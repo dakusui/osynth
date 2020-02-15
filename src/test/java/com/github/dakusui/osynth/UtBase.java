@@ -1,4 +1,4 @@
-package com.github.dakusui.floorplan.osynth;
+package com.github.dakusui.osynth;
 
 import org.junit.After;
 import org.junit.Before;
