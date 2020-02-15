@@ -1,193 +1,174 @@
 package com.github.dakusui.osynth;
 
-import com.github.dakusui.objsynth.ObjectSynthesizer;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Objects;
+import java.io.Serializable;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.objsynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
+import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.UtUtils.nonEmptyString;
 
 public class ObjectSynthesizerTest extends UtBase {
-  private X fallbackObject;
-
   interface A {
-    // ReflectivelyCalled
-    @SuppressWarnings("unused")
-    String aMethod();
-  }
-
-  interface B {
-    // ReflectivelyCalled
-    @SuppressWarnings("unused")
-    String bMethod();
-  }
-
-  interface C {
-    // ReflectivelyCalled
-    @SuppressWarnings("unused")
-    String cMethod();
-  }
-
-  interface X extends A, B, C {
-    // ReflectivelyCalled
-    @SuppressWarnings("unused")
-    String xMethod();
-
-  }
-
-  public interface Y extends X {
-    default String yMethod() {
-      return "yMethod";
+    @SuppressWarnings("unused") // Called through reflection
+    default String aMethod() {
+      return "aMethod";
     }
   }
 
-  @Before
-  public void before() {
-    this.fallbackObject = createX("");
+  interface B {
+    String bMethod();
   }
 
-  private X createX(String value) {
-    return new X() {
-      @Override
-      public String xMethod() {
-        return "xMethod" + value;
-      }
+  interface E {
+    class EException extends RuntimeException {
+    }
 
-      @Override
-      public String cMethod() {
-        return "cMethod";
-      }
-
-      @Override
-      public String bMethod() {
-        return "bMethod";
-      }
-
-      @Override
-      public String aMethod() {
-        return "aMethod";
-      }
-
-      @Override
-      public int hashCode() {
-        return value.hashCode();
-      }
-
-      @Override
-      public boolean equals(Object anotherObject) {
-        if (anotherObject instanceof X) {
-          X another = (X) anotherObject;
-          return Objects.equals(another.xMethod(), this.xMethod());
-        }
-        return false;
-      }
-    };
+    default String eMethod() {
+      throw new EException();
+    }
   }
+
+  private Object fallbackObject = new Object();
 
   @Test
-  public void whenMethodsCalled$thenProxiedToIntendedMethods() {
-    X x = new ObjectSynthesizer<>(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
+  public void givenHandlerForMethodInB$whenMethodInBCalled$thenHandlerIsRun() {
+    Object x = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .addInterface(B.class)
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(fallbackObject)
+        .addHandlerObject(fallbackObject)
         .synthesize();
-    assertThat(
-        x,
+    assertThat(x,
         allOf(
-            asString("aMethod").equalTo("a is called").$(),
-            asString("bMethod").equalTo("b is called").$(),
-            asString("toString").startsWith("com.github.dakusui.floorplan.osynth.ObjectSynthesizerTest$1@0").$(),
-            asString("cMethod").equalTo("cMethod").$(),
-            asString("xMethod").equalTo("xMethod").$(),
-            asInteger(call("xMethod").andThen("toString").andThen("length").$()).equalTo(7).$()
+            asString(call("aMethod").$()).equalTo("aMethod").$(),
+            asString(call("bMethod").$()).equalTo("b is called").$()
         ));
   }
 
+  @Test(expected = IllegalArgumentException.class)
+  public void givenNoHandlerForMethodInB$whenMethodInBCalled$thenIllegalArgumentExceptionThrown() {
+    B x = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .addInterface(B.class)
+        .addHandlerObject(fallbackObject)
+        .synthesize(B.class);
+    try {
+      System.out.println(x.bMethod());
+    } catch (IllegalArgumentException e) {
+      assertThat(
+          e,
+          asString(call("getMessage").$())
+              .check(
+                  substringAfterRegex("Fallback object:")
+                      .after("is not assignable to")
+                      .after(", which declares requested method:")
+                      .$(),
+                  nonEmptyString())
+              .containsString("bMethod").$());
+      throw e;
+    }
+  }
+
+  @Test(expected = AssertionInCatchClauseFinished.class)
+  public void whenSynthesizedWithUnregisteredInterface$thenIllegalArgumentExceptionThrown() {
+    try {
+      Serializable x = new ObjectSynthesizer()
+          .addInterface(A.class)
+          .addInterface(B.class)
+          .addHandlerObject(fallbackObject)
+          .synthesize(Serializable.class);
+      System.out.println(x);
+    } catch (IllegalArgumentException e) {
+      assertThat(
+          e,
+          asString(call("getMessage").$())
+              .check(
+                  substringAfterRegex("No matching interface was found for")
+                      .after("Serializable")
+                      .after("A")
+                      .after("B")
+                      .$(),
+                  nonEmptyString())
+              .$());
+      assertionInCatchClauseFinished();
+    }
+  }
+
+  @Test(expected = AssertionInCatchClauseFinished.class)
+  public void givenCoreInterface$whenSynthesized$then() {
+    try {
+      new ObjectSynthesizer().addInterface(Serializable.class).addHandlerObject(new Object()).synthesize();
+    } catch (RuntimeException e) {
+      assertThat(
+          e,
+          allOf(
+              asString(call("getMessage").$())
+                  .startsWith("Failed to create a method handles lookup")
+                  .containsString(Serializable.class.getCanonicalName())
+                  .containsString("prohibited")
+                  .$(),
+              asObject(call(UtUtils.class, "rootCause", e).$())
+                  .isInstanceOf(IllegalArgumentException.class)
+                  .$()
+          )
+      );
+      assertionInCatchClauseFinished();
+    }
+  }
+
+  @Test(expected = AssertionInCatchClauseFinished.class)
+  public void whenNonInterfaceClassPassed$thenExceptionThrown() {
+    try {
+      new ObjectSynthesizer().addInterface(String.class).synthesize();
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage(), asString().containsString(String.class.getCanonicalName()).$());
+      assertionInCatchClauseFinished();
+    }
+  }
+
+  @Test(expected = E.EException.class)
+  public void whenErrorThrowingDefaultMethodExecuted$thenErrorThrown() {
+    System.out.println(new ObjectSynthesizer().addInterface(E.class).synthesize(E.class).eMethod());
+  }
+
+  @Test(expected = E.EException.class)
+  public void whenErrorThrowingOverridingMethodExecuted$thenErrorThrown() {
+    new ObjectSynthesizer()
+        .addInterface(E.class)
+        .addHandlerObject(new E() {
+          @Override
+          public String eMethod() {
+            throw new EException();
+          }
+        })
+        .synthesize(E.class)
+        .eMethod();
+  }
+
   @Test
-  public void whenEqualsOnSameObject$thenTrue() {
-    X x = ObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(fallbackObject)
+  public void givenMultipleHandlerObjects$whenMethodsRun$thenMethodsOnHandlerObjectsCalled() {
+    Object x = new ObjectSynthesizer().addInterface(A.class)
+        .addInterface(B.class)
+        .addHandlerObject(new A() {
+          @Override
+          public String aMethod() {
+            return "Overridden A";
+          }
+        })
+        .addHandlerObject((B) () -> "Overridden B")
         .synthesize();
+    A a = (A) x;
+    B b = (B) x;
+    System.out.println(a.aMethod());
+    System.out.println(b.bMethod());
     assertThat(
         x,
         allOf(
-            asBoolean("equals", x).isTrue().$(),
-            asBoolean("equals", fallbackObject).isTrue().$()
-        ));
-  }
-
-  @Test
-  public void whenEqualsOnAnotherObjectNotEqual$thenFalse() {
-    X x = ObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(fallbackObject)
-        .synthesize();
-    assertThat(
-        x,
-        asBoolean("equals", "Hello").isFalse().$()
-    );
-  }
-
-  @Test
-  public void whenEqualsOnAnotherXNotEqual$thenFalse() {
-    X x = ObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(fallbackObject)
-        .synthesize();
-    assertThat(
-        x,
-        asBoolean("equals", createX("Hello")).isFalse().$()
-    );
-  }
-
-  @Test
-  public void whenEqualsOnAnotherProxiedObjectEqualToIt$thenTrue() {
-    X x = ObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(fallbackObject)
-        .synthesize();
-    X x2 = ObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(createX(""))
-        .synthesize();
-    assertThat(
-        x,
-        asBoolean("equals", x2).isTrue().$()
-    );
-  }
-
-  @Test
-  public void whenEqualsOnAnotherObjectEqualToIt$thenTrue() {
-    X x = ObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(fallbackObject)
-        .synthesize();
-    X x2 = createX("");
-    assertThat(
-        x,
-        asBoolean("equals", x2).isTrue().$()
-    );
-  }
-
-  @Test
-  public void whenDefaultMethodCalled$thenValueReturned() {
-    Y y = ObjectSynthesizer.create(Y.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackTo(fallbackObject)
-        .synthesize();
-    assertThat(
-        y.yMethod(),
-        asString().equalTo("yMethod").$()
+            asString("aMethod").eq("Overridden A").$(),
+            asString("bMethod").equalTo("Overridden B").$()
+        )
     );
   }
 }

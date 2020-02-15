@@ -2,11 +2,13 @@ package com.github.dakusui.osynth;
 
 
 
+import com.github.dakusui.crest.utils.printable.Printable;
 import org.hamcrest.CoreMatchers;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import static org.junit.Assume.assumeThat;
 
@@ -77,5 +79,9 @@ public enum UtUtils {
     if (t.getCause() == null)
       return t;
     return rootCause(t.getCause());
+  }
+
+  public static Predicate<String> nonEmptyString() {
+    return Printable.predicate("nonEmptyString", v -> v.length() > 0);
   }
 }

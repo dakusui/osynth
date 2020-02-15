@@ -1,13 +1,13 @@
 package com.github.dakusui.osynth;
 
-import com.github.dakusui.objsynth.ObjectSynthesizer;
 import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.objsynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.SimpleObjectSynthesizer.methodCall;
 
 /**
- * Base        Fallback    Synth     Expectation
+ * A test class to fix a behavior reported as an issue #53 of floorplan library.
+ * Base     Fallback    Synth     Expectation
  * method1  Absent      Absent      Absent    -
  * method2  Present     Absent      Absent    Base
  * method3  Absent      Present     Absent    Fallback
@@ -17,7 +17,7 @@ import static com.github.dakusui.objsynth.ObjectSynthesizer.methodCall;
  * method7  Absent      Present     Present   Synth
  * method8  Present     Present     Present   Synth
  */
-public class ObjectSynthesizerIssue53Test extends UtBase {
+public class SimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
   public interface Base {
     default String method2() {
       return "Base:method2";
@@ -29,8 +29,6 @@ public class ObjectSynthesizerIssue53Test extends UtBase {
       return "Base:method4";
     }
 
-    ;
-
     default String method6() {
       return "Base:method6";
     }
@@ -40,8 +38,6 @@ public class ObjectSynthesizerIssue53Test extends UtBase {
     default String method8() {
       return "Base:method8";
     }
-
-    ;
   }
 
   static abstract class FallbackBase implements Base {
@@ -53,8 +49,8 @@ public class ObjectSynthesizerIssue53Test extends UtBase {
 
   @Test
   public void test() {
-    Base base = ObjectSynthesizer.create(Base.class)
-        .fallbackTo(new FallbackBase() {
+    Base base = SimpleObjectSynthesizer.create(Base.class)
+        .addHandlerObject(new FallbackBase() {
           @Override
           public String method3() {
             return "Fallback:method3";

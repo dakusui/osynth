@@ -1,4 +1,4 @@
-package com.github.dakusui.objsynth;
+package com.github.dakusui.osynth;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -14,18 +14,25 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
 
   static Builder builderByNameAndParameterTypes(String methodName, Class<?>[] parameterTypes) {
     return builder(method -> {
-      AtomicInteger i = new AtomicInteger(-1);
+      AtomicInteger i = new AtomicInteger(0);
       return Objects.equals(
-          methodName, method.getName()) &&
+          methodName,
+          method.getName()) &&
           parameterTypes.length == method.getParameterCount() &&
-          Arrays.stream(
-              parameterTypes
-          ).peek(
-              type -> i.getAndIncrement()
-          ).allMatch(
-              type -> type.isAssignableFrom(method.getParameterTypes()[i.get()])
-          );
+          Arrays.stream(parameterTypes)
+              .allMatch(type -> type.isAssignableFrom(method.getParameterTypes()[i.getAndIncrement()]));
     });
+  }
+
+  static MethodHandler equalsHandler(Object o) {
+    // a default for 'equals' method.
+    return ObjectSynthesizer.methodCall("equals", Object.class)
+        .with((self, args) -> self == args[0] || o.equals(args[0]));
+  }
+
+  static MethodHandler hashCodeHandler(Object o) {
+    // a default for 'hashCode' method.
+    return ObjectSynthesizer.methodCall("hashCode").with((self, args) -> o.hashCode());
   }
 
   class Builder {
