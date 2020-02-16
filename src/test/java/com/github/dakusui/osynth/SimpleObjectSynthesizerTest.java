@@ -189,4 +189,16 @@ public class SimpleObjectSynthesizerTest extends UtBase {
         asString().equalTo("yMethod").$()
     );
   }
+
+  @Test
+  public void thenPass() {
+    assertThat(
+        createProxiedX(),
+        asObject().equalTo(createProxiedX()).$()
+    );
+  }
+
+  private X createProxiedX() {
+    return SimpleObjectSynthesizer.create(X.class).addHandlerObject(createX("Hello")).synthesize();
+  }
 }

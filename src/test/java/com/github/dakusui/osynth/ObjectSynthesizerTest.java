@@ -96,10 +96,13 @@ public class ObjectSynthesizerTest extends UtBase {
     }
   }
 
+  /**
+   * Passes on JDK8
+   */
   @Test(expected = AssertionInCatchClauseFinished.class)
-  public void givenCoreInterface$whenSynthesized$then() {
+  public void givenCoreInterface$whenSynthesized$thenFail() {
     try {
-      new ObjectSynthesizer().addInterface(Serializable.class).addHandlerObject(new Object()).synthesize();
+      System.out.println(new ObjectSynthesizer().addInterface(Serializable.class).addHandlerObject(new Object()).synthesize());
     } catch (RuntimeException e) {
       assertThat(
           e,

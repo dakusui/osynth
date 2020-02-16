@@ -15,9 +15,9 @@ import static com.github.dakusui.osynth.Utils.rethrow;
 import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizer {
-  private final List<Class<?>>      interfaces     = new LinkedList<>();
-  private       List<Object>        handlerObjects = new LinkedList<>();
-  private       List<MethodHandler> handlers       = new LinkedList<>();
+  private final List<Class<?>> interfaces = new LinkedList<>();
+  private List<Object> handlerObjects = new LinkedList<>();
+  private List<MethodHandler> handlers = new LinkedList<>();
 
   public ObjectSynthesizer() {
   }
@@ -58,15 +58,16 @@ public class ObjectSynthesizer {
 
   private ProxyFactory createProxyFactory() {
     this.handlerObjects.add(new Object());
-    this.handle(hashCodeHandler(handlerObjects));
-    this.handle(equalsHandler(handlerObjects));
-    return new ProxyFactory(interfaces.toArray(new Class<?>[0]), new ArrayList<>(handlers), handlerObjects);
+    ProxyDescriptor descriptor = new ProxyDescriptor(interfaces.toArray(new Class<?>[0]), new ArrayList<>(handlers), handlerObjects);
+    this.handle(hashCodeHandler(descriptor));
+    this.handle(equalsHandler(descriptor));
+    return new ProxyFactory(descriptor);
   }
 
   public static class ProxyDescriptor {
-    private final Class<?>[]                    interfaces;
+    private final Class<?>[] interfaces;
     private final List<? extends MethodHandler> handlers;
-    private final List<Object>                  handlerObjects;
+    private final List<Object> handlerObjects;
 
     public ProxyDescriptor(Class<?>[] interfaces, List<? extends MethodHandler> handlers, List<Object> handlerObjects) {
       this.interfaces = interfaces;
@@ -84,19 +85,20 @@ public class ObjectSynthesizer {
       if (!(anotherObject instanceof ProxyDescriptor))
         return false;
       ProxyDescriptor another = (ProxyDescriptor) anotherObject;
-      return Arrays.equals(this.interfaces, another.interfaces) &&
-          this.handlers.equals(another.handlers) &&
-          this.handlerObjects.equals(another.handlerObjects);
+      return this == another ||
+          (Arrays.equals(this.interfaces, another.interfaces) &&
+              this.handlers.equals(another.handlers) &&
+              this.handlerObjects.equals(another.handlerObjects));
     }
   }
 
   private static class ProxyFactory {
-    private final ProxyDescriptor                                   descriptor;
+    private final ProxyDescriptor descriptor;
     private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-    private final Map<Class<?>, MethodHandles.Lookup>               lookups;
+    private final Map<Class<?>, MethodHandles.Lookup> lookups;
 
-    private ProxyFactory(Class<?>[] interfaces, List<? extends MethodHandler> handlers, List<Object> handlerObjects) {
-      this.descriptor = new ProxyDescriptor(interfaces, handlers, handlerObjects);
+    private ProxyFactory(ProxyDescriptor descriptor) {
+      this.descriptor = descriptor;
       this.methodHandlersCache = new HashMap<>();
       this.lookups = new HashMap<>();
       Arrays.stream(this.descriptor.interfaces).forEach(this::lookup);
@@ -121,7 +123,7 @@ public class ObjectSynthesizer {
       }
     }
 
-    @SuppressWarnings({ "Convert2MethodRef" })
+    @SuppressWarnings({"Convert2MethodRef"})
     Object create() {
       return Proxy.newProxyInstance(
           ProxyFactory.class.getClassLoader(),
