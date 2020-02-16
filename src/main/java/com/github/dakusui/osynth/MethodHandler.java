@@ -27,7 +27,8 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
   static MethodHandler equalsHandler(Object o) {
     // a default for 'equals' method.
     return ObjectSynthesizer.methodCall("equals", Object.class)
-        .with((self, args) -> self == args[0] || o.equals(args[0]));
+        .with((self, args) -> self == args[0] ||
+            o.equals(args[0]));
   }
 
   static MethodHandler hashCodeHandler(Object o) {
