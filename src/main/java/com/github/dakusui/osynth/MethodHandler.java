@@ -12,7 +12,7 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
     return new Builder(predicate);
   }
 
-  static Builder builderByNameAndParameterTypes(String methodName, Class<?>[] parameterTypes) {
+  static Builder builderByNameAndParameterTypes(String methodName, Class<?>... parameterTypes) {
     return builder(method -> {
       AtomicInteger i = new AtomicInteger(0);
       return Objects.equals(
@@ -25,15 +25,17 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
   }
 
   static MethodHandler equalsHandler(Object o) {
-    // a default for 'equals' method.
     return ObjectSynthesizer.methodCall("equals", Object.class)
         .with((self, args) -> self == args[0] ||
             o.equals(args[0]));
   }
 
   static MethodHandler hashCodeHandler(Object o) {
-    // a default for 'hashCode' method.
     return ObjectSynthesizer.methodCall("hashCode").with((self, args) -> o.hashCode());
+  }
+
+  static MethodHandler toStringHandler(Object o) {
+    return ObjectSynthesizer.methodCall("toString").with((self, args) -> o.toString());
   }
 
   class Builder {
