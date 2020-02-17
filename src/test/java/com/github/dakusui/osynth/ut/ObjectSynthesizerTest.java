@@ -7,7 +7,7 @@ import com.github.dakusui.osynth.utils.UtUtils;
 import org.junit.Test;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.*;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
@@ -247,6 +247,41 @@ public class ObjectSynthesizerTest extends UtBase {
   public void test8() {
     ObjectSynthesizer.ProxyDescriptor desc = createDesc();
     assertThat(desc.hashCode(), asInteger().equalTo(emptyList().hashCode()).$());
+  }
+
+  @Test
+  public void example() {
+    Arrays.stream(LinkedList.class.getInterfaces()).forEach(System.out::println);
+    System.out.println();
+    Arrays.stream(List.class.getInterfaces()).forEach(System.out::println);
+
+  }
+
+  @Test
+  public void test9() {
+    @SuppressWarnings("unchecked") Map<String, String> map = (Map<String, String>) ObjectSynthesizer.create(true)
+        .addHandlerObject(new HashMap<String, String>())
+        .synthesize();
+    map.put("hello", "world");
+    System.out.println(map);
+    System.out.println(map.get("hello"));
+    System.out.println(((ObjectSynthesizer.Describable)map).describe());
+  }
+
+  @Test
+  public void test10() {
+    B b = (B) ObjectSynthesizer.create(true)
+        .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
+        .synthesize();
+    System.out.println(b.bMethod());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void test11() {
+    B b = (B) ObjectSynthesizer.create(false)
+        .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
+        .synthesize();
+    System.out.println(b.bMethod());
   }
 
   protected ObjectSynthesizer.ProxyDescriptor createDesc() {
