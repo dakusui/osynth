@@ -7,12 +7,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.Messages.*;
 import static com.github.dakusui.osynth.MethodHandler.*;
 import static com.github.dakusui.osynth.Utils.rethrow;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
@@ -83,9 +83,16 @@ public class ObjectSynthesizer {
       this.interfaces.add(Describable.class);
       this.builtInHandlers = asList(
           hashCodeHandler(this),
-          equalsHandler(this),
+          equalsHandler(this, describeIfPossible()),
+          toStringHandler(this, v -> "proxy:" + v.toString()),
           builderByNameAndParameterTypes("describe").with((self, args) -> this)
       );
+    }
+
+    private Function<Object, Object> describeIfPossible() {
+      return v -> v instanceof Describable ?
+          ((Describable) v).describe() :
+          v;
     }
 
     Stream<MethodHandler> streamAllHandlers() {
@@ -102,20 +109,18 @@ public class ObjectSynthesizer {
       if (this == anotherObject)
         return true;
       ProxyDescriptor another;
-      if (anotherObject instanceof Describable) {
-        return equals(((Describable) anotherObject).describe());
-      } else if ((anotherObject instanceof ProxyDescriptor)) {
+      if ((anotherObject instanceof ProxyDescriptor)) {
         another = (ProxyDescriptor) anotherObject;
-        return (this.interfaces.equals(another.interfaces) &&
-            this.handlers.equals(another.handlers) &&
-            this.handlerObjects.equals(another.handlerObjects)) ||
-            equalsLeniently(another);
+        return (this.interfaces().equals(another.interfaces()) &&
+            this.handlers().equals(another.handlers()) &&
+            this.handlerObjects().equals(another.handlerObjects()));
       }
-      return equalsLeniently(anotherObject);
+      return false;
     }
 
-    protected boolean equalsLeniently(Object anotherObject) {
-      return false;
+    @Override
+    public String toString() {
+      return "osynth@" + System.identityHashCode(this);
     }
 
     protected List<Class<?>> interfaces() {
@@ -126,13 +131,9 @@ public class ObjectSynthesizer {
       return unmodifiableList(this.handlers);
     }
 
-    protected List<Object> handlerObects() {
+    protected List<Object> handlerObjects() {
       return unmodifiableList(this.handlerObjects);
     }
-  }
-
-  public String toString() {
-    return format("osynth@%s", System.identityHashCode(this));
   }
 
   public interface Describable {
@@ -184,8 +185,9 @@ public class ObjectSynthesizer {
     }
 
     private BiFunction<Object, Object[], Object> lookUpMethodCallHandler(Method method) {
-      if (!this.methodHandlersCache.containsKey(method))
+      if (!this.methodHandlersCache.containsKey(method)) {
         this.methodHandlersCache.put(method, createMethodCallHandler(method));
+      }
       return this.methodHandlersCache.get(method);
     }
 

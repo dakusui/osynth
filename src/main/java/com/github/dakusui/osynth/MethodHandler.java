@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface MethodHandler extends BiFunction<Object, Object[], Object>, Predicate<Method> {
@@ -24,14 +25,22 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
     });
   }
 
-  static MethodHandler equalsHandler(Object o) {
+  /**
+   * @param o         An object on which {@code equals(Object)} method is called.
+   * @param converter A function that converts an argument given to {@code equals(Object)} method to a variable that can be compared to {@code o}.
+   * @return A method handler object.
+   */
+  static MethodHandler equalsHandler(Object o, Function<Object, Object> converter) {
     return ObjectSynthesizer.methodCall("equals", Object.class)
-        .with((self, args) -> self == args[0] ||
-            o.equals(args[0]));
+        .with((self, args) -> o == args[0] || o.equals(converter.apply(args[0])));
   }
 
   static MethodHandler hashCodeHandler(Object o) {
     return ObjectSynthesizer.methodCall("hashCode").with((self, args) -> o.hashCode());
+  }
+
+  static MethodHandler toStringHandler(Object o, Function<Object, String> formatter) {
+    return ObjectSynthesizer.methodCall("toString").with((self, args) -> formatter.apply(o));
   }
 
   class Builder {

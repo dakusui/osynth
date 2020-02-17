@@ -99,7 +99,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
         allOf(
             asString("aMethod").equalTo("a is called").$(),
             asString("bMethod").equalTo("b is called").$(),
-            asString("toString").startsWith("com.github.dakusui.osynth.ut.SimpleObjectSynthesizerTest$1@0").$(),
+            asString("toString").startsWith("proxy:osynth@").$(),
             asString("cMethod").equalTo("cMethod").$(),
             asString("xMethod").equalTo("xMethod").$(),
             asInteger(call("xMethod").andThen("toString").andThen("length").$()).equalTo(7).$()
@@ -148,15 +148,15 @@ public class SimpleObjectSynthesizerTest extends UtBase {
   @Test
   public void thenPass() {
     Y y = createY();
-    Y x1 = createProxyFor(Y.class, y);
-    Y x2 = createProxyFor(Y.class, y);
-    System.out.println(x1);
-    System.out.println(x2);
-    System.out.println(x1.equals(x2));
-    assertThat(x1, asObject().equalTo(x2).$());
+    Y y1 = createProxyFor(Y.class, y);
+    Y y2 = createProxyFor(Y.class, y);
+    System.out.println(y1);
+    System.out.println(y2);
+    System.out.println(y1.equals(y2));
+    assertThat(y1, asObject().equalTo(y2).$());
   }
 
-  private static <T> T createProxyFor(Class<T> klass, T obj) {
+  private static <T> T createProxyFor(@SuppressWarnings("SameParameterValue") Class<T> klass, T obj) {
     return SimpleObjectSynthesizer.create(klass).addHandlerObject(obj).synthesize(klass);
   }
 

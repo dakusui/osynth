@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.utils.UtBase;
 import com.github.dakusui.osynth.utils.UtUtils;
 import org.junit.Test;
@@ -9,8 +9,8 @@ import org.junit.Test;
 import java.io.Serializable;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.utils.UtUtils.nonEmptyString;
 
 public class ObjectSynthesizerTest extends UtBase {
@@ -177,5 +177,42 @@ public class ObjectSynthesizerTest extends UtBase {
             asString("bMethod").equalTo("Overridden B").$()
         )
     );
+  }
+
+  @Test
+  public void test1() {
+    Object x = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    assertThat(
+        x,
+        asObject().equalTo(x).$()
+    );
+  }
+
+  @Test
+  public void test2() {
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    assertThat(
+        x1,
+        asBoolean(call("equals", x2).$()).isFalse().$()
+    );
+  }
+
+  @Test
+  public void test3() {
+    Object o = new Object();
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
+    assertThat(
+        x1,
+        asBoolean(call("equals", x2).$()).isTrue().$()
+    );
+  }
+
+  @Test
+  public void test4() {
+    Object o = new Object();
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
+    assertThat(x1.toString(), asString().startsWith("proxy:osynth@").$());
   }
 }
