@@ -1,5 +1,6 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.ObjectSynthesizer;
 import org.junit.Test;
 
 import java.util.Arrays;

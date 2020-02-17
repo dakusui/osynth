@@ -1,13 +1,17 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
+import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.utils.UtBase;
+import com.github.dakusui.osynth.utils.UtUtils;
 import org.junit.Test;
 
 import java.io.Serializable;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
+import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.osynth.UtUtils.nonEmptyString;
+import static com.github.dakusui.osynth.utils.UtUtils.nonEmptyString;
 
 public class ObjectSynthesizerTest extends UtBase {
   interface A {

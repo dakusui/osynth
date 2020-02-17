@@ -66,7 +66,7 @@ public class ObjectSynthesizer {
     return new ProxyFactory(descriptor);
   }
 
-  ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
+  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
     return new ProxyDescriptor(interfaces, handlers, handlerObjects);
   }
 
@@ -135,7 +135,7 @@ public class ObjectSynthesizer {
     return format("osynth@%s", System.identityHashCode(this));
   }
 
-  interface Describable {
+  public interface Describable {
     ProxyDescriptor describe();
   }
 
@@ -233,6 +233,7 @@ public class ObjectSynthesizer {
     private static Object invokeMethod(Object object, Method method, Object[] args) {
       try {
         try {
+          method.setAccessible(true);
           return method.invoke(object, args);
         } catch (InvocationTargetException e) {
           throw e.getTargetException();

@@ -28,16 +28,6 @@ public class SimpleObjectSynthesizer<T> extends ObjectSynthesizer {
   }
 
   @Override
-  ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
-    return new ProxyDescriptor(interfaces, handlers, handlerObjects) {
-      @Override
-      protected boolean equalsLeniently(Object anotherObject) {
-        return this.handlerObects().contains(anotherObject);
-      }
-    };
-  }
-
-  @Override
   public T synthesize() {
     return super.synthesize(this.primaryInterface);
   }

@@ -1,5 +1,7 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -97,25 +99,10 @@ public class SimpleObjectSynthesizerTest extends UtBase {
         allOf(
             asString("aMethod").equalTo("a is called").$(),
             asString("bMethod").equalTo("b is called").$(),
-            asString("toString").startsWith("com.github.dakusui.osynth.SimpleObjectSynthesizerTest$1@0").$(),
+            asString("toString").startsWith("com.github.dakusui.osynth.ut.SimpleObjectSynthesizerTest$1@0").$(),
             asString("cMethod").equalTo("cMethod").$(),
             asString("xMethod").equalTo("xMethod").$(),
             asInteger(call("xMethod").andThen("toString").andThen("length").$()).equalTo(7).$()
-        ));
-  }
-
-  @Test
-  public void whenEqualsOnSameObject$thenTrue() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(handlerObject)
-        .synthesize();
-    assertThat(
-        x,
-        allOf(
-            asBoolean("equals", x).isTrue().$(),
-            asBoolean("equals", handlerObject).isTrue().$()
         ));
   }
 
@@ -142,38 +129,6 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     assertThat(
         x,
         asBoolean("equals", createX("Hello")).isFalse().$()
-    );
-  }
-
-  @Test
-  public void whenEqualsOnAnotherProxiedObjectEqualToIt$thenTrue() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(handlerObject)
-        .synthesize();
-    X x2 = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(createX(""))
-        .synthesize();
-    assertThat(
-        x,
-        asBoolean("equals", x2).isTrue().$()
-    );
-  }
-
-  @Test
-  public void whenEqualsOnAnotherObjectEqualToIt$thenTrue() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(handlerObject)
-        .synthesize();
-    X x2 = createX("");
-    assertThat(
-        x,
-        asBoolean("equals", x2).isTrue().$()
     );
   }
 
