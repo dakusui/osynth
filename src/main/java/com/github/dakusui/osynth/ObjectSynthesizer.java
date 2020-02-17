@@ -195,14 +195,14 @@ public class ObjectSynthesizer {
           .map(handler -> (BiFunction<Object, Object[], Object>) handler)
           .findFirst()
           .orElseGet(
-              () -> this.descriptor.handlerObjects.stream()
+              () -> this.descriptor.handlerObjects().stream()
                   .filter(h -> hasMethod(h.getClass(), method))
                   .map(h -> (BiFunction<Object, Object[], Object>) (Object o, Object[] o2) -> invokeMethod(h, method, o2))
                   .findFirst()
                   .orElseGet(() -> {
                     if (method.isDefault())
                       return defaultMethodInvoker(method);
-                    throw new IllegalArgumentException(incompatibleFallbackObject(this.descriptor.handlerObjects, method));
+                    throw new IllegalArgumentException(incompatibleFallbackObject(this.descriptor.handlerObjects(), method));
                   }));
     }
 
