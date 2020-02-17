@@ -3,7 +3,7 @@ package com.github.dakusui.osynth;
 public enum Utils {
   ;
 
-  static RuntimeException rethrow(Throwable e) {
+  public static RuntimeException rethrow(Throwable e) {
     if (e instanceof RuntimeException)
       throw (RuntimeException) e;
     if (e instanceof Error)

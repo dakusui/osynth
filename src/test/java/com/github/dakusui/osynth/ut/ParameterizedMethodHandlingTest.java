@@ -1,5 +1,7 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -7,7 +9,7 @@ import java.util.Arrays;
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 
-public class ParameterizedMethodHandlingTest {
+public class ParameterizedMethodHandlingTest extends UtBase {
   interface Single {
     default String addIndex(int index) {
       return "HELLO_INT_" + index;

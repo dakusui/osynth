@@ -1,5 +1,7 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -9,7 +11,7 @@ import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.SimpleObjectSynthesizer.methodCall;
 
 public class SimpleObjectSynthesizerTest extends UtBase {
-  private X fallbackObject;
+  private X handlerObject;
 
   interface A {
     // ReflectivelyCalled
@@ -44,7 +46,8 @@ public class SimpleObjectSynthesizerTest extends UtBase {
 
   @Before
   public void before() {
-    this.fallbackObject = createX("");
+    super.before();
+    this.handlerObject = createX("");
   }
 
   private X createX(String value) {
@@ -90,32 +93,17 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     X x = new SimpleObjectSynthesizer<>(X.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
+        .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
         x,
         allOf(
             asString("aMethod").equalTo("a is called").$(),
             asString("bMethod").equalTo("b is called").$(),
-            asString("toString").startsWith("com.github.dakusui.osynth.SimpleObjectSynthesizerTest$1@0").$(),
+            asString("toString").startsWith("proxy:osynth:").$(),
             asString("cMethod").equalTo("cMethod").$(),
             asString("xMethod").equalTo("xMethod").$(),
             asInteger(call("xMethod").andThen("toString").andThen("length").$()).equalTo(7).$()
-        ));
-  }
-
-  @Test
-  public void whenEqualsOnSameObject$thenTrue() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
-        .synthesize();
-    assertThat(
-        x,
-        allOf(
-            asBoolean("equals", x).isTrue().$(),
-            asBoolean("equals", fallbackObject).isTrue().$()
         ));
   }
 
@@ -124,7 +112,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     X x = SimpleObjectSynthesizer.create(X.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
+        .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
         x,
@@ -137,7 +125,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     X x = SimpleObjectSynthesizer.create(X.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
+        .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
         x,
@@ -146,47 +134,54 @@ public class SimpleObjectSynthesizerTest extends UtBase {
   }
 
   @Test
-  public void whenEqualsOnAnotherProxiedObjectEqualToIt$thenTrue() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
-        .synthesize();
-    X x2 = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(createX(""))
-        .synthesize();
-    assertThat(
-        x,
-        asBoolean("equals", x2).isTrue().$()
-    );
-  }
-
-  @Test
-  public void whenEqualsOnAnotherObjectEqualToIt$thenTrue() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
-        .synthesize();
-    X x2 = createX("");
-    assertThat(
-        x,
-        asBoolean("equals", x2).isTrue().$()
-    );
-  }
-
-  @Test
   public void whenDefaultMethodCalled$thenValueReturned() {
     Y y = SimpleObjectSynthesizer.create(Y.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
+        .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
         y.yMethod(),
         asString().equalTo("yMethod").$()
     );
+  }
+
+  @Test
+  public void thenPass() {
+    Y y = createY();
+    Y y1 = createProxyFor(Y.class, y);
+    Y y2 = createProxyFor(Y.class, y);
+    System.out.println(y1);
+    System.out.println(y2);
+    System.out.println(y1.equals(y2));
+    assertThat(y1, asObject().equalTo(y2).$());
+  }
+
+  private static <T> T createProxyFor(@SuppressWarnings("SameParameterValue") Class<T> klass, T obj) {
+    return SimpleObjectSynthesizer.create(klass).addHandlerObject(obj).synthesize(klass);
+  }
+
+  private Y createY() {
+    return new Y() {
+      @Override
+      public String xMethod() {
+        return "xMethod";
+      }
+
+      @Override
+      public String cMethod() {
+        return "cMethod";
+      }
+
+      @Override
+      public String bMethod() {
+        return "bMethod";
+      }
+
+      @Override
+      public String aMethod() {
+        return "aMethod";
+      }
+    };
   }
 }

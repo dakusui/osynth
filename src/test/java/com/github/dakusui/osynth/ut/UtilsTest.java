@@ -1,15 +1,18 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
+import com.github.dakusui.osynth.Utils;
+import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 
 import java.io.IOException;
 
 import static com.github.dakusui.crest.Crest.asObject;
 import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.osynth.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
-import static com.github.dakusui.osynth.UtUtils.rootCause;
+import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
+import static com.github.dakusui.osynth.utils.UtUtils.rootCause;
 
-public class UtilsTest {
+public class UtilsTest extends UtBase {
   @Test(expected = Error.class)
   public void givenError$whenRethrown$thenErrorIsThrown() {
     throw Utils.rethrow(new Error());

@@ -1,5 +1,6 @@
 package com.github.dakusui.osynth;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -7,11 +8,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.Messages.*;
-import static com.github.dakusui.osynth.MethodHandler.equalsHandler;
-import static com.github.dakusui.osynth.MethodHandler.hashCodeHandler;
+import static com.github.dakusui.osynth.MethodHandler.*;
 import static com.github.dakusui.osynth.Utils.rethrow;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizer {
@@ -25,12 +29,9 @@ public class ObjectSynthesizer {
   public ObjectSynthesizer addInterface(Class<?> anInterface) {
     if (!requireNonNull(anInterface).isInterface())
       throw new IllegalArgumentException(notAnInterface(anInterface));
-    this.interfaces.add(anInterface);
+    if (!this.interfaces.contains(anInterface))
+      this.interfaces.add(anInterface);
     return this;
-  }
-
-  public static MethodHandler.Builder methodCall(String methodName, Class<?>... parameterTypes) {
-    return MethodHandler.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
   }
 
   public ObjectSynthesizer addHandlerObject(Object handlerObject) {
@@ -43,8 +44,9 @@ public class ObjectSynthesizer {
     return this;
   }
 
-  public Object synthesize() {
-    return this.synthesize(Object.class);
+  @SuppressWarnings("unchecked")
+  public <T> T synthesize() {
+    return (T) this.synthesize(Object.class);
   }
 
   @SuppressWarnings("unchecked")
@@ -57,33 +59,119 @@ public class ObjectSynthesizer {
   }
 
   private ProxyFactory createProxyFactory() {
-    this.handlerObjects.add(new Object());
-    this.handle(hashCodeHandler(handlerObjects.get(0)));
-    this.handle(equalsHandler(handlerObjects.get(0)));
-    return new ProxyFactory(interfaces.toArray(new Class<?>[0]), new ArrayList<>(handlers), handlerObjects);
+    ProxyDescriptor descriptor = createProxyDescriptor(interfaces, handlers, handlerObjects);
+    return new ProxyFactory(descriptor);
+  }
+
+  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
+    return new ProxyDescriptor(interfaces, handlers, handlerObjects);
+  }
+
+  public static ObjectSynthesizer create(boolean auto) {
+    return auto ?
+        new ObjectSynthesizer() {
+          @Override
+          public ObjectSynthesizer addHandlerObject(Object handlerObject) {
+            requireNonNull(handlerObject);
+            for (Class<?> eachInterface : handlerObject.getClass().getInterfaces())
+              addInterface(eachInterface);
+            return super.addHandlerObject(handlerObject);
+          }
+        } :
+        new ObjectSynthesizer();
+  }
+
+  public static MethodHandler.Builder methodCall(String methodName, Class<?>... parameterTypes) {
+    return MethodHandler.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
+  }
+
+  public static class ProxyDescriptor {
+    private final List<Class<?>>      interfaces;
+    private final List<MethodHandler> handlers;
+    private final List<MethodHandler> builtInHandlers;
+    private final List<Object>        handlerObjects;
+
+    public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
+      this.interfaces = interfaces;
+      this.handlers = handlers;
+      this.handlerObjects = handlerObjects;
+      this.interfaces.add(Describable.class);
+      this.builtInHandlers = asList(
+          hashCodeHandler(this),
+          equalsHandler(this, describeIfPossible()),
+          toStringHandler(this, v -> "proxy:" + v.toString()),
+          builderByNameAndParameterTypes("describe").with((self, args) -> this)
+      );
+    }
+
+    private Function<Object, Object> describeIfPossible() {
+      return v -> v instanceof Describable ?
+          ((Describable) v).describe() :
+          v;
+    }
+
+    Stream<MethodHandler> streamAllHandlers() {
+      return Stream.concat(this.handlers.stream(), this.builtInHandlers.stream());
+    }
+
+    @Override
+    public int hashCode() {
+      return handlers.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object anotherObject) {
+      if (this == anotherObject)
+        return true;
+      ProxyDescriptor another;
+      if ((anotherObject instanceof ProxyDescriptor)) {
+        another = (ProxyDescriptor) anotherObject;
+        return (this.interfaces().equals(another.interfaces()) &&
+            this.handlers().equals(another.handlers()) &&
+            this.handlerObjects().equals(another.handlerObjects()));
+      }
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return "osynth:" + this.getClass().getCanonicalName() + "@" + System.identityHashCode(this);
+    }
+
+    protected List<Class<?>> interfaces() {
+      return unmodifiableList(this.interfaces);
+    }
+
+    protected List<MethodHandler> handlers() {
+      return unmodifiableList(this.handlers);
+    }
+
+    protected List<Object> handlerObjects() {
+      return unmodifiableList(this.handlerObjects);
+    }
+  }
+
+  public interface Describable {
+    ProxyDescriptor describe();
   }
 
   private static class ProxyFactory {
-    private final Class<?>[]                                        interfaces;
-    private final List<? extends MethodHandler>                     handlers;
+    private final ProxyDescriptor                                   descriptor;
     private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-    private final List<Object>                                      handlerObjects;
     private final Map<Class<?>, MethodHandles.Lookup>               lookups;
 
-    private ProxyFactory(Class<?>[] interfaces, List<? extends MethodHandler> handlers, List<Object> handlerObjects) {
-      this.interfaces = interfaces;
-      this.handlers = handlers;
+    private ProxyFactory(ProxyDescriptor descriptor) {
+      this.descriptor = descriptor;
       this.methodHandlersCache = new HashMap<>();
-      this.handlerObjects = new ArrayList<>(handlerObjects);
       this.lookups = new HashMap<>();
-      Arrays.stream(this.interfaces).forEach(this::lookup);
+      this.descriptor.interfaces.forEach(this::lookupObjectFor);
     }
 
-    private MethodHandles.Lookup lookup(Class<?> anInterface) {
+    private MethodHandles.Lookup lookupObjectFor(Class<?> anInterface) {
       return this.lookups.computeIfAbsent(anInterface, ProxyFactory::createLookup);
     }
 
-    private static MethodHandles.Lookup createLookup(Class<?> anInterface) {
+    private static synchronized MethodHandles.Lookup createLookup(Class<?> anInterface) {
       Constructor<MethodHandles.Lookup> constructor;
       try {
         constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
@@ -102,7 +190,7 @@ public class ObjectSynthesizer {
     Object create() {
       return Proxy.newProxyInstance(
           ProxyFactory.class.getClassLoader(),
-          this.interfaces,
+          this.descriptor.interfaces.toArray(new Class<?>[0]),
           (proxy, method, args) -> handleMethodCall(proxy, method, args)
       );
     }
@@ -113,25 +201,31 @@ public class ObjectSynthesizer {
 
     private BiFunction<Object, Object[], Object> lookUpMethodCallHandler(Method method) {
       if (!this.methodHandlersCache.containsKey(method)) {
+        method.setAccessible(true);
         this.methodHandlersCache.put(method, createMethodCallHandler(method));
       }
       return this.methodHandlersCache.get(method);
     }
 
     private BiFunction<Object, Object[], Object> createMethodCallHandler(Method method) {
-      return handlers.stream()
+      return this.descriptor.streamAllHandlers()
           .filter(handler -> handler.test(method))
           .map(handler -> (BiFunction<Object, Object[], Object>) handler)
           .findFirst()
           .orElseGet(
-              () -> this.handlerObjects.stream()
+              () -> this.descriptor.handlerObjects().stream()
                   .filter(h -> hasMethod(h.getClass(), method))
                   .map(h -> (BiFunction<Object, Object[], Object>) (Object o, Object[] o2) -> invokeMethod(h, method, o2))
                   .findFirst()
                   .orElseGet(() -> {
-                    if (method.isDefault())
-                      return defaultMethodInvoker(method);
-                    throw new IllegalArgumentException(incompatibleFallbackObject(this.handlerObjects, method));
+                    try {
+                      if (method.isDefault()) {
+                        return defaultMethodInvoker(method);
+                      }
+                      throw new IllegalArgumentException(incompatibleFallbackObject(this.descriptor.handlerObjects(), method));
+                    } catch (Throwable t) {
+                      throw rethrow(t);
+                    }
                   }));
     }
 
@@ -142,18 +236,21 @@ public class ObjectSynthesizer {
                   Arrays.equals(m.getParameterTypes(), method.getParameterTypes()));
     }
 
-    private BiFunction<Object, Object[], Object> defaultMethodInvoker(Method method) {
-      return (self, args) -> invokeDefaultMethodInDeclaringInterface(self, method, args);
+    private BiFunction<Object, Object[], Object> defaultMethodInvoker(Method method) throws IllegalAccessException {
+      MethodHandle preparedMethodHandle = prepareMethodHandle(method);
+      return (self, args) -> invokeDefaultMethodInDeclaringInterface(self, args, preparedMethodHandle);
     }
 
-    private Object invokeDefaultMethodInDeclaringInterface(Object proxy, Method method, Object[] args) {
+    private MethodHandle prepareMethodHandle(Method method) throws IllegalAccessException {
       Class<?> declaringInterface = method.getDeclaringClass();
+      return lookupObjectFor(declaringInterface)
+          .in(declaringInterface)
+          .unreflectSpecial(method, declaringInterface);
+    }
+
+    private Object invokeDefaultMethodInDeclaringInterface(Object proxy, Object[] args, MethodHandle preparedMethodHandle) {
       try {
-        return lookup(declaringInterface)
-            .in(declaringInterface)
-            .unreflectSpecial(method, declaringInterface)
-            .bindTo(proxy)
-            .invokeWithArguments(args);
+        return preparedMethodHandle.bindTo(proxy).invokeWithArguments(args);
       } catch (Throwable throwable) {
         throw rethrow(throwable);
       }

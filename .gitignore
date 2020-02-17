@@ -37,7 +37,8 @@ buildNumber.properties
 hs_err_pid*
 
 .idea/
-Would skip repository target/checkout
+osynth.iml
+# Would skip repository target/checkout
 
 # Emacs backup files
 *~

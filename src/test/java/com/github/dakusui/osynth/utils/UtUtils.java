@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.utils;
 
 
 

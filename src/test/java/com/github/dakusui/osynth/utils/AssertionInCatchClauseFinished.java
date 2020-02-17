@@ -1,7 +1,7 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.utils;
 
 public class AssertionInCatchClauseFinished extends RuntimeException {
-  static AssertionInCatchClauseFinished assertionInCatchClauseFinished() {
+  public static AssertionInCatchClauseFinished assertionInCatchClauseFinished() {
     throw new AssertionInCatchClauseFinished();
   }
 }

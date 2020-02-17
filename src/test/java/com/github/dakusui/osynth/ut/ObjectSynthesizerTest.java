@@ -1,13 +1,21 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
+import com.github.dakusui.osynth.utils.UtBase;
+import com.github.dakusui.osynth.utils.UtUtils;
 import org.junit.Test;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.osynth.UtUtils.nonEmptyString;
+import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
+import static com.github.dakusui.osynth.utils.UtUtils.nonEmptyString;
+import static java.util.Collections.emptyList;
 
 public class ObjectSynthesizerTest extends UtBase {
   interface A {
@@ -19,6 +27,9 @@ public class ObjectSynthesizerTest extends UtBase {
 
   interface B {
     String bMethod();
+  }
+
+  interface X extends A, B {
   }
 
   interface E {
@@ -96,10 +107,13 @@ public class ObjectSynthesizerTest extends UtBase {
     }
   }
 
+  /**
+   * Passes on JDK8
+   */
   @Test(expected = AssertionInCatchClauseFinished.class)
-  public void givenCoreInterface$whenSynthesized$then() {
+  public void givenCoreInterface$whenSynthesized$thenFail() {
     try {
-      new ObjectSynthesizer().addInterface(Serializable.class).addHandlerObject(new Object()).synthesize();
+      System.out.println(new ObjectSynthesizer().addInterface(Serializable.class).addHandlerObject(new Object()).<Object>synthesize());
     } catch (RuntimeException e) {
       assertThat(
           e,
@@ -170,5 +184,92 @@ public class ObjectSynthesizerTest extends UtBase {
             asString("bMethod").equalTo("Overridden B").$()
         )
     );
+  }
+
+  @SuppressWarnings("EqualsWithItself")
+  @Test
+  public void whenEqualsItself$thenTrue() {
+    Object x = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    assertThat(
+        x.equals(x),
+        asBoolean().isTrue().$()
+    );
+  }
+
+  @Test
+  public void givenEmptySynthesizedObjects$whenEquals$thenTrue() {
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    assertThat(
+        x1,
+        asBoolean(call("equals", x2).$()).isTrue().$()
+    );
+  }
+
+  @Test
+  public void givenSynthesizedObjectsFromTheSameDefinitions$whenEquals$thenTrue() {
+    Object o = new Object();
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
+    assertThat(
+        x1,
+        asBoolean(call("equals", x2).$()).isTrue().$()
+    );
+  }
+
+  @Test
+  public void givenSynthesizedObjectsFromDifferentDefinitions$whenEquals$thenFalse() {
+    Object o1 = new Object();
+    Object o2 = new Object();
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o1).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o2).synthesize();
+    assertThat(
+        x1,
+        asBoolean(call("equals", x2).$()).isFalse().$()
+    );
+  }
+
+  @Test(expected = E.EException.class)
+  public void whenErrorThrowingMethodIsInvoked$thenExceptionThrown() {
+    E e = new ObjectSynthesizer().addInterface(E.class).synthesize();
+    System.out.println(e.eMethod());
+  }
+
+  @Test
+  public void givenEmptyProxyDescriptor$whenHashCode$thenEqualToHashCodeFromEmptyList() {
+    ObjectSynthesizer.ProxyDescriptor desc = createEmptyDesc();
+    assertThat(desc.hashCode(), asInteger().equalTo(emptyList().hashCode()).$());
+  }
+
+  @Test
+  public void example() {
+    Arrays.stream(LinkedList.class.getInterfaces()).forEach(System.out::println);
+    System.out.println();
+    Arrays.stream(List.class.getInterfaces()).forEach(System.out::println);
+
+  }
+
+  @Test
+  public void givenNoExplicitInterface$whenSynthesizeObjectInAutoMode$thenDescribable() {
+    X x = ObjectSynthesizer.create(true)
+        .addHandlerObject((X) () -> "bMethodX in lambda")
+        .synthesize();
+    System.out.println(x.bMethod());
+    System.out.println(((ObjectSynthesizer.Describable) x).describe());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void givenNoExplicitInterface$whenSynthesizeObjectInNonAutoMode$thenErrorIsThrown() {
+    B b = ObjectSynthesizer.create(false)
+        .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
+        .synthesize();
+    System.out.println(b.bMethod());
+  }
+
+  protected ObjectSynthesizer.ProxyDescriptor createEmptyDesc() {
+    return new ObjectSynthesizer.ProxyDescriptor(
+        new LinkedList<>(),
+        new LinkedList<>(),
+        new LinkedList<>());
   }
 }
