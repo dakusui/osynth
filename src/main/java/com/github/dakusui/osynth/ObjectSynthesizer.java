@@ -19,9 +19,9 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizer {
-  private final List<Class<?>> interfaces = new LinkedList<>();
-  private List<Object> handlerObjects = new LinkedList<>();
-  private List<MethodHandler> handlers = new LinkedList<>();
+  private final List<Class<?>>      interfaces     = new LinkedList<>();
+  private       List<Object>        handlerObjects = new LinkedList<>();
+  private       List<MethodHandler> handlers       = new LinkedList<>();
 
   public ObjectSynthesizer() {
   }
@@ -44,8 +44,9 @@ public class ObjectSynthesizer {
     return this;
   }
 
-  public Object synthesize() {
-    return this.synthesize(Object.class);
+  @SuppressWarnings("unchecked")
+  public <T> T synthesize() {
+    return (T) this.synthesize(Object.class);
   }
 
   @SuppressWarnings("unchecked")
@@ -85,10 +86,10 @@ public class ObjectSynthesizer {
   }
 
   public static class ProxyDescriptor {
-    private final List<Class<?>> interfaces;
+    private final List<Class<?>>      interfaces;
     private final List<MethodHandler> handlers;
     private final List<MethodHandler> builtInHandlers;
-    private final List<Object> handlerObjects;
+    private final List<Object>        handlerObjects;
 
     public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
       this.interfaces = interfaces;
@@ -134,7 +135,7 @@ public class ObjectSynthesizer {
 
     @Override
     public String toString() {
-      return "osynth:" + ObjectSynthesizer.class.getCanonicalName() + "@" + System.identityHashCode(this);
+      return "osynth:" + this.getClass().getCanonicalName() + "@" + System.identityHashCode(this);
     }
 
     protected List<Class<?>> interfaces() {
@@ -155,9 +156,9 @@ public class ObjectSynthesizer {
   }
 
   private static class ProxyFactory {
-    private final ProxyDescriptor descriptor;
+    private final ProxyDescriptor                                   descriptor;
     private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-    private final Map<Class<?>, MethodHandles.Lookup> lookups;
+    private final Map<Class<?>, MethodHandles.Lookup>               lookups;
 
     private ProxyFactory(ProxyDescriptor descriptor) {
       this.descriptor = descriptor;
@@ -185,7 +186,7 @@ public class ObjectSynthesizer {
       }
     }
 
-    @SuppressWarnings({"Convert2MethodRef"})
+    @SuppressWarnings({ "Convert2MethodRef" })
     Object create() {
       return Proxy.newProxyInstance(
           ProxyFactory.class.getClassLoader(),
