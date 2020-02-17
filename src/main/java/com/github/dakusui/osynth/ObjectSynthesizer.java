@@ -84,7 +84,6 @@ public class ObjectSynthesizer {
       this.builtInHandlers = asList(
           hashCodeHandler(this),
           equalsHandler(this),
-          toStringHandler(this),
           builderByNameAndParameterTypes("describe").with((self, args) -> this)
       );
     }

@@ -97,7 +97,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
         allOf(
             asString("aMethod").equalTo("a is called").$(),
             asString("bMethod").equalTo("b is called").$(),
-            asString("toString").startsWith("com.github.dakusui.osynth.SimpleObjectSynthesizer$1").$(),
+            asString("toString").startsWith("com.github.dakusui.osynth.SimpleObjectSynthesizerTest$1@0").$(),
             asString("cMethod").equalTo("cMethod").$(),
             asString("xMethod").equalTo("xMethod").$(),
             asInteger(call("xMethod").andThen("toString").andThen("length").$()).equalTo(7).$()

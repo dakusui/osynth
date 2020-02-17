@@ -34,10 +34,6 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
     return ObjectSynthesizer.methodCall("hashCode").with((self, args) -> o.hashCode());
   }
 
-  static MethodHandler toStringHandler(Object o) {
-    return ObjectSynthesizer.methodCall("toString").with((self, args) -> o.toString());
-  }
-
   class Builder {
     private final Predicate<Method>                    matcher;
     private       BiFunction<Object, Object[], Object> function;
