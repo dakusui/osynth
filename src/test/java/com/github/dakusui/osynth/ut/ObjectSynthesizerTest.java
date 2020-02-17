@@ -194,7 +194,7 @@ public class ObjectSynthesizerTest extends UtBase {
     Object x2 = new ObjectSynthesizer().addInterface(A.class).synthesize();
     assertThat(
         x1,
-        asBoolean(call("equals", x2).$()).isFalse().$()
+        asBoolean(call("equals", x2).$()).isTrue().$()
     );
   }
 
@@ -211,6 +211,18 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test
   public void test4() {
+    Object o1 = new Object();
+    Object o2 = new Object();
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o1).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o2).synthesize();
+    assertThat(
+        x1,
+        asBoolean(call("equals", x2).$()).isFalse().$()
+    );
+  }
+
+  @Test
+  public void test5() {
     Object o = new Object();
     Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
     assertThat(x1.toString(), asString().startsWith("proxy:osynth@").$());

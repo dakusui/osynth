@@ -60,8 +60,6 @@ public class ObjectSynthesizer {
   }
 
   private ProxyFactory createProxyFactory() {
-    if (this.handlerObjects.isEmpty())
-      this.handlerObjects.add(new Object());
     ProxyDescriptor descriptor = createProxyDescriptor(interfaces, handlers, handlerObjects);
     return new ProxyFactory(descriptor);
   }
