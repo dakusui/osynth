@@ -7,11 +7,13 @@ import com.github.dakusui.osynth.utils.UtUtils;
 import org.junit.Test;
 
 import java.io.Serializable;
+import java.util.LinkedList;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.utils.UtUtils.nonEmptyString;
+import static java.util.Collections.emptyList;
 
 public class ObjectSynthesizerTest extends UtBase {
   interface A {
@@ -226,5 +228,31 @@ public class ObjectSynthesizerTest extends UtBase {
     Object o = new Object();
     Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
     assertThat(x1.toString(), asString().startsWith("proxy:osynth@").$());
+  }
+
+  @SuppressWarnings("EqualsWithItself")
+  @Test
+  public void test6() {
+    ObjectSynthesizer.ProxyDescriptor desc = createDesc();
+    assertThat(desc.equals(desc), asBoolean().isTrue().$());
+  }
+
+  @Test(expected = E.EException.class)
+  public void test7() {
+    E e = new ObjectSynthesizer().addInterface(E.class).synthesize(E.class);
+    System.out.println(e.eMethod());
+  }
+
+  @Test
+  public void test8() {
+    ObjectSynthesizer.ProxyDescriptor desc = createDesc();
+    assertThat(desc.hashCode(), asInteger().equalTo(emptyList().hashCode()).$());
+  }
+
+  protected ObjectSynthesizer.ProxyDescriptor createDesc() {
+    return new ObjectSynthesizer.ProxyDescriptor(
+        new LinkedList<>(),
+        new LinkedList<>(),
+        new LinkedList<>());
   }
 }

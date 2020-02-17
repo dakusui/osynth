@@ -46,6 +46,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
 
   @Before
   public void before() {
+    super.before();
     this.handlerObject = createX("");
   }
 

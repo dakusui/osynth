@@ -1,5 +1,6 @@
 package com.github.dakusui.osynth;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -147,14 +148,14 @@ public class ObjectSynthesizer {
       this.descriptor = descriptor;
       this.methodHandlersCache = new HashMap<>();
       this.lookups = new HashMap<>();
-      this.descriptor.interfaces.forEach(this::lookup);
+      this.descriptor.interfaces.forEach(this::lookupObjectFor);
     }
 
-    private MethodHandles.Lookup lookup(Class<?> anInterface) {
+    private MethodHandles.Lookup lookupObjectFor(Class<?> anInterface) {
       return this.lookups.computeIfAbsent(anInterface, ProxyFactory::createLookup);
     }
 
-    private static MethodHandles.Lookup createLookup(Class<?> anInterface) {
+    private static synchronized MethodHandles.Lookup createLookup(Class<?> anInterface) {
       Constructor<MethodHandles.Lookup> constructor;
       try {
         constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
@@ -184,6 +185,7 @@ public class ObjectSynthesizer {
 
     private BiFunction<Object, Object[], Object> lookUpMethodCallHandler(Method method) {
       if (!this.methodHandlersCache.containsKey(method)) {
+        method.setAccessible(true);
         this.methodHandlersCache.put(method, createMethodCallHandler(method));
       }
       return this.methodHandlersCache.get(method);
@@ -200,9 +202,14 @@ public class ObjectSynthesizer {
                   .map(h -> (BiFunction<Object, Object[], Object>) (Object o, Object[] o2) -> invokeMethod(h, method, o2))
                   .findFirst()
                   .orElseGet(() -> {
-                    if (method.isDefault())
-                      return defaultMethodInvoker(method);
-                    throw new IllegalArgumentException(incompatibleFallbackObject(this.descriptor.handlerObjects(), method));
+                    try {
+                      if (method.isDefault()) {
+                        return defaultMethodInvoker(method);
+                      }
+                      throw new IllegalArgumentException(incompatibleFallbackObject(this.descriptor.handlerObjects(), method));
+                    } catch (Throwable t) {
+                      throw rethrow(t);
+                    }
                   }));
     }
 
@@ -213,18 +220,21 @@ public class ObjectSynthesizer {
                   Arrays.equals(m.getParameterTypes(), method.getParameterTypes()));
     }
 
-    private BiFunction<Object, Object[], Object> defaultMethodInvoker(Method method) {
-      return (self, args) -> invokeDefaultMethodInDeclaringInterface(self, method, args);
+    private BiFunction<Object, Object[], Object> defaultMethodInvoker(Method method) throws IllegalAccessException {
+      MethodHandle preparedMethodHandle = prepareMethodHandle(method);
+      return (self, args) -> invokeDefaultMethodInDeclaringInterface(self, args, preparedMethodHandle);
     }
 
-    private Object invokeDefaultMethodInDeclaringInterface(Object proxy, Method method, Object[] args) {
+    private MethodHandle prepareMethodHandle(Method method) throws IllegalAccessException {
       Class<?> declaringInterface = method.getDeclaringClass();
+      return lookupObjectFor(declaringInterface)
+          .in(declaringInterface)
+          .unreflectSpecial(method, declaringInterface);
+    }
+
+    private Object invokeDefaultMethodInDeclaringInterface(Object proxy, Object[] args, MethodHandle preparedMethodHandle) {
       try {
-        return lookup(declaringInterface)
-            .in(declaringInterface)
-            .unreflectSpecial(method, declaringInterface)
-            .bindTo(proxy)
-            .invokeWithArguments(args);
+        return preparedMethodHandle.bindTo(proxy).invokeWithArguments(args);
       } catch (Throwable throwable) {
         throw rethrow(throwable);
       }
@@ -233,7 +243,6 @@ public class ObjectSynthesizer {
     private static Object invokeMethod(Object object, Method method, Object[] args) {
       try {
         try {
-          method.setAccessible(true);
           return method.invoke(object, args);
         } catch (InvocationTargetException e) {
           throw e.getTargetException();
