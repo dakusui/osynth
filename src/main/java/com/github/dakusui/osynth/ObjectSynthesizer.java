@@ -19,11 +19,18 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizer {
-  private final List<Class<?>>      interfaces     = new LinkedList<>();
-  private       List<Object>        handlerObjects = new LinkedList<>();
-  private       List<MethodHandler> handlers       = new LinkedList<>();
+  public static final FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc ->
+      method ->
+          (self, args) -> {
+            throw new IllegalArgumentException(noHandlerFound(desc.handlerObjects, method));
+          };
+  private final       List<Class<?>>         interfaces                       = new LinkedList<>();
+  private             List<Object>           handlerObjects                   = new LinkedList<>();
+  private             List<MethodHandler>    handlers                         = new LinkedList<>();
+  private             FallbackHandlerFactory fallbackHandlerFactory;
 
   public ObjectSynthesizer() {
+    this.fallbackHandlerFactory(DEFAULT_FALLBACK_HANDLER_FACTORY);
   }
 
   public ObjectSynthesizer addInterface(Class<?> anInterface) {
@@ -44,6 +51,11 @@ public class ObjectSynthesizer {
     return this;
   }
 
+  public ObjectSynthesizer fallbackHandlerFactory(FallbackHandlerFactory fallbackHandlerFactory) {
+    this.fallbackHandlerFactory = requireNonNull(fallbackHandlerFactory);
+    return this;
+  }
+
   @SuppressWarnings("unchecked")
   public <T> T synthesize() {
     return (T) this.synthesize(Object.class);
@@ -59,12 +71,16 @@ public class ObjectSynthesizer {
   }
 
   private ProxyFactory createProxyFactory() {
-    ProxyDescriptor descriptor = createProxyDescriptor(interfaces, handlers, handlerObjects);
+    ProxyDescriptor descriptor = createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory);
     return new ProxyFactory(descriptor);
   }
 
-  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
-    return new ProxyDescriptor(interfaces, handlers, handlerObjects);
+  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
+    return new ProxyDescriptor(
+        interfaces,
+        handlers,
+        handlerObjects,
+        fallbackHandlerFactory);
   }
 
   public static ObjectSynthesizer create(boolean auto) {
@@ -85,13 +101,18 @@ public class ObjectSynthesizer {
     return MethodHandler.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
   }
 
-  public static class ProxyDescriptor {
-    private final List<Class<?>>      interfaces;
-    private final List<MethodHandler> handlers;
-    private final List<MethodHandler> builtInHandlers;
-    private final List<Object>        handlerObjects;
+  @FunctionalInterface
+  public interface FallbackHandlerFactory extends Function<ProxyDescriptor, Function<Method, BiFunction<Object, Object[], Object>>> {
+  }
 
-    public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects) {
+  public static class ProxyDescriptor {
+    private final List<Class<?>>         interfaces;
+    private final List<MethodHandler>    handlers;
+    private final List<MethodHandler>    builtInHandlers;
+    private final List<Object>           handlerObjects;
+    private final FallbackHandlerFactory fallbackHandlerFactory;
+
+    public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
       this.interfaces = interfaces;
       this.handlers = handlers;
       this.handlerObjects = handlerObjects;
@@ -102,6 +123,7 @@ public class ObjectSynthesizer {
           toStringHandler(this, v -> "proxy:" + v.toString()),
           builderByNameAndParameterTypes("describe").with((self, args) -> this)
       );
+      this.fallbackHandlerFactory = fallbackHandlerFactory;
     }
 
     private Function<Object, Object> describeIfPossible() {
@@ -128,7 +150,8 @@ public class ObjectSynthesizer {
         another = (ProxyDescriptor) anotherObject;
         return (this.interfaces().equals(another.interfaces()) &&
             this.handlers().equals(another.handlers()) &&
-            this.handlerObjects().equals(another.handlerObjects()));
+            this.handlerObjects().equals(another.handlerObjects())) &&
+            this.fallbackHandlerFactory.equals(another.fallbackHandlerFactory);
       }
       return false;
     }
@@ -148,6 +171,10 @@ public class ObjectSynthesizer {
 
     protected List<Object> handlerObjects() {
       return unmodifiableList(this.handlerObjects);
+    }
+
+    public BiFunction<Object, Object[], Object> fallbackHandler(Method method) {
+      return this.fallbackHandlerFactory.apply(this).apply(method);
     }
   }
 
@@ -222,11 +249,15 @@ public class ObjectSynthesizer {
                       if (method.isDefault()) {
                         return defaultMethodInvoker(method);
                       }
-                      throw new IllegalArgumentException(incompatibleFallbackObject(this.descriptor.handlerObjects(), method));
+                      return invokeFallbackHandler(method, descriptor);
                     } catch (Throwable t) {
                       throw rethrow(t);
                     }
                   }));
+    }
+
+    private static BiFunction<Object, Object[], Object> invokeFallbackHandler(Method method, ProxyDescriptor descriptor) {
+      return descriptor.fallbackHandler(method);
     }
 
     private boolean hasMethod(Class<?> aClass, Method method) {

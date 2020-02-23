@@ -8,12 +8,11 @@ import static java.lang.String.format;
 public enum Messages {
   ;
 
-  static String incompatibleFallbackObject(Object fallbackObject, Method method) {
+  static String noHandlerFound(Object fallbackObject, Method method) {
     return format(
-        "Fallback object:'%s' is not assignable to '%s', which declares requested method:'%s'",
-        fallbackObject,
-        method.getDeclaringClass().getCanonicalName(),
-        method);
+        "No appropriate handler for the requested method:'%s' was found in fallback object:'%s'",
+        method,
+        fallbackObject);
   }
 
   static <T> String noMatchingInterface(Class<T> anInterface, List<Class<?>> interfaces) {
@@ -24,7 +23,7 @@ public enum Messages {
 
   public static String failedToInstantiate(Class<?> anInterface) {
     return format(
-        "Failed to create a method handles lookup for interface:'%s'. Probably, it is prohibited on the interface.",
+        "Failed to create a method handles lookup for interface:'%s'. Probably, it is prohibited for the interface by your platform.",
         anInterface.getCanonicalName());
   }
 
