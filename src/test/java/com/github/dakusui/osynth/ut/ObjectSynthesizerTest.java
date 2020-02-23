@@ -68,13 +68,16 @@ public class ObjectSynthesizerTest extends UtBase {
     try {
       System.out.println(x.bMethod());
     } catch (IllegalArgumentException e) {
+      // No appropriate handler for the requested method:'public abstract java.lang.String com.github.dakusui.osynth.ut.ObjectSynthesizerTest$B.bMethod()' was found in fallback object:'[java.lang.Object@39ba5a14]'
       assertThat(
           e,
           asString(call("getMessage").$())
               .check(
-                  substringAfterRegex("Fallback object:")
-                      .after("is not assignable to")
-                      .after(", which declares requested method:")
+                  substringAfterRegex("No appropriate handler")
+                      .after("ObjectSynthesizerTest\\$B")
+                      .after("bMethod")
+                      .after("was found in fallback object")
+                      .after("java.lang.Object")
                       .$(),
                   nonEmptyString())
               .containsString("bMethod").$());
@@ -105,6 +108,32 @@ public class ObjectSynthesizerTest extends UtBase {
               .$());
       assertionInCatchClauseFinished();
     }
+  }
+
+  interface TestFunction {
+    String apply(String value);
+  }
+
+  @Test(expected = AssertionInCatchClauseFinished.class)
+  public void givenErrorThrowingFallbackHandlerIsGiven$whenInvokeMethod$thenIntendedErrorThrown() {
+    TestFunction x = new ObjectSynthesizer()
+        .addInterface(TestFunction.class)
+        .fallbackHandlerFactory(proxyDescriptor -> {
+          throw new AssertionInCatchClauseFinished();
+        })
+        .synthesize();
+    x.apply("hello");
+  }
+
+  @Test(expected = AssertionInCatchClauseFinished.class)
+  public void givenErrorValueReturningFallbackHandlerIsGiven$whenInvokeMethod$thenIntendedValueReturned() {
+    TestFunction x = new ObjectSynthesizer()
+        .addInterface(TestFunction.class)
+        .fallbackHandlerFactory(proxyDescriptor -> {
+          throw new AssertionInCatchClauseFinished();
+        })
+        .synthesize();
+    assertThat(x.apply("hello"), asString().equalTo("hello").$());
   }
 
   /**
@@ -270,6 +299,7 @@ public class ObjectSynthesizerTest extends UtBase {
     return new ObjectSynthesizer.ProxyDescriptor(
         new LinkedList<>(),
         new LinkedList<>(),
-        new LinkedList<>());
+        new LinkedList<>(),
+        ObjectSynthesizer.DEFAULT_FALLBACK_HANDLER_FACTORY);
   }
 }
