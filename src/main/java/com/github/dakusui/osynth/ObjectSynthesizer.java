@@ -148,9 +148,9 @@ public class ObjectSynthesizer {
       ProxyDescriptor another;
       if ((anotherObject instanceof ProxyDescriptor)) {
         another = (ProxyDescriptor) anotherObject;
-        return (this.interfaces().equals(another.interfaces()) &&
+        return this.interfaces().equals(another.interfaces()) &&
             this.handlers().equals(another.handlers()) &&
-            this.handlerObjects().equals(another.handlerObjects())) &&
+            this.handlerObjects().equals(another.handlerObjects()) &&
             this.fallbackHandlerFactory.equals(another.fallbackHandlerFactory);
       }
       return false;

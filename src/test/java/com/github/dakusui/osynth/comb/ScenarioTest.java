@@ -8,6 +8,7 @@ import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.SimpleObjectSynthesizer;
 import com.github.dakusui.osynth.comb.model.ExceptionType;
 import com.github.dakusui.osynth.comb.model.MethodType;
 import com.github.dakusui.osynth.comb.model.ObjectSynthesizerWrapper;
@@ -110,6 +111,11 @@ public class ScenarioTest {
     return exceptionType == ExceptionType.CHECKED_EXCEPTION;
   }
 
+  @Condition
+  public boolean onlyOneInterfaceIsSpecified(@From("numInterfaces") int numInterfaces) {
+    return numInterfaces == 1;
+  }
+
   @Test
   public void print(@From("auto") boolean auto,
       @From("numMethodHandlers") int numMethodHandlers,
@@ -160,11 +166,15 @@ public class ScenarioTest {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Object obj1 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
     Object obj2 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object objX = new Object();
+    System.out.println(obj1.equals(obj2));
     assertThat(
         obj1,
         allOf(
-            not(asObject().equalTo(obj2).$()),
-            asObject().equalTo(obj1).$()));
+            asObject().equalTo(obj2).$(),
+            asObject().equalTo(obj1).$(),
+            not(asObject().equalTo(objX).$())
+        ));
   }
 
   @Given("runtimeExceptionThrowingMethod")
@@ -216,7 +226,8 @@ public class ScenarioTest {
 
   @Given("checkedExceptionThrowingMethod")
   @Test
-  public void whenSynthesized$thenTargetMethodThrowsCheckedException(@From("auto") boolean auto,
+  public void whenSynthesized$thenTargetMethodThrowsCheckedException(
+      @From("auto") boolean auto,
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numInterfaces") int numInterfaces,
       @From("numHandlerObjects") int numHandlerObjects,
@@ -237,6 +248,29 @@ public class ScenarioTest {
     );
   }
 
+  @Given("normalReturningMethod&&onlyOneInterfaceIsSpecified")
+  @Test
+  public void whenSynthesizedWithSimpleObjectSynthesizer$thenTargetMethodIsRun(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
+    Class<?>[] interfaces = targetMethodDef.getMethodType().interfaces(targetMethodDef.getExceptionType());
+    Object obj = new ObjectSynthesizerWrapper(SimpleObjectSynthesizer.create(interfaces[0]))
+        .addMethodHandlers(targetMethodDef, numMethodHandlers)
+        .addHandlerObjects(targetMethodDef, numHandlerObjects)
+        .setFallbackHandlerFactory(targetMethodDef, customFallback)
+        .synthesize();
+    assertThat(
+        obj,
+        asString(targetMethodDef.methodName(), targetMethodDef.args())
+            .containsString(targetMethodDef.methodName())
+            .$()
+    );
+  }
+
   public static Throwable getRootCause(Throwable e) {
     Throwable cause = e.getCause();
     if (cause == null)
@@ -244,7 +278,13 @@ public class ScenarioTest {
     return getRootCause(cause);
   }
 
-  public Object synthesizeObject(@From("auto") boolean auto, @From("numInterfaces") int numMethodHandlers, @From("numInterfaces") int numInterfaces, @From("numHandlerObjects") int numHandlerObjects, @From("customFallback") boolean customFallback, TargetMethodDef targetMethodDef) {
+  public static Object synthesizeObject(
+      boolean auto,
+      int numMethodHandlers,
+      int numInterfaces,
+      int numHandlerObjects,
+      boolean customFallback,
+      TargetMethodDef targetMethodDef) {
     ObjectSynthesizer objectSynthesizer = ObjectSynthesizer.create(auto);
     return new ObjectSynthesizerWrapper(objectSynthesizer)
         .addMethodHandlers(targetMethodDef, numMethodHandlers)
