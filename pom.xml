@@ -24,7 +24,7 @@
         <developerConnection>scm:git:git@github.com:dakusui/osynth.git
         </developerConnection>
         <url>http://dakusui.github.io/osynth</url>
-        <tag>osynth-5.1.x</tag>
+        <tag>osynth-1.0.x</tag>
     </scm>
 
     <developers>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>com.github.dakusui</groupId>
             <artifactId>thincrest</artifactId>
-            <version>4.0.0</version>
+            <version>4.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

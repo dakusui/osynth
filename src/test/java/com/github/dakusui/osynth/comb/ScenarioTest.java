@@ -1,26 +1,20 @@
 package com.github.dakusui.osynth.comb;
 
-import com.github.dakusui.crest.Crest;
+import com.github.dakusui.crest.core.ExecutionFailure;
 import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.Condition;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.From;
+import com.github.dakusui.jcunit8.runners.junit4.annotations.Given;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.ParameterSource;
-import com.github.dakusui.osynth.MethodHandler;
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.comb.def.*;
+import com.github.dakusui.osynth.comb.model.ExceptionType;
+import com.github.dakusui.osynth.comb.model.MethodType;
+import com.github.dakusui.osynth.comb.model.ObjectSynthesizerWrapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.BiFunction;
-
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.osynth.Utils.rethrow;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 /**
@@ -39,101 +33,6 @@ import static java.util.Arrays.asList;
  */
 @RunWith(JCUnit8.class)
 public class ScenarioTest {
-  public enum MethodType {
-    NORMAL {
-      @Override
-      public BiFunction<Object, Object[], Object> createMethodHandler(int numArgs, Class<?>[] argTypes, ExceptionType exceptionType) {
-        return (self, args) -> format("apply%s(%s) on methodHandler", numArgs, Arrays.toString(argTypes));
-      }
-
-      @Override
-      public Class<?>[] interfaces(ExceptionType exceptionType) {
-        return new Class[]{I1N.class, I2N.class};
-      }
-
-      @Override
-      public ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
-        return proxyDescriptor -> method -> (o, objects) -> String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes()));
-      }
-
-      @Override
-      public List<?> handlerObjects(ExceptionType exceptionType) {
-        return asList(
-            (I) () -> "I[1](handlerObject)",
-            () -> "I[2](handlerObject)");
-      }
-    },
-    EXCEPTION {
-      @Override
-      public BiFunction<Object, Object[], Object> createMethodHandler(int numArgs, Class<?>[] argTypes, ExceptionType exceptionType) {
-        return (self, args) -> exceptionType.create(format("apply%s(%s) on methodHandler", numArgs, Arrays.toString(argTypes)));
-      }
-
-      @Override
-      public Class<?>[] interfaces(ExceptionType exceptionType) {
-        return new Class[]{I1E.class, I2E.class};
-      }
-
-      @Override
-      public ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
-        return proxyDescriptor -> method -> (o, objects) -> {
-          try {
-            throw exceptionType.create(String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes())));
-          } catch (Throwable throwable) {
-            throw rethrow(throwable);
-          }
-        };
-      }
-
-      @Override
-      public List<?> handlerObjects(ExceptionType exceptionType) {
-        return asList(
-            (I) () -> {
-              throw exceptionType.create("I[1](handlerObject)");
-            },
-            () -> {
-              throw exceptionType.create("I[2](handlerObject)");
-            });
-      }
-    };
-
-    public abstract BiFunction<Object, Object[], Object> createMethodHandler(int numArgs, Class<?>[] argTypes, ExceptionType exceptionType);
-
-    public abstract Class<?>[] interfaces(ExceptionType exceptionType);
-
-    public abstract ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType);
-
-    public abstract List<?> handlerObjects(ExceptionType exceptionType);
-  }
-
-  public enum ExceptionType {
-    RUNTIME_EXCEPTION {
-      @Override
-      Throwable create(String meesage) {
-        throw new RuntimeException(meesage);
-      }
-    },
-    ERROR {
-      @Override
-      Throwable create(String message) {
-        throw new Error(message);
-      }
-    },
-    CHEKED_EXCEPTION {
-      @Override
-      Throwable create(String message) {
-        return new IOException(message);
-      }
-    },
-    NONE {
-      @Override
-      Throwable create(String message) {
-        return null;
-      }
-    };
-
-    abstract Throwable create(String message);
-  }
 
   @ParameterSource
   public Parameter.Factory<Boolean> auto() {
@@ -141,8 +40,13 @@ public class ScenarioTest {
   }
 
   @ParameterSource
-  public Parameter.Factory<Integer> numInterfaces() {
+  public Parameter.Factory<Integer> numMethodHandlers() {
     return Parameter.Simple.Factory.of(asList(1, 2, 0));
+  }
+
+  @ParameterSource
+  public Parameter.Factory<Integer> numInterfaces() {
+    return Parameter.Simple.Factory.of(asList(1, 2));
   }
 
   @ParameterSource
@@ -167,104 +71,186 @@ public class ScenarioTest {
 
   @ParameterSource
   public Parameter.Factory<ExceptionType> exceptionType() {
-    return Parameter.Simple.Factory.of(asList(ExceptionType.NONE, ExceptionType.CHEKED_EXCEPTION, ExceptionType.RUNTIME_EXCEPTION, ExceptionType.ERROR));
+    return Parameter.Simple.Factory.of(asList(ExceptionType.NONE, ExceptionType.CHECKED_EXCEPTION, ExceptionType.RUNTIME_EXCEPTION, ExceptionType.ERROR));
   }
 
   @Condition(constraint = true)
-  public boolean cons(@From("methodType") MethodType methodType, @From("exceptionType") ExceptionType exceptionType) {
+  public boolean ifMethodTypeIsNormalExceptionTypeMustBeNull(@From("methodType") MethodType methodType, @From("exceptionType") ExceptionType exceptionType) {
     if (methodType == MethodType.NORMAL)
       return exceptionType == ExceptionType.NONE;
     return true;
   }
 
-  //  @Ignore
-//  @Test
-  public void example() {
-    Object obj = new ObjectSynthesizer()
-        .handle(createMethodHandler(1, MethodType.NORMAL, null))
-        .addHandlerObject(new Object())
-        .addInterface(I1N.class)
-        .addInterface(I2N.class)
-        .fallbackHandlerFactory(createFallbackHandlerFactory(MethodType.NORMAL, null))
-        .synthesize();
-    Crest.assertThat(
+  @Condition(constraint = true)
+  public boolean atLeastOneHandlerPresent(
+      @From("numMethodHandlers") Integer numMethodHandlers,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback
+  ) {
+    return (numMethodHandlers != null && numMethodHandlers > 0) || numHandlerObjects > 0 || customFallback;
+  }
+
+  @Condition
+  public boolean normalReturningMethod(@From("methodType") MethodType methodType) {
+    return methodType == MethodType.NORMAL;
+  }
+
+  @Condition
+  public boolean runtimeExceptionThrowingMethod(@From("exceptionType") ExceptionType exceptionType) {
+    return exceptionType == ExceptionType.RUNTIME_EXCEPTION;
+  }
+
+  @Condition
+  public boolean errorThrowingMethod(@From("exceptionType") ExceptionType exceptionType) {
+    return exceptionType == ExceptionType.ERROR;
+  }
+
+  @Condition
+  public boolean checkedExceptionThrowingMethod(@From("exceptionType") ExceptionType exceptionType) {
+    return exceptionType == ExceptionType.CHECKED_EXCEPTION;
+  }
+
+  @Test
+  public void print(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    System.out.printf("auto:%s, numMethodHandlers:%s, numInterfaces=%s, numHandlerObjects=%s, customFallback=%s, methodType=%s, numArgs=%s, exceptionType=%s%n",
+        auto,
+        numMethodHandlers,
+        numInterfaces,
+        numHandlerObjects,
+        customFallback,
+        methodType,
+        numArgs,
+        exceptionType
+    );
+  }
+
+  @Given("normalReturningMethod")
+  @Test
+  public void whenSynthesized$thenTargetMethodIsRun(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
         obj,
-        asString("apply1", 100).equalTo("apply1").$()
+        asString(targetMethodDef.methodName(), targetMethodDef.args())
+            .containsString(targetMethodDef.methodName())
+            .$()
     );
   }
 
   @Test
-  public void test2(@From("auto") boolean auto,
-                    @From("numInterfaces") int numInterfaces,
-                    @From("numHandlerObjects") int numHandlerObjects,
-                    @From("customFallback") boolean customFallback,
-                    @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
-                    @From("exceptionType") ExceptionType exceptionType
-  ) {
-    ObjectSynthesizer objectSynthesizer = ObjectSynthesizer.create(auto);
-    Object obj = new ObjectSynthesizerWrapper(objectSynthesizer)
-        .addMethodHandlers(methodType, numArgs, exceptionType)
-        .addHandlerObjects(methodType, exceptionType, numHandlerObjects)
-        .addInterfaces(methodType, exceptionType, numInterfaces)
-        .setFallbackHandlerFactory(methodType, exceptionType, customFallback)
-        .synthesize();
-    Crest.assertThat(
-        obj,
+  public void testEquals(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
+    Object obj1 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object obj2 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj1,
         allOf(
-            asString("apply1", 100).containsString("apply1").$(),
-            asBoolean("equals", obj).isTrue().$(),
-            asBoolean(call("equals", (Object) null).$()).isFalse().$()
-        )
+            not(asObject().equalTo(obj2).$()),
+            asObject().equalTo(obj1).$()));
+  }
+
+  @Given("runtimeExceptionThrowingMethod")
+  @Test
+
+  public void whenSynthesized$thenTargetMethodThrowsRuntimeException(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThrows(
+        ExceptionType.IntentionalRuntimeException.class,
+        () -> {
+          try {
+            assertThat(obj, asString(targetMethodDef.methodName(), targetMethodDef.args()).$());
+          } catch (ExecutionFailure e) {
+            throw getRootCause(e);
+          }
+        }
     );
   }
 
-  private static ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(MethodType methodType, ExceptionType exceptionType) {
-    return methodType.createFallbackHandlerFactory(exceptionType);
+  @Given("errorThrowingMethod")
+  @Test
+  public void whenSynthesized$thenTargetMethodThrowsError(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThrows(
+        ExceptionType.IntentionalError.class,
+        () -> {
+          try {
+            assertThat(obj, asString(targetMethodDef.methodName(), targetMethodDef.args()).$());
+          } catch (ExecutionFailure e) {
+            throw getRootCause(e);
+          }
+        }
+    );
   }
 
-  public static MethodHandler createMethodHandler(int numArgs, MethodType methodType, ExceptionType exceptionType) {
-    Class<?>[] argTypes = new Class[numArgs];
-    for (int i = 0; i < numArgs; i++)
-      argTypes[i] = int.class;
-    BiFunction<Object, Object[], Object> methodHandlingFunction;
-    methodHandlingFunction = methodType.createMethodHandler(numArgs, argTypes, exceptionType);
-    return methodCall(format("apply%s", numArgs), argTypes).with(methodHandlingFunction);
+  @Given("checkedExceptionThrowingMethod")
+  @Test
+  public void whenSynthesized$thenTargetMethodThrowsCheckedException(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThrows(
+        ExceptionType.IntentionalCheckedException.class,
+        () -> {
+          try {
+            assertThat(obj, asString(targetMethodDef.methodName(), targetMethodDef.args()).$());
+          } catch (ExecutionFailure e) {
+            throw getRootCause(e);
+          }
+        }
+    );
   }
 
-  static class ObjectSynthesizerWrapper {
-    final ObjectSynthesizer objectSynthesizer;
+  public static Throwable getRootCause(Throwable e) {
+    Throwable cause = e.getCause();
+    if (cause == null)
+      return e;
+    return getRootCause(cause);
+  }
 
-    ObjectSynthesizerWrapper(ObjectSynthesizer objectSynthesizer) {
-      this.objectSynthesizer = objectSynthesizer;
-    }
-
-    private ObjectSynthesizerWrapper addInterfaces(MethodType methodType, ExceptionType exceptionType, int numInterfaces) {
-      Class<?>[] interfaces = methodType.interfaces(exceptionType);
-      for (int i = 0; i < numInterfaces; i++)
-        objectSynthesizer.addInterface(interfaces[i]);
-      return this;
-    }
-
-    public ObjectSynthesizerWrapper addHandlerObjects(MethodType methodType, ExceptionType exceptionType, int numHandlerObjects) {
-      List<?> handlerObjects = methodType.handlerObjects(exceptionType);
-      for (int i = 0; i < numHandlerObjects; i++)
-        objectSynthesizer.addHandlerObject(handlerObjects.get(i));
-      return this;
-    }
-
-    public ObjectSynthesizerWrapper setFallbackHandlerFactory(MethodType methodType, ExceptionType exceptionType, boolean customFallback) {
-      if (customFallback)
-        objectSynthesizer.fallbackHandlerFactory(createFallbackHandlerFactory(methodType, exceptionType));
-      return this;
-    }
-
-    public ObjectSynthesizerWrapper addMethodHandlers(MethodType methodType, int numArgs, ExceptionType exceptionType) {
-      return new ObjectSynthesizerWrapper(objectSynthesizer.handle(createMethodHandler(numArgs, methodType, exceptionType)));
-    }
-
-    public <T> T synthesize() {
-      return this.objectSynthesizer.synthesize();
-    }
-
+  public Object synthesizeObject(@From("auto") boolean auto, @From("numInterfaces") int numMethodHandlers, @From("numInterfaces") int numInterfaces, @From("numHandlerObjects") int numHandlerObjects, @From("customFallback") boolean customFallback, TargetMethodDef targetMethodDef) {
+    ObjectSynthesizer objectSynthesizer = ObjectSynthesizer.create(auto);
+    return new ObjectSynthesizerWrapper(objectSynthesizer)
+        .addMethodHandlers(targetMethodDef, numMethodHandlers)
+        .addHandlerObjects(targetMethodDef, numHandlerObjects)
+        .addInterfaces(targetMethodDef, numInterfaces)
+        .setFallbackHandlerFactory(targetMethodDef, customFallback)
+        .synthesize();
   }
 }
