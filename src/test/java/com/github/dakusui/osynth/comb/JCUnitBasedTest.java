@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.utils.UtUtils.rootCause;
 import static java.util.Arrays.asList;
+import static java.util.Objects.requireNonNull;
 
 /**
  * I1,
@@ -134,8 +135,8 @@ public class JCUnitBasedTest extends UtBase {
   }
 
   @Condition
-  public boolean onlyOneInterface(@From("numInterfaces") int numInterfaces) {
-    return numInterfaces == 1;
+  public boolean noInterface(@From("numInterfaces") int numInterfaces) {
+    return numInterfaces == 0;
   }
 
   @Test
@@ -188,7 +189,14 @@ public class JCUnitBasedTest extends UtBase {
                                                     @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
-    assertThrows(IllegalArgumentException.class, () -> System.out.println(((I)obj).apply0()));
+    assertThrows(IllegalArgumentException.class, () -> {
+      try {
+        System.out.println(((I) obj).apply0());
+      } catch (IllegalArgumentException e) {
+        assertThat(e.getMessage(), asString().containsString("No appropriate handler for the requested method").$());
+        throw e;
+      }
+    });
   }
 
   @Test
@@ -288,7 +296,7 @@ public class JCUnitBasedTest extends UtBase {
     );
   }
 
-  @Given("normalReturningMethod&&atLeastOneHandlerPresent&&onlyOneInterface")
+  @Given("normalReturningMethod&&atLeastOneHandlerPresent&&noInterface")
   @Test
   public void whenSynthesizedWithSimpleObjectSynthesizer$thenTargetMethodIsRun(
       @From("numMethodHandlers") int numMethodHandlers,
@@ -298,7 +306,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Class<?>[] interfaces = targetMethodDef.getMethodType().interfaces(targetMethodDef.getExceptionType());
-    Object obj = new ObjectSynthesizerWrapper(SimpleObjectSynthesizer.create(interfaces[0]))
+    Object obj = new ObjectSynthesizerWrapper(requireNonNull(SimpleObjectSynthesizer.create(interfaces[0])))
         .addMethodHandlers(targetMethodDef, numMethodHandlers)
         .addHandlerObjects(targetMethodDef, numHandlerObjects)
         .setFallbackHandlerFactory(targetMethodDef, customFallback)

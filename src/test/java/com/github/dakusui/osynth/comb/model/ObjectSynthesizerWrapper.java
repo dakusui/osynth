@@ -12,6 +12,7 @@ import static com.github.dakusui.crest.Crest.asString;
 import static com.github.dakusui.crest.Crest.assertThat;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizerWrapper {
   final ObjectSynthesizer objectSynthesizer;
@@ -36,26 +37,26 @@ public class ObjectSynthesizerWrapper {
   public ObjectSynthesizerWrapper addInterfaces(TargetMethodDef targetMethodDef, int numInterfaces) {
     Class<?>[] interfaces = targetMethodDef.getMethodType().interfaces(targetMethodDef.getExceptionType());
     for (int i = 0; i < numInterfaces; i++)
-      objectSynthesizer.addInterface(interfaces[i]);
+      requireNonNull(objectSynthesizer.addInterface(interfaces[i]));
     return this;
   }
 
   public ObjectSynthesizerWrapper addHandlerObjects(TargetMethodDef targetMethodDef, int numHandlerObjects) {
     List<?> handlerObjects = targetMethodDef.getMethodType().handlerObjects(targetMethodDef.getExceptionType());
     for (int i = 0; i < numHandlerObjects; i++)
-      objectSynthesizer.addHandlerObject(handlerObjects.get(i));
+      requireNonNull(objectSynthesizer.addHandlerObject(handlerObjects.get(i)));
     return this;
   }
 
   public ObjectSynthesizerWrapper setFallbackHandlerFactory(TargetMethodDef targetMethodDef, boolean customFallback) {
     if (customFallback)
-      objectSynthesizer.fallbackHandlerFactory(createFallbackHandlerFactory(targetMethodDef.getMethodType(), targetMethodDef.getExceptionType()));
+      requireNonNull(objectSynthesizer.fallbackHandlerFactory(createFallbackHandlerFactory(targetMethodDef.getMethodType(), targetMethodDef.getExceptionType())));
     return this;
   }
 
   public ObjectSynthesizerWrapper addMethodHandlers(TargetMethodDef targetMethodDef, int numMethodHandlers) {
     for (int i = 0; i < numMethodHandlers; i++)
-      objectSynthesizer.handle(createMethodHandler(targetMethodDef.getNumArgs(), targetMethodDef.getMethodType(), targetMethodDef.getExceptionType()));
+      requireNonNull(objectSynthesizer.handle(createMethodHandler(targetMethodDef.getNumArgs(), targetMethodDef.getMethodType(), targetMethodDef.getExceptionType())));
     return this;
   }
 
