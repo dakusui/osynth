@@ -12,10 +12,12 @@ import com.github.dakusui.osynth.SimpleObjectSynthesizer;
 import com.github.dakusui.osynth.comb.model.ExceptionType;
 import com.github.dakusui.osynth.comb.model.MethodType;
 import com.github.dakusui.osynth.comb.model.ObjectSynthesizerWrapper;
+import com.github.dakusui.osynth.comb.model.TargetMethodDef;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static com.github.dakusui.crest.Crest.*;
+import static com.github.dakusui.osynth.utils.UtUtils.rootCause;
 import static java.util.Arrays.asList;
 
 /**
@@ -33,7 +35,7 @@ import static java.util.Arrays.asList;
  * Me: 0, 1      ... thrown exception or not
  */
 @RunWith(JCUnit8.class)
-public class ScenarioTest {
+public class JCUnitBasedTest {
 
   @ParameterSource
   public Parameter.Factory<Boolean> auto() {
@@ -76,19 +78,19 @@ public class ScenarioTest {
   }
 
   @Condition(constraint = true)
-  public boolean ifMethodTypeIsNormalExceptionTypeMustBeNull(@From("methodType") MethodType methodType, @From("exceptionType") ExceptionType exceptionType) {
+  public boolean whenMethodTypeIsNormalExceptionTypeIsAlsoNull(@From("methodType") MethodType methodType, @From("exceptionType") ExceptionType exceptionType) {
     if (methodType == MethodType.NORMAL)
       return exceptionType == ExceptionType.NONE;
-    return true;
+    return exceptionType != ExceptionType.NONE;
   }
 
   @Condition(constraint = true)
   public boolean atLeastOneHandlerPresent(
-      @From("numMethodHandlers") Integer numMethodHandlers,
+      @From("numMethodHandlers") int numMethodHandlers,
       @From("numHandlerObjects") int numHandlerObjects,
       @From("customFallback") boolean customFallback
   ) {
-    return (numMethodHandlers != null && numMethodHandlers > 0) || numHandlerObjects > 0 || customFallback;
+    return numMethodHandlers > 0 || numHandlerObjects > 0 || customFallback;
   }
 
   @Condition
@@ -112,7 +114,7 @@ public class ScenarioTest {
   }
 
   @Condition
-  public boolean onlyOneInterfaceIsSpecified(@From("numInterfaces") int numInterfaces) {
+  public boolean onlyOneInterface(@From("numInterfaces") int numInterfaces) {
     return numInterfaces == 1;
   }
 
@@ -155,6 +157,25 @@ public class ScenarioTest {
     );
   }
 
+  @Given("normalReturningMethod&&!atLeastOneHandlerPresent")
+  @Test
+  public void whenSynthesized$thenNoHandlerReported(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj,
+        asString(targetMethodDef.methodName(), targetMethodDef.args())
+            .containsString(targetMethodDef.methodName())
+            .$()
+    );
+  }
+
   @Test
   public void testEquals(@From("auto") boolean auto,
       @From("numMethodHandlers") int numMethodHandlers,
@@ -171,15 +192,19 @@ public class ScenarioTest {
     assertThat(
         obj1,
         allOf(
-            asObject().equalTo(obj2).$(),
-            asObject().equalTo(obj1).$(),
-            not(asObject().equalTo(objX).$())
-        ));
+            allOf(
+                asObject().equalTo(obj2).$(),
+                asBoolean("equals", obj2).isTrue().$(),
+                asInteger("hashCode").equalTo(obj2.hashCode()).$()),
+            allOf(
+                asObject().equalTo(obj1).$(),
+                asBoolean("equals", obj1).isTrue().$(),
+                asInteger("hashCode").equalTo(obj1.hashCode()).$()),
+            not(asObject().equalTo(objX).$())));
   }
 
   @Given("runtimeExceptionThrowingMethod")
   @Test
-
   public void whenSynthesized$thenTargetMethodThrowsRuntimeException(@From("auto") boolean auto,
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numInterfaces") int numInterfaces,
@@ -195,7 +220,7 @@ public class ScenarioTest {
           try {
             assertThat(obj, asString(targetMethodDef.methodName(), targetMethodDef.args()).$());
           } catch (ExecutionFailure e) {
-            throw getRootCause(e);
+            throw rootCause(e);
           }
         }
     );
@@ -216,9 +241,16 @@ public class ScenarioTest {
         ExceptionType.IntentionalError.class,
         () -> {
           try {
-            assertThat(obj, asString(targetMethodDef.methodName(), targetMethodDef.args()).$());
-          } catch (ExecutionFailure e) {
-            throw getRootCause(e);
+            try {
+              assertThat(obj, asString(targetMethodDef.methodName(), targetMethodDef.args()).$());
+            } catch (ExecutionFailure e) {
+              throw rootCause(e);
+            }
+          } catch (ExceptionType.IntentionalRuntimeException e) {
+            if (numInterfaces > 0 && numHandlerObjects == 0 && numMethodHandlers == 0)
+              throw new ExceptionType.IntentionalError(e.getMessage());
+            else
+              throw e;
           }
         }
     );
@@ -242,15 +274,15 @@ public class ScenarioTest {
           try {
             assertThat(obj, asString(targetMethodDef.methodName(), targetMethodDef.args()).$());
           } catch (ExecutionFailure e) {
-            throw getRootCause(e);
+            throw rootCause(e);
           }
         }
     );
   }
 
-  @Given("normalReturningMethod&&onlyOneInterfaceIsSpecified")
+  @Given("normalReturningMethod&&onlyOneInterface")
   @Test
-  public void whenSynthesizedWithSimpleObjectSynthesizer$thenTargetMethodIsRun(@From("auto") boolean auto,
+  public void whenSynthesizedWithSimpleObjectSynthesizer$thenTargetMethodIsRun(
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numHandlerObjects") int numHandlerObjects,
       @From("customFallback") boolean customFallback,
@@ -269,13 +301,6 @@ public class ScenarioTest {
             .containsString(targetMethodDef.methodName())
             .$()
     );
-  }
-
-  public static Throwable getRootCause(Throwable e) {
-    Throwable cause = e.getCause();
-    if (cause == null)
-      return e;
-    return getRootCause(cause);
   }
 
   public static Object synthesizeObject(

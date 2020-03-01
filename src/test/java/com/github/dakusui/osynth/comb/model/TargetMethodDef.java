@@ -1,7 +1,4 @@
-package com.github.dakusui.osynth.comb;
-
-import com.github.dakusui.osynth.comb.model.ExceptionType;
-import com.github.dakusui.osynth.comb.model.MethodType;
+package com.github.dakusui.osynth.comb.model;
 
 public class TargetMethodDef {
   private final MethodType    methodType;

@@ -2,7 +2,6 @@ package com.github.dakusui.osynth.comb.model;
 
 import com.github.dakusui.osynth.MethodHandler;
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.comb.TargetMethodDef;
 import com.github.dakusui.osynth.comb.def.I1N;
 import com.github.dakusui.osynth.comb.def.I2N;
 

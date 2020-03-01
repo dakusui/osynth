@@ -35,7 +35,7 @@ public enum ExceptionType {
   }
 
   public static class IntentionalError extends Error {
-    IntentionalError(String message) {
+    public IntentionalError(String message) {
       super(message);
     }
   }
