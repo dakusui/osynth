@@ -26,7 +26,7 @@ public enum MethodType {
 
     @Override
     public Class<?>[] interfaces(ExceptionType exceptionType) {
-      return new Class[] { I1N.class, I2N.class };
+      return new Class[]{I1N.class, I2N.class};
     }
 
     @Override
@@ -41,8 +41,28 @@ public enum MethodType {
     @Override
     public List<?> handlerObjects(ExceptionType exceptionType) {
       handlerObjectPool.computeIfAbsent(exceptionType, e -> asList(
-          (I) () -> "I[1](handlerObject)",
-          () -> "I[2](handlerObject)"));
+          new I1() {
+            @Override
+            public String apply0_2() {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String implementorName() {
+              return "I[1](handlerObject)";
+            }
+          },
+          new I2() {
+            @Override
+            public String apply0_1() {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String implementorName() {
+              return "I[2](handlerObject)";
+            }
+          }));
       return handlerObjectPool.get(exceptionType);
     }
   },
@@ -64,7 +84,7 @@ public enum MethodType {
 
     @Override
     public Class<?>[] interfaces(ExceptionType exceptionType) {
-      return new Class[] { I1E.class, I2E.class };
+      return exceptionType.createInterfaces();
     }
 
     @Override
@@ -82,11 +102,27 @@ public enum MethodType {
     @Override
     public List<?> handlerObjects(ExceptionType exceptionType) {
       handlerObjectPool.computeIfAbsent(exceptionType, e -> asList(
-          (I) () -> {
-            throw exceptionType.createException("I[1](handlerObject)");
+          new I1() {
+            @Override
+            public String apply0_2() throws Throwable {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String implementorName() throws Throwable {
+              throw exceptionType.createException("I[1](handlerObject)");
+            }
           },
-          () -> {
-            throw exceptionType.createException("I[2](handlerObject)");
+          new I2() {
+            @Override
+            public String apply0_1() {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String implementorName() throws Throwable {
+              throw exceptionType.createException("I[2](handlerObject)");
+            }
           }));
       return handlerObjectPool.get(exceptionType);
     }

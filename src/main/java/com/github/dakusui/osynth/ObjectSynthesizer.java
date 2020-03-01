@@ -24,10 +24,10 @@ public class ObjectSynthesizer {
           (self, args) -> {
             throw new IllegalArgumentException(noHandlerFound(desc.handlerObjects, method));
           };
-  private final       List<Class<?>>         interfaces                       = new LinkedList<>();
-  private             List<Object>           handlerObjects                   = new LinkedList<>();
-  private             List<MethodHandler>    handlers                         = new LinkedList<>();
-  private             FallbackHandlerFactory fallbackHandlerFactory;
+  private final List<Class<?>> interfaces = new LinkedList<>();
+  private List<Object> handlerObjects = new LinkedList<>();
+  private List<MethodHandler> handlers = new LinkedList<>();
+  private FallbackHandlerFactory fallbackHandlerFactory;
 
   public ObjectSynthesizer() {
     this.fallbackHandlerFactory(DEFAULT_FALLBACK_HANDLER_FACTORY);
@@ -106,10 +106,10 @@ public class ObjectSynthesizer {
   }
 
   public static class ProxyDescriptor {
-    private final List<Class<?>>         interfaces;
-    private final List<MethodHandler>    handlers;
-    private final List<MethodHandler>    builtInHandlers;
-    private final List<Object>           handlerObjects;
+    private final List<Class<?>> interfaces;
+    private final List<MethodHandler> handlers;
+    private final List<MethodHandler> builtInHandlers;
+    private final List<Object> handlerObjects;
     private final FallbackHandlerFactory fallbackHandlerFactory;
 
     public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
@@ -183,9 +183,9 @@ public class ObjectSynthesizer {
   }
 
   private static class ProxyFactory {
-    private final ProxyDescriptor                                   descriptor;
+    private final ProxyDescriptor descriptor;
     private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-    private final Map<Class<?>, MethodHandles.Lookup>               lookups;
+    private final Map<Class<?>, MethodHandles.Lookup> lookups;
 
     private ProxyFactory(ProxyDescriptor descriptor) {
       this.descriptor = descriptor;
@@ -213,7 +213,7 @@ public class ObjectSynthesizer {
       }
     }
 
-    @SuppressWarnings({ "Convert2MethodRef" })
+    @SuppressWarnings({"Convert2MethodRef"})
     Object create() {
       return Proxy.newProxyInstance(
           ProxyFactory.class.getClassLoader(),
@@ -246,14 +246,28 @@ public class ObjectSynthesizer {
                   .findFirst()
                   .orElseGet(() -> {
                     try {
-                      if (method.isDefault()) {
-                        return defaultMethodInvoker(method);
-                      }
+                      Optional<Method> methodOptional = this.descriptor.interfaces()
+                          .stream()
+                          .map(each -> getMethodFrom(method, each))
+                          .filter(Optional::isPresent)
+                          .map(Optional::get)
+                          .filter(Method::isDefault)
+                          .findFirst();
+                      if (methodOptional.isPresent())
+                        return defaultMethodInvoker(methodOptional.get());
                       return invokeFallbackHandler(method, descriptor);
                     } catch (Throwable t) {
                       throw rethrow(t);
                     }
                   }));
+    }
+
+    private Optional<Method> getMethodFrom(Method method, Class<?> each) {
+      try {
+        return Optional.of(each.getMethod(method.getName(), method.getParameterTypes()));
+      } catch (NoSuchMethodException e) {
+        return Optional.empty();
+      }
     }
 
     private static BiFunction<Object, Object[], Object> invokeFallbackHandler(Method method, ProxyDescriptor descriptor) {

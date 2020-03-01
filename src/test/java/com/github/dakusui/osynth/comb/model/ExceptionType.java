@@ -1,10 +1,17 @@
 package com.github.dakusui.osynth.comb.model;
 
+import com.github.dakusui.osynth.comb.def.*;
+
 public enum ExceptionType {
   RUNTIME_EXCEPTION {
     @Override
     Throwable createException(String meesage) {
       throw new IntentionalRuntimeException(meesage);
+    }
+
+    @Override
+    public Class<?>[] createInterfaces() {
+      return new Class[]{I1RuntimeException.class, I2RuntimeException.class};
     }
   },
   ERROR {
@@ -12,11 +19,21 @@ public enum ExceptionType {
     Throwable createException(String message) {
       throw new IntentionalError(message);
     }
+
+    @Override
+    public Class<?>[] createInterfaces() {
+      return new Class[]{I1Error.class, I2Error.class};
+    }
   },
   CHECKED_EXCEPTION {
     @Override
     Throwable createException(String message) throws Throwable {
       throw new IntentionalCheckedException(message);
+    }
+
+    @Override
+    public Class<?>[] createInterfaces() {
+      return new Class[]{I1CheckedException.class, I2CheckedException.class};
     }
   },
   NONE {
@@ -24,9 +41,16 @@ public enum ExceptionType {
     Throwable createException(String message) {
       throw new RuntimeException();
     }
+
+    @Override
+    public Class<?>[] createInterfaces() {
+      return new Class[]{I1N.class, I2N.class};
+    }
   };
 
   abstract Throwable createException(String message) throws Throwable;
+
+  public abstract Class<?>[] createInterfaces();
 
   public static class IntentionalRuntimeException extends RuntimeException {
     public IntentionalRuntimeException(String message) {
@@ -41,7 +65,7 @@ public enum ExceptionType {
   }
 
   public static class IntentionalCheckedException extends Exception {
-    IntentionalCheckedException(String message) {
+    public IntentionalCheckedException(String message) {
       super(message);
     }
   }
