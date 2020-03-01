@@ -53,6 +53,7 @@ public class JCUnitBasedTest extends UtBase {
               .put("methodType", MethodType.NORMAL)
               .put("exceptionType", ExceptionType.NONE)
               .build())
+          .withStrength(3)
           .build();
     }
   }
