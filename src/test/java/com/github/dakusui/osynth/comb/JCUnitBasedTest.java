@@ -53,7 +53,7 @@ public class JCUnitBasedTest extends UtBase {
               .put("methodType", MethodType.NORMAL)
               .put("exceptionType", ExceptionType.NONE)
               .build())
-          .withStrength(3)
+          .withStrength(2)
           .build();
     }
   }
@@ -116,6 +116,16 @@ public class JCUnitBasedTest extends UtBase {
   }
 
   @Condition
+  public boolean secondIsProvided(
+      @From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("numInterfaces") int numInterfaces
+  ) {
+    return numInterfaces >= 2 || (auto && (numMethodHandlers >= 2 || numHandlerObjects >= 2));
+  }
+
+  @Condition
   public boolean normalReturningMethod(@From("methodType") MethodType methodType) {
     return methodType == MethodType.NORMAL;
   }
@@ -142,12 +152,12 @@ public class JCUnitBasedTest extends UtBase {
 
   @Test
   public void print(@From("auto") boolean auto,
-                    @From("numMethodHandlers") int numMethodHandlers,
-                    @From("numInterfaces") int numInterfaces,
-                    @From("numHandlerObjects") int numHandlerObjects,
-                    @From("customFallback") boolean customFallback,
-                    @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
-                    @From("exceptionType") ExceptionType exceptionType) {
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
     System.out.printf("auto:%s, numMethodHandlers:%s, numInterfaces=%s, numHandlerObjects=%s, customFallback=%s, methodType=%s, numArgs=%s, exceptionType=%s%n",
         auto,
         numMethodHandlers,
@@ -163,31 +173,71 @@ public class JCUnitBasedTest extends UtBase {
   @Given("normalReturningMethod&&atLeastOneHandlerPresent")
   @Test
   public void whenSynthesized$thenTargetMethodIsRun(@From("auto") boolean auto,
-                                                    @From("numMethodHandlers") int numMethodHandlers,
-                                                    @From("numInterfaces") int numInterfaces,
-                                                    @From("numHandlerObjects") int numHandlerObjects,
-                                                    @From("customFallback") boolean customFallback,
-                                                    @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
-                                                    @From("exceptionType") ExceptionType exceptionType) {
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
     assertThat(
         obj,
         asString(targetMethodDef.methodName(), targetMethodDef.args())
-            .containsString(targetMethodDef.methodName())
-            .$()
-    );
+            .containsString(targetMethodDef.methodName()).$());
+  }
+
+  @Given("normalReturningMethod&&atLeastOneHandlerPresent")
+  @Test
+  public void whenSynthesized$thenMethodWrittenBothIsRun(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj,
+        asString("apply0_both").containsString("apply0_both:I1:").$());
+  }
+
+  @Given("normalReturningMethod&&atLeastOneHandlerPresent")
+  @Test
+  public void whenSynthesized$thenMethodWrittenInFirstIsRun(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj,
+        asString("apply0_1").containsString("apply0_1:I1:").$());
+  }
+
+  @Given("normalReturningMethod&&secondIsProvided")
+  @Test
+  public void whenSynthesized$thenMethodWrittenInSecondIsRun(@From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj,
+        asString("apply0_2").containsString("apply0_2:I2:").$());
   }
 
   @Given("normalReturningMethod&&!atLeastOneHandlerPresent")
   @Test
   public void whenSynthesized$thenNoHandlerReported(@From("auto") boolean auto,
-                                                    @From("numMethodHandlers") int numMethodHandlers,
-                                                    @From("numInterfaces") int numInterfaces,
-                                                    @From("numHandlerObjects") int numHandlerObjects,
-                                                    @From("customFallback") boolean customFallback,
-                                                    @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
-                                                    @From("exceptionType") ExceptionType exceptionType) {
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
     assertThrows(IllegalArgumentException.class, () -> {
@@ -202,12 +252,12 @@ public class JCUnitBasedTest extends UtBase {
 
   @Test
   public void testEquals(@From("auto") boolean auto,
-                         @From("numMethodHandlers") int numMethodHandlers,
-                         @From("numInterfaces") int numInterfaces,
-                         @From("numHandlerObjects") int numHandlerObjects,
-                         @From("customFallback") boolean customFallback,
-                         @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
-                         @From("exceptionType") ExceptionType exceptionType) {
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Object obj1 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
     Object obj2 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
@@ -230,12 +280,12 @@ public class JCUnitBasedTest extends UtBase {
   @Given("runtimeExceptionThrowingMethod&&atLeastOneHandlerPresent")
   @Test
   public void whenSynthesized$thenTargetMethodThrowsRuntimeException(@From("auto") boolean auto,
-                                                                     @From("numMethodHandlers") int numMethodHandlers,
-                                                                     @From("numInterfaces") int numInterfaces,
-                                                                     @From("numHandlerObjects") int numHandlerObjects,
-                                                                     @From("customFallback") boolean customFallback,
-                                                                     @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
-                                                                     @From("exceptionType") ExceptionType exceptionType) {
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
     assertThrows(
@@ -253,12 +303,12 @@ public class JCUnitBasedTest extends UtBase {
   @Given("errorThrowingMethod&&atLeastOneHandlerPresent")
   @Test
   public void whenSynthesized$thenTargetMethodThrowsError(@From("auto") boolean auto,
-                                                          @From("numMethodHandlers") int numMethodHandlers,
-                                                          @From("numInterfaces") int numInterfaces,
-                                                          @From("numHandlerObjects") int numHandlerObjects,
-                                                          @From("customFallback") boolean customFallback,
-                                                          @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
-                                                          @From("exceptionType") ExceptionType exceptionType) {
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numInterfaces") int numInterfaces,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("customFallback") boolean customFallback,
+      @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
+      @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
     assertThrows(
