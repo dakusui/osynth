@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.dakusui</groupId>
@@ -23,7 +24,7 @@
         <developerConnection>scm:git:git@github.com:dakusui/osynth.git
         </developerConnection>
         <url>http://dakusui.github.io/osynth</url>
-        <tag>osynth-5.1.x</tag>
+        <tag>osynth-1.0.x</tag>
     </scm>
 
     <developers>
@@ -50,8 +51,20 @@
         <dependency>
             <groupId>com.github.dakusui</groupId>
             <artifactId>thincrest</artifactId>
-            <version>4.0.0</version>
-            <scope>compile</scope>
+            <version>4.1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.dakusui</groupId>
+            <artifactId>jcunit</artifactId>
+            <version>0.8.17</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.opentest4j</groupId>
+            <artifactId>opentest4j</artifactId>
+            <version>1.2.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

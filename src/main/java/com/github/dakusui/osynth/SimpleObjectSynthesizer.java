@@ -1,7 +1,5 @@
 package com.github.dakusui.osynth;
 
-import java.util.List;
-
 public class SimpleObjectSynthesizer<T> extends ObjectSynthesizer {
 
   private final Class<T> primaryInterface;
@@ -27,6 +25,7 @@ public class SimpleObjectSynthesizer<T> extends ObjectSynthesizer {
     return (SimpleObjectSynthesizer<T>) super.handle(handler);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public T synthesize() {
     return super.synthesize(this.primaryInterface);
