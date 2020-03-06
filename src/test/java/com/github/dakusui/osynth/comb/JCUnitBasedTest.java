@@ -42,19 +42,16 @@ public class JCUnitBasedTest extends UtBase {
   public static class ConfigFactory extends com.github.dakusui.jcunit8.pipeline.stages.ConfigFactory.Base {
     @Override
     protected Requirement defineRequirement(Requirement.Builder defaultValues) {
-      return new Requirement.Builder()
-          .addSeed(Tuple.builder()
-              .put("auto", false)
-              .put("numMethodHandlers", 0)
-              .put("numInterfaces", 0)
-              .put("numHandlerObjects", 0)
-              .put("customFallback", false)
-              .put("numArgs", 1)
-              .put("methodType", MethodType.NORMAL)
-              .put("exceptionType", ExceptionType.NONE)
-              .build())
-          .withStrength(2)
-          .build();
+      return defaultValues.addSeed(Tuple.builder()
+          .put("auto", false)
+          .put("numMethodHandlers", 1)
+          .put("numInterfaces", 1)
+          .put("numHandlerObjects", 1)
+          .put("customFallback", false)
+          .put("numArgs", 1)
+          .put("methodType", MethodType.NORMAL)
+          .put("exceptionType", ExceptionType.NONE)
+          .build()).build();
     }
   }
 
@@ -110,8 +107,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numHandlerObjects") int numHandlerObjects,
       @From("numInterfaces") int numInterfaces,
-      @From("customFallback") boolean customFallback
-  ) {
+      @From("customFallback") boolean customFallback) {
     return numMethodHandlers > 0 || numHandlerObjects > 0 || numInterfaces > 0 || customFallback;
   }
 
@@ -120,8 +116,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("auto") boolean auto,
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numHandlerObjects") int numHandlerObjects,
-      @From("numInterfaces") int numInterfaces
-  ) {
+      @From("numInterfaces") int numInterfaces) {
     return numInterfaces >= 2 || (auto && (numMethodHandlers >= 2 || numHandlerObjects >= 2));
   }
 
