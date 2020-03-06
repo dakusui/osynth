@@ -23,6 +23,13 @@ public class Examples {
   interface HelloWorld extends HelloWithDefault, Bye {
   }
 
+  public static class Howdy {
+    public String howdy() {
+      return "Howdy!";
+    }
+  }
+
+
   @Test
   public void example1() {
     HelloWorld helloWorld = new ObjectSynthesizer()
@@ -71,5 +78,22 @@ public class Examples {
     Bye bye = (Bye) hello;
     System.out.println(hello.hello("world"));
     System.out.println(bye.bye());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void error1() {
+    Howdy howdy = new ObjectSynthesizer()
+        .addHandlerObject(new Howdy())
+        .synthesize();
+    System.out.println(howdy.howdy());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void error2() {
+    Howdy howdy = new ObjectSynthesizer()
+        .addHandlerObject(new Howdy())
+        .handle(methodCall("howdy").with((self, args) -> "howdy..."))
+        .synthesize();
+    System.out.println(howdy.howdy());
   }
 }
