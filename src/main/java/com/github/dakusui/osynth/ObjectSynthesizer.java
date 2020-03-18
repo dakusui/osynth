@@ -41,6 +41,26 @@ public class ObjectSynthesizer {
     return this;
   }
 
+  /**
+   * In a situation, where a method in the {@code handlerObject} calls another method in the interface directly or indirectly
+   * and you intend to override the callee method's behavior by the {@link ObjectSynthesizer}, it results in a counter-intuitive
+   * behavior.
+   * <p>
+   * Since implementation of a default method is "synthesized" in an implementation class when the implementing class is compiled,
+   * call on the callee method from the caller is invoked directly on "this", not through the dynamic proxy.
+   * Hence the method handler is ignored even if it is given to the object synthesize for the callee method.
+   * <p>
+   * Best practice to avoid this is not to add a handler object that implements an interface that has default methods.
+   * That is,
+   * 1. Create a separated interface S that contains only no default methods and extend it by your original interface.
+   * 2. Instantiate an object that implements S and add it to the synthesizer through this method.
+   * Another approach is,
+   * Create an object that has a public method (or methods) you desire to override its behavior and add it to the synthesizer through this method.
+   * The second approach is easier but a bit more error-prone since it cannot rely on the compiler for the correctness of the method's signature.
+   *
+   * @param handlerObject An object that handles method invocation
+   * @return This object
+   */
   public ObjectSynthesizer addHandlerObject(Object handlerObject) {
     this.handlerObjects.add(requireNonNull(handlerObject));
     return this;
@@ -304,13 +324,28 @@ public class ObjectSynthesizer {
     private static Object invokeMethod(Object object, Method method, Object[] args) {
       try {
         try {
-          return method.invoke(object, args);
+          method = findMethodInObjectIfNecessary(object, method);
+          boolean wasAccessible = method.isAccessible();
+          method.setAccessible(true);
+          try {
+            return method.invoke(object, args);
+          } finally {
+            method.setAccessible(wasAccessible);
+          }
         } catch (InvocationTargetException e) {
           throw e.getTargetException();
         }
       } catch (Throwable e) {
         throw rethrow(e);
       }
+    }
+
+    private static Method findMethodInObjectIfNecessary(Object object, Method method) throws NoSuchMethodException {
+      assert object.getClass().getMethod(method.getName(), method.getParameterTypes()) != null : String.format("Method:%s presence check in %s should have been done already", method, object.getClass());
+      if (method.getDeclaringClass().isInstance(object))
+        return method;
+      method = object.getClass().getMethod(method.getName(), method.getParameterTypes());
+      return method;
     }
   }
 }
