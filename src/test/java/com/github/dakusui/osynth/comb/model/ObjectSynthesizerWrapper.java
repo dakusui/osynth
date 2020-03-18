@@ -16,6 +16,14 @@ import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizerWrapper {
   final ObjectSynthesizer objectSynthesizer;
+  final MethodHandler[]   methodHandlersRegisteredAlways = new MethodHandler[] {
+      methodCall("apply0_both").with((o, objects) -> "apply0_both:I1:methodHandler"),
+      methodCall("apply0_both").with((o, objects) -> "apply0_both:I2:methodHandler")
+  };
+  final MethodHandler[]   methodHandlersForEachInterface = new MethodHandler[] {
+      methodCall("apply0_1").with((o, objects) -> "apply0_1:I1:methodHandler"),
+      methodCall("apply0_2").with((o, objects) -> "apply0_2:I2:methodHandler")
+  };
 
   public ObjectSynthesizerWrapper(ObjectSynthesizer objectSynthesizer) {
     this.objectSynthesizer = objectSynthesizer;
@@ -55,8 +63,12 @@ public class ObjectSynthesizerWrapper {
   }
 
   public ObjectSynthesizerWrapper addMethodHandlers(TargetMethodDef targetMethodDef, int numMethodHandlers) {
-    for (int i = 0; i < numMethodHandlers; i++)
+    for (MethodHandler each : methodHandlersRegisteredAlways)
+      objectSynthesizer.handle(each);
+    for (int i = 0; i < numMethodHandlers; i++) {
       requireNonNull(objectSynthesizer.handle(createMethodHandler(targetMethodDef.getNumArgs(), targetMethodDef.getMethodType(), targetMethodDef.getExceptionType())));
+      objectSynthesizer.handle(methodHandlersForEachInterface[i]);
+    }
     return this;
   }
 
@@ -64,9 +76,7 @@ public class ObjectSynthesizerWrapper {
     return this.objectSynthesizer.synthesize();
   }
 
-  //  @Ignore
-  //  @Test
-  public void example() {
+  private static void example() {
     Object obj = new ObjectSynthesizer()
         .handle(ObjectSynthesizerWrapper.createMethodHandler(1, MethodType.NORMAL, null))
         .addHandlerObject(new Object())
@@ -80,5 +90,8 @@ public class ObjectSynthesizerWrapper {
     );
   }
 
+  public static void main(String... args) {
+    example();
+  }
 }
 

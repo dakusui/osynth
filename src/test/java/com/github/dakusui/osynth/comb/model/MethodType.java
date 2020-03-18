@@ -1,7 +1,10 @@
 package com.github.dakusui.osynth.comb.model;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.comb.def.*;
+import com.github.dakusui.osynth.comb.def.I1;
+import com.github.dakusui.osynth.comb.def.I1N;
+import com.github.dakusui.osynth.comb.def.I2;
+import com.github.dakusui.osynth.comb.def.I2N;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,7 +29,7 @@ public enum MethodType {
 
     @Override
     public Class<?>[] interfaces(ExceptionType exceptionType) {
-      return new Class[]{I1N.class, I2N.class};
+      return new Class[] { I1N.class, I2N.class };
     }
 
     @Override
@@ -40,29 +43,33 @@ public enum MethodType {
 
     @Override
     public List<?> handlerObjects(ExceptionType exceptionType) {
-      handlerObjectPool.computeIfAbsent(exceptionType, e -> asList(
-          new I1() {
-            @Override
-            public String apply0_2() {
-              throw new UnsupportedOperationException();
-            }
+      handlerObjectPool.computeIfAbsent(exceptionType, e -> {
+        I2 i2 = new I2() {
+          @Override
+          public String apply0_1() {
+            throw new UnsupportedOperationException();
+          }
 
-            @Override
-            public String implementorName() {
-              return "I[1](handlerObject)";
-            }
-          },
-          new I2() {
-            @Override
-            public String apply0_1() {
-              throw new UnsupportedOperationException();
-            }
+          @Override
+          public String implementorName() {
+            return "I[2](handlerObject)";
+          }
+        };
+        I1 i1 = new I1() {
+          @Override
+          public String apply0_2() {
+            return i2.apply0_2();
+          }
 
-            @Override
-            public String implementorName() {
-              return "I[2](handlerObject)";
-            }
-          }));
+          @Override
+          public String implementorName() {
+            return "I[1](handlerObject)";
+          }
+        };
+        return asList(
+            i1,
+            i2);
+      });
       return handlerObjectPool.get(exceptionType);
     }
   },
@@ -101,29 +108,34 @@ public enum MethodType {
 
     @Override
     public List<?> handlerObjects(ExceptionType exceptionType) {
-      handlerObjectPool.computeIfAbsent(exceptionType, e -> asList(
-          new I1() {
-            @Override
-            public String apply0_2() throws Throwable {
-              throw new UnsupportedOperationException();
-            }
+      handlerObjectPool.computeIfAbsent(exceptionType, e -> {
+        I2 i2 = new I2() {
+          @Override
+          public String apply0_1() {
+            throw new UnsupportedOperationException();
+          }
 
-            @Override
-            public String implementorName() throws Throwable {
-              throw exceptionType.createException("I[1](handlerObject)");
-            }
-          },
-          new I2() {
-            @Override
-            public String apply0_1() {
-              throw new UnsupportedOperationException();
-            }
+          @Override
+          public String implementorName() throws Throwable {
+            throw exceptionType.createException("I[2](handlerObject)");
+          }
+        };
+        I1 i1 = new I1() {
+          @Override
+          public String apply0_2() {
+            return i2.apply0_2();
+          }
 
-            @Override
-            public String implementorName() throws Throwable {
-              throw exceptionType.createException("I[2](handlerObject)");
-            }
-          }));
+          @Override
+          public String implementorName() throws Throwable {
+            throw exceptionType.createException("I[1](handlerObject)");
+          }
+        };
+
+        return asList(
+            i1,
+            i2);
+      });
       return handlerObjectPool.get(exceptionType);
     }
 

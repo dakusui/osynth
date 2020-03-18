@@ -14,6 +14,7 @@ import com.github.dakusui.osynth.comb.model.MethodType;
 import com.github.dakusui.osynth.comb.model.ObjectSynthesizerWrapper;
 import com.github.dakusui.osynth.comb.model.TargetMethodDef;
 import com.github.dakusui.osynth.utils.UtBase;
+import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -42,19 +43,16 @@ public class JCUnitBasedTest extends UtBase {
   public static class ConfigFactory extends com.github.dakusui.jcunit8.pipeline.stages.ConfigFactory.Base {
     @Override
     protected Requirement defineRequirement(Requirement.Builder defaultValues) {
-      return new Requirement.Builder()
-          .addSeed(Tuple.builder()
-              .put("auto", false)
-              .put("numMethodHandlers", 0)
-              .put("numInterfaces", 0)
-              .put("numHandlerObjects", 0)
-              .put("customFallback", false)
-              .put("numArgs", 1)
-              .put("methodType", MethodType.NORMAL)
-              .put("exceptionType", ExceptionType.NONE)
-              .build())
-          .withStrength(3)
-          .build();
+      return defaultValues.addSeed(Tuple.builder()
+          .put("auto", false)
+          .put("numMethodHandlers", 1)
+          .put("numInterfaces", 1)
+          .put("numHandlerObjects", 1)
+          .put("customFallback", false)
+          .put("numArgs", 1)
+          .put("methodType", MethodType.NORMAL)
+          .put("exceptionType", ExceptionType.NONE)
+          .build()).build();
     }
   }
 
@@ -110,9 +108,17 @@ public class JCUnitBasedTest extends UtBase {
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numHandlerObjects") int numHandlerObjects,
       @From("numInterfaces") int numInterfaces,
-      @From("customFallback") boolean customFallback
-  ) {
+      @From("customFallback") boolean customFallback) {
     return numMethodHandlers > 0 || numHandlerObjects > 0 || numInterfaces > 0 || customFallback;
+  }
+
+  @Condition
+  public boolean secondIsProvided(
+      @From("auto") boolean auto,
+      @From("numMethodHandlers") int numMethodHandlers,
+      @From("numHandlerObjects") int numHandlerObjects,
+      @From("numInterfaces") int numInterfaces) {
+    return numInterfaces >= 2 || (auto && (numMethodHandlers >= 2 || numHandlerObjects >= 2));
   }
 
   @Condition
@@ -174,9 +180,49 @@ public class JCUnitBasedTest extends UtBase {
     assertThat(
         obj,
         asString(targetMethodDef.methodName(), targetMethodDef.args())
-            .containsString(targetMethodDef.methodName())
-            .$()
-    );
+            .containsString(targetMethodDef.methodName()).$());
+  }
+
+  @Given("normalReturningMethod&&atLeastOneHandlerPresent")
+  @Test
+  public void whenSynthesized$thenMethodWrittenBothIsRun(@From("auto") boolean auto,
+                                                         @From("numMethodHandlers") int numMethodHandlers,
+                                                         @From("numInterfaces") int numInterfaces,
+                                                         @From("numHandlerObjects") int numHandlerObjects,
+                                                         @From("customFallback") boolean customFallback) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj,
+        asString("apply0_both").containsString("apply0_both:I1:").$());
+  }
+
+  @Given("normalReturningMethod&&atLeastOneHandlerPresent")
+  @Test
+  public void whenSynthesized$thenMethodWrittenInFirstIsRun(@From("auto") boolean auto,
+                                                            @From("numMethodHandlers") int numMethodHandlers,
+                                                            @From("numInterfaces") int numInterfaces,
+                                                            @From("numHandlerObjects") int numHandlerObjects,
+                                                            @From("customFallback") boolean customFallback) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj,
+        asString("apply0_1").containsString("apply0_1:I1:").$());
+  }
+
+  @Given("normalReturningMethod&&secondIsProvided")
+  @Test
+  public void whenSynthesized$thenMethodWrittenInSecondIsRun(@From("auto") boolean auto,
+                                                             @From("numMethodHandlers") int numMethodHandlers,
+                                                             @From("numInterfaces") int numInterfaces,
+                                                             @From("numHandlerObjects") int numHandlerObjects,
+                                                             @From("customFallback") boolean customFallback) {
+    TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    assertThat(
+        obj,
+        asString("apply0_2").containsString("apply0_2:I2:").$());
   }
 
   @Given("normalReturningMethod&&!atLeastOneHandlerPresent")
@@ -336,4 +382,18 @@ public class JCUnitBasedTest extends UtBase {
         .setFallbackHandlerFactory(targetMethodDef, customFallback)
         .synthesize();
   }
+
+  private static void assertThrows(Class<? extends Throwable> exceptionClass, Executable executable) {
+    try {
+      executable.execute();
+    } catch (Throwable t) {
+      if (!exceptionClass.isInstance(t))
+        throw new ComparisonFailure("Not an expected exceptioin type", exceptionClass.getName(), t.getClass().getName());
+    }
+  }
+
+  interface Executable {
+    void execute() throws Throwable;
+  }
+
 }
