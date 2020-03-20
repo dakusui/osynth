@@ -3,24 +3,57 @@ package com.github.dakusui.osynth;
 import com.github.dakusui.osynth.core.*;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
-import static com.github.dakusui.osynth.utils.Messages.*;
-import static com.github.dakusui.osynth.utils.InternalUtils.rethrow;
-import static com.github.dakusui.pcond.Preconditions.requireArgument;
-import static com.github.dakusui.pcond.functions.Predicates.isInstanceOf;
-import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
-import static java.util.Objects.requireNonNull;
+import static com.github.dakusui.osynth.utils.InternalPredicates.*;
+import static com.github.dakusui.osynth.utils.Messages.notAnInterface;
+import static com.github.dakusui.pcond.Preconditions.*;
+import static com.github.dakusui.pcond.functions.Functions.stream;
+import static com.github.dakusui.pcond.functions.Predicates.*;
 
 public class ObjectSynthesizer {
+  enum ValidationMode {
+    SYNTHESIZE {
+      @Override
+      ObjectSynthesizer validate(ObjectSynthesizer target) {
+        target.interfaces.forEach(each -> requireState(target.handlerObjects, when(stream()).then(noneMatch(isInstanceOf(each)))));
+        return target;
+      }
+    },
+    TWEAK {
+      @Override
+      ObjectSynthesizer validate(ObjectSynthesizer target) {
+        target.interfaces.forEach(each -> requireState(each, when(methods().andThen(stream())).then(noneMatch(isDefaultMethod()))));
+        return target;
+      }
+    },
+
+    /**
+     * No validation is made.
+     */
+    NOTHING {
+      @Override
+      ObjectSynthesizer validate(ObjectSynthesizer target) {
+        return target;
+      }
+    };
+
+    abstract ObjectSynthesizer validate(ObjectSynthesizer target);
+
+
+  }
+
   public static final FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc -> (Method method) -> Optional.empty();
-  public static final Method                 DESCRIPTOR_METHOD                = retrieveDescriptorMethod();
-  private final        List<Class<?>>         interfaces                       = new LinkedList<>();
-  private              List<Object>           handlerObjects                   = new LinkedList<>();
-  private              List<MethodHandler>    handlers                         = new LinkedList<>();
-  private              FallbackHandlerFactory fallbackHandlerFactory;
+  private final List<Class<?>> interfaces = new LinkedList<>();
+  private final List<Object> handlerObjects = new LinkedList<>();
+  private final List<MethodHandler> handlers = new LinkedList<>();
+  private FallbackHandlerFactory fallbackHandlerFactory;
+  private ValidationMode validationMode;
 
   public ObjectSynthesizer() {
+    this.validationMode = ValidationMode.NOTHING;
     this.fallbackHandlerFactory(DEFAULT_FALLBACK_HANDLER_FACTORY);
   }
 
@@ -67,18 +100,24 @@ public class ObjectSynthesizer {
     return this;
   }
 
+  public ObjectSynthesizer validationMode(ValidationMode validationMode) {
+    this.validationMode = requireNonNull(validationMode);
+    return this;
+  }
+
   @SuppressWarnings("unchecked")
   public <T> T synthesize() {
     return (T) this.synthesize(Object.class);
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T synthesize(Class<T> anInterface) {
-    requireNonNull(anInterface);
-    if (this.interfaces.stream().noneMatch(anInterface::isAssignableFrom)) {
-      throw new IllegalArgumentException(noMatchingInterface(anInterface, interfaces));
-    }
-    return (T) this.createProxyFactory(this.createProxyDescriptor()).create();
+  public <T> T synthesize(Class<T> aClass) {
+    requireNonNull(aClass);
+    requireArgument(aClass, or(isEqualTo(Object.class), isInterfaceClass().and(matchesAnyOf(interfaces, isAssignableFrom(aClass)))));
+    return (T) this.validationMode
+        .validate(this)
+        .createProxyFactory(this.createProxyDescriptor())
+        .create();
   }
 
   @SuppressWarnings("unchecked")
@@ -106,6 +145,14 @@ public class ObjectSynthesizer {
         fallbackHandlerFactory);
   }
 
+  public static ObjectSynthesizer synthesizer() {
+    return create(false).validationMode(ValidationMode.SYNTHESIZE);
+  }
+
+  public static ObjectSynthesizer tweaker() {
+    return create(true).validationMode(ValidationMode.TWEAK);
+  }
+
   public static ObjectSynthesizer create(boolean auto) {
     return auto ?
         new ObjectSynthesizer() {
@@ -123,14 +170,4 @@ public class ObjectSynthesizer {
   public static MethodHandler.Builder methodCall(String methodName, Class<?>... parameterTypes) {
     return MethodHandler.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
   }
-
-
-  private static Method retrieveDescriptorMethod() {
-    try {
-      return Synthesized.class.getMethod("descriptor");
-    } catch (NoSuchMethodException e) {
-      throw rethrow(e);
-    }
-  }
-
 }

@@ -1,7 +1,5 @@
 package com.github.dakusui.osynth.core;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
-
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
@@ -19,15 +17,24 @@ import static com.github.dakusui.osynth.utils.InternalUtils.rethrow;
 import static com.github.dakusui.osynth.utils.Messages.failedToInstantiate;
 
 public class ProxyFactory {
-  private final ProxyDescriptor                                   descriptor;
+  public static final Method DESCRIPTOR_METHOD = retrieveDescriptorMethod();
+  private final ProxyDescriptor descriptor;
   private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-  private final Map<Class<?>, MethodHandles.Lookup>               lookups;
+  private final Map<Class<?>, MethodHandles.Lookup> lookups;
 
   public ProxyFactory(ProxyDescriptor descriptor) {
     this.descriptor = descriptor;
     this.methodHandlersCache = new HashMap<>();
     this.lookups = new HashMap<>();
     this.descriptor.interfaces().forEach(this::lookupObjectFor);
+  }
+
+  private static Method retrieveDescriptorMethod() {
+    try {
+      return Synthesized.class.getMethod("descriptor");
+    } catch (NoSuchMethodException e) {
+      throw rethrow(e);
+    }
   }
 
   private MethodHandles.Lookup lookupObjectFor(Class<?> anInterface) {
@@ -49,7 +56,7 @@ public class ProxyFactory {
     }
   }
 
-  @SuppressWarnings({ "Convert2MethodRef" })
+  @SuppressWarnings({"Convert2MethodRef"})
   public Object create() {
     return Proxy.newProxyInstance(
         ProxyFactory.class.getClassLoader(),
@@ -59,7 +66,7 @@ public class ProxyFactory {
   }
 
   private Object handleMethodCall(Object proxy, Method method, Object[] args) {
-    if (ObjectSynthesizer.DESCRIPTOR_METHOD.equals(method))
+    if (DESCRIPTOR_METHOD.equals(method))
       return this.descriptor;
     return lookUpMethodCallHandler(method).apply(proxy, args);
   }
