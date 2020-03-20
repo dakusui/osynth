@@ -1,5 +1,7 @@
 package com.github.dakusui.osynth;
 
+import com.github.dakusui.osynth.core.MethodHandler;
+
 public class SimpleObjectSynthesizer<T> extends ObjectSynthesizer {
 
   private final Class<T> primaryInterface;

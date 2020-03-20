@@ -1,15 +1,15 @@
 package com.github.dakusui.osynth.comb.model;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.comb.def.I1;
 import com.github.dakusui.osynth.comb.def.I1N;
 import com.github.dakusui.osynth.comb.def.I2;
 import com.github.dakusui.osynth.comb.def.I2N;
+import com.github.dakusui.osynth.core.FallbackHandlerFactory;
 
 import java.util.*;
 import java.util.function.BiFunction;
 
-import static com.github.dakusui.osynth.Utils.rethrow;
+import static com.github.dakusui.osynth.utils.InternalUtils.rethrow;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -17,7 +17,7 @@ public enum MethodType {
   NORMAL {
     Map<List<Class<?>>, Map<ExceptionType, BiFunction<Object, Object[], Object>>> methodHandlerPool = new HashMap<>();
     Map<ExceptionType, List<?>> handlerObjectPool = new HashMap<>();
-    Map<ExceptionType, ObjectSynthesizer.FallbackHandlerFactory> fallbackHandlerFactoryPool = new HashMap<>();
+    Map<ExceptionType, FallbackHandlerFactory> fallbackHandlerFactoryPool = new HashMap<>();
 
     @Override
     public BiFunction<Object, Object[], Object> createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType) {
@@ -30,7 +30,7 @@ public enum MethodType {
     }
 
     @Override
-    public ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
+    public FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
       fallbackHandlerFactoryPool.computeIfAbsent(
           exceptionType,
           e -> proxyDescriptor -> method -> Optional.of((o, objects) ->
@@ -73,7 +73,7 @@ public enum MethodType {
   EXCEPTION {
     Map<List<Class<?>>, Map<ExceptionType, BiFunction<Object, Object[], Object>>> methodHandlerPool = new HashMap<>();
     Map<ExceptionType, List<?>> handlerObjectPool = new HashMap<>();
-    Map<ExceptionType, ObjectSynthesizer.FallbackHandlerFactory> fallbackHandlerFactoryPool = new HashMap<>();
+    Map<ExceptionType, FallbackHandlerFactory> fallbackHandlerFactoryPool = new HashMap<>();
 
     @Override
     public BiFunction<Object, Object[], Object> createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType) {
@@ -92,7 +92,7 @@ public enum MethodType {
     }
 
     @Override
-    public ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
+    public FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
       fallbackHandlerFactoryPool.computeIfAbsent(exceptionType, e -> proxyDescriptor -> method -> Optional.of((o, objects) -> {
         try {
           throw e.createException(String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes())));
@@ -142,7 +142,7 @@ public enum MethodType {
 
   public abstract Class<?>[] interfaces(ExceptionType exceptionType);
 
-  public abstract ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType);
+  public abstract FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType);
 
   public abstract List<?> handlerObjects(ExceptionType exceptionType);
 

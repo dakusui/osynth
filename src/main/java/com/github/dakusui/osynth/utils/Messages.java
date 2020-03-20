@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.utils;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -8,14 +8,14 @@ import static java.lang.String.format;
 public enum Messages {
   ;
 
-  static String noHandlerFound(Object fallbackObject, Method method) {
+  public static String noHandlerFound(Object fallbackObject, Method method) {
     return format(
         "No appropriate handler for the requested method:'%s' was found in fallback object:'%s'",
         method,
         fallbackObject);
   }
 
-  static <T> String noMatchingInterface(Class<T> anInterface, List<Class<?>> interfaces) {
+  public static <T> String noMatchingInterface(Class<T> anInterface, List<Class<?>> interfaces) {
     return format("No matching interface was found for '%s' in '%s'.",
         anInterface.getCanonicalName(),
         interfaces);

@@ -1,0 +1,87 @@
+= The ObjectSynthesizer library
+
+NOTE:: ```osynth``` doesn't to "bytecode manipulation".
+
+== Usecases
+
+- Override
+
+A use case where specific methods of a given object defined in an `interface` are overridden.
+
+Use with caution.
+It override the specified method strictly only.
+Methods calling it still calls the one before overridden.
+
+- Synthesize
+
+A use case where a new object is created from a given interface.
+In case no implementation for a method is provided by neither by user lambda or the `interface` s, an appropriate method from handler objects will be searched for and invoked.
+
+
+- "Re-synthesize"
+
+----
+                          +----- Lambd
+                          | +--- Default
+                          | | +- Raw
+                          | | |
+                          A A A|A A P|A P A|A P P|P A A|P A P|P P A|P P P SYN  OVR
+Lambda -> Default -> Raw: ERROR|RAW  |DEF  |DEF  |LAMBD|LAMBD|LAMBD|LAMBD OK   NG
+Lambda -> Raw -> Default: ERROR|RAW  |DEF  |RAW  |LAMBD|LAMBD|LAMBD|LAMBD OK   OK <-- CHOSEN
+Default -> Lambda -> Raw: ERROR|RAW  |DEF  |DEF  |LAMBD|LAMBD|DEF  |DEF
+Default -> Raw -> Lambda: ERROR|RAW  |DEF  |DEF  |LAMBD|RAW  |DEF  |DEF
+Raw -> Lambda -> Default: ERROR|RAW  |DEF  |RAW  |LAMBD|RAW  |LAMBD|RAW
+Raw -> Default -> Lambda: ERROR|RAW  |DEF  |RAW  |LAMBD|RAW  |DEF  |RAW
+----
+[ditaa]
+----
+                        +-----------------------------------------------+
+                        |  +-----------------------------------------+  |
+                        |  |                                         |  |
+                        V  V                                         |  |
++------+      +-----------------+        +---------+                 |  |
+|      |      |                 |        |         |                 |  |
+|Client+----->|SynthesizedObject+<>--+-->+Interface|                 |  |
+|      |      |     (Proxy)     | 1  |  n|         |                 |  |
++------+      +-----------------+    |   +----*----+                 |  |
+                                     |        | 1                    |  |
+                                     |        |                      |  |
+                                     |        V 0...n                |  |
+                                     |   +-----------------+         |  |
+                                     |   +Method Definition|         |  |
+                                     |   +----*------------+         |  |
+                                     |        | 1                    |  |
+                                     |        |                      |  |
+                                     |        V 0...1                |  |
+                                     |   +----------------------+    |  |
+                                     |   |Default Implementation+-=--+  |
+                                     |   +----------------------+       |
+                                     |                                  |
+                                     |   +--------------+               |
+                                     +-->|Method Handler+-=-------------+
+                                     |  n| (BiFunction) |     method call
+                                     |   +--------------+
+                                     |           +----------+
+                                     |           |          |
+                                     |           V          |
+                                     |   +--------------+   |
+                                     +-->|Handler Object+-=-+ method call
+                                        n|    (Raw)     |
+                                         +--------------+
+
+----
+
+
+== Limitation
+
+
+=== You should not give an object that implements any of registered interfaces to `addHandlerObject`
+
+A method implementation in the object will not (cannot) respect the overriding handlers you gave to the object synthesizer.
+This results in a puzzling behavior, where the value directly returned by the method you override is the one you expect, but the value returned
+
+=== Inside the raw object, nothing will be changed.
+
+By design `osynth` doesn't manipulate byte-codes inside the handler objects.
+This means that once a program counter goes into the inside of an handler object, it will not call overriding  method handlers at all.
+This results in a counter intuitive behavior.

@@ -1,6 +1,8 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.core.Describable;
+import com.github.dakusui.osynth.core.ProxyDescriptor;
 import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.utils.UtBase;
 import com.github.dakusui.osynth.utils.UtUtils;
@@ -266,7 +268,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test
   public void givenEmptyProxyDescriptor$whenHashCode$thenEqualToHashCodeFromEmptyList() {
-    ObjectSynthesizer.ProxyDescriptor desc = createEmptyDesc();
+    ProxyDescriptor desc = createEmptyDesc();
     assertThat(desc.hashCode(), asInteger().equalTo(emptyList().hashCode()).$());
   }
 
@@ -284,7 +286,7 @@ public class ObjectSynthesizerTest extends UtBase {
         .addHandlerObject((X) () -> "bMethodX in lambda")
         .synthesize();
     System.out.println(x.bMethod());
-    System.out.println(((ObjectSynthesizer.Describable) x).describe());
+    System.out.println(((Describable) x).describe());
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -307,8 +309,8 @@ public class ObjectSynthesizerTest extends UtBase {
     System.out.println(aa.aMethod());
   }
 
-  protected ObjectSynthesizer.ProxyDescriptor createEmptyDesc() {
-    return new ObjectSynthesizer.ProxyDescriptor(
+  protected ProxyDescriptor createEmptyDesc() {
+    return new ProxyDescriptor(
         new LinkedList<>(),
         new LinkedList<>(),
         new LinkedList<>(),
