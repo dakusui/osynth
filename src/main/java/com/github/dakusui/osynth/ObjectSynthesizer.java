@@ -14,20 +14,21 @@ import java.util.stream.Stream;
 import static com.github.dakusui.osynth.Messages.*;
 import static com.github.dakusui.osynth.MethodHandler.*;
 import static com.github.dakusui.osynth.Utils.rethrow;
+import static com.github.dakusui.pcond.Preconditions.requireArgument;
+import static com.github.dakusui.pcond.functions.Predicates.isInstanceOf;
+import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 
 public class ObjectSynthesizer {
-  public static final FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc ->
-      method ->
-          (self, args) -> {
-            throw new IllegalArgumentException(noHandlerFound(desc.handlerObjects, method));
-          };
-  private final List<Class<?>> interfaces = new LinkedList<>();
-  private List<Object> handlerObjects = new LinkedList<>();
-  private List<MethodHandler> handlers = new LinkedList<>();
-  private FallbackHandlerFactory fallbackHandlerFactory;
+  public static final  FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc -> (Method method) -> Optional.empty();
+  private static final Method                 DESCRIPTOR_METHOD                = retrieveDescriptorMethod();
+  private final        List<Class<?>>         interfaces                       = new LinkedList<>();
+  private              List<Object>           handlerObjects                   = new LinkedList<>();
+  private              List<MethodHandler>    handlers                         = new LinkedList<>();
+  private              FallbackHandlerFactory fallbackHandlerFactory;
 
   public ObjectSynthesizer() {
     this.fallbackHandlerFactory(DEFAULT_FALLBACK_HANDLER_FACTORY);
@@ -87,12 +88,24 @@ public class ObjectSynthesizer {
     if (this.interfaces.stream().noneMatch(anInterface::isAssignableFrom)) {
       throw new IllegalArgumentException(noMatchingInterface(anInterface, interfaces));
     }
-    return (T) this.createProxyFactory().create();
+    return (T) this.createProxyFactory(this.createProxyDescriptor()).create();
   }
 
-  private ProxyFactory createProxyFactory() {
-    ProxyDescriptor descriptor = createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory);
-    return new ProxyFactory(descriptor);
+  @SuppressWarnings("unchecked")
+  public <T> T resynthesizeFrom(T base) {
+    Synthesized synthesized = (Synthesized) requireArgument(base, isNotNull().and(isInstanceOf(Synthesized.class)));
+    return (T) createProxyFactory(
+        synthesized.descriptor()
+            .overrideWith(this.createProxyDescriptor()))
+        .create();
+  }
+
+  private ProxyFactory createProxyFactory(ProxyDescriptor proxyDescriptor) {
+    return new ProxyFactory(proxyDescriptor);
+  }
+
+  private ProxyDescriptor createProxyDescriptor() {
+    return createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory);
   }
 
   protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
@@ -121,15 +134,32 @@ public class ObjectSynthesizer {
     return MethodHandler.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
   }
 
+
+  private static Method retrieveDescriptorMethod() {
+    try {
+      return Synthesized.class.getMethod("descriptor");
+    } catch (NoSuchMethodException e) {
+      throw rethrow(e);
+    }
+  }
+
   @FunctionalInterface
-  public interface FallbackHandlerFactory extends Function<ProxyDescriptor, Function<Method, BiFunction<Object, Object[], Object>>> {
+  public interface FallbackHandlerFactory extends Function<ProxyDescriptor, Function<Method, Optional<BiFunction<Object, Object[], Object>>>> {
+    default FallbackHandlerFactory compose(FallbackHandlerFactory before) {
+      return proxyDescriptor -> method -> {
+        Optional<BiFunction<Object, Object[], Object>> ret = before.apply(proxyDescriptor).apply(method);
+        if (ret.isPresent())
+          return ret;
+        return FallbackHandlerFactory.this.apply(proxyDescriptor).apply(method);
+      };
+    }
   }
 
   public static class ProxyDescriptor {
-    private final List<Class<?>> interfaces;
-    private final List<MethodHandler> handlers;
-    private final List<MethodHandler> builtInHandlers;
-    private final List<Object> handlerObjects;
+    private final List<Class<?>>         interfaces;
+    private final List<MethodHandler>    handlers;
+    private final List<MethodHandler>    builtInHandlers;
+    private final List<Object>           handlerObjects;
     private final FallbackHandlerFactory fallbackHandlerFactory;
 
     public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
@@ -194,7 +224,17 @@ public class ObjectSynthesizer {
     }
 
     public BiFunction<Object, Object[], Object> fallbackHandler(Method method) {
-      return this.fallbackHandlerFactory.apply(this).apply(method);
+      return this.fallbackHandlerFactory.apply(this)
+          .apply(method)
+          .orElseThrow(() -> new IllegalArgumentException(noHandlerFound(this.handlerObjects, method)));
+    }
+
+    public ProxyDescriptor overrideWith(ProxyDescriptor proxyDescriptor) {
+      return new ProxyDescriptor(
+          Stream.concat(proxyDescriptor.interfaces().stream(), this.interfaces().stream()).distinct().collect(toList()),
+          Stream.concat(proxyDescriptor.handlers().stream(), this.handlers().stream()).distinct().collect(toList()),
+          Stream.concat(proxyDescriptor.handlerObjects().stream(), this.handlerObjects().stream()).distinct().collect(toList()),
+          this.fallbackHandlerFactory.compose(proxyDescriptor.fallbackHandlerFactory));
     }
   }
 
@@ -203,9 +243,9 @@ public class ObjectSynthesizer {
   }
 
   private static class ProxyFactory {
-    private final ProxyDescriptor descriptor;
+    private final ProxyDescriptor                                   descriptor;
     private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-    private final Map<Class<?>, MethodHandles.Lookup> lookups;
+    private final Map<Class<?>, MethodHandles.Lookup>               lookups;
 
     private ProxyFactory(ProxyDescriptor descriptor) {
       this.descriptor = descriptor;
@@ -233,16 +273,18 @@ public class ObjectSynthesizer {
       }
     }
 
-    @SuppressWarnings({"Convert2MethodRef"})
+    @SuppressWarnings({ "Convert2MethodRef" })
     Object create() {
       return Proxy.newProxyInstance(
           ProxyFactory.class.getClassLoader(),
-          this.descriptor.interfaces.toArray(new Class<?>[0]),
+          Stream.concat(this.descriptor.interfaces.stream(), Stream.of(Synthesized.class)).distinct().toArray(Class<?>[]::new),
           (proxy, method, args) -> handleMethodCall(proxy, method, args)
       );
     }
 
     private Object handleMethodCall(Object proxy, Method method, Object[] args) {
+      if (DESCRIPTOR_METHOD.equals(method))
+        return this.descriptor;
       return lookUpMethodCallHandler(method).apply(proxy, args);
     }
 

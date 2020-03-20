@@ -6,10 +6,7 @@ import com.github.dakusui.osynth.comb.def.I1N;
 import com.github.dakusui.osynth.comb.def.I2;
 import com.github.dakusui.osynth.comb.def.I2N;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 
 import static com.github.dakusui.osynth.Utils.rethrow;
@@ -36,8 +33,8 @@ public enum MethodType {
     public ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
       fallbackHandlerFactoryPool.computeIfAbsent(
           exceptionType,
-          e -> proxyDescriptor -> method -> (o, objects) ->
-              String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes())));
+          e -> proxyDescriptor -> method -> Optional.of((o, objects) ->
+              String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes()))));
       return fallbackHandlerFactoryPool.get(exceptionType);
     }
 
@@ -96,13 +93,13 @@ public enum MethodType {
 
     @Override
     public ObjectSynthesizer.FallbackHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
-      fallbackHandlerFactoryPool.computeIfAbsent(exceptionType, e -> proxyDescriptor -> method -> (o, objects) -> {
+      fallbackHandlerFactoryPool.computeIfAbsent(exceptionType, e -> proxyDescriptor -> method -> Optional.of((o, objects) -> {
         try {
           throw e.createException(String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes())));
         } catch (Throwable throwable) {
           throw rethrow(throwable);
         }
-      });
+      }));
       return fallbackHandlerFactoryPool.get(exceptionType);
     }
 

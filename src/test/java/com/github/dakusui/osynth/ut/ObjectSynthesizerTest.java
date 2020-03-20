@@ -295,6 +295,18 @@ public class ObjectSynthesizerTest extends UtBase {
     System.out.println(b.bMethod());
   }
 
+  @Test
+  public void givenSynthesizedObject$whenResynthesize$overridingHandlerIsInvoked() {
+    A a = ObjectSynthesizer.create(false)
+        .addInterface(A.class)
+        .handle(methodCall("aMethod").with((self, args) -> "OverridingA was called"))
+        .synthesize();
+    A aa = ObjectSynthesizer.create(false)
+        .handle(methodCall("aMethod").with((self, args) -> "Re-OverridingA was called"))
+        .resynthesizeFrom(a);
+    System.out.println(aa.aMethod());
+  }
+
   protected ObjectSynthesizer.ProxyDescriptor createEmptyDesc() {
     return new ObjectSynthesizer.ProxyDescriptor(
         new LinkedList<>(),
