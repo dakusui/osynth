@@ -4,19 +4,12 @@ import com.github.dakusui.pcond.functions.PrintablePredicate;
 import com.github.dakusui.pcond.functions.Printables;
 
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.pcond.functions.Printables.predicate;
 
 public enum InternalPredicates {
   ;
-
-  @SuppressWarnings("unchecked")
-  public static <T> Function<T, List<Method>> methods() {
-    return (Function<T, List<Method>>) InternalFunctions.METHODS;
-  }
 
   public static Predicate<Class<?>> isInterfaceClass() {
     return Def.IS_INTERFACE_CLASS;

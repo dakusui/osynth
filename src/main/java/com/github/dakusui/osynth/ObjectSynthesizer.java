@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth;
 
 import com.github.dakusui.osynth.core.*;
+import com.github.dakusui.osynth.utils.InternalFunctions;
 
 import java.lang.reflect.Method;
 import java.util.LinkedList;
@@ -25,7 +26,7 @@ public class ObjectSynthesizer {
     TWEAK {
       @Override
       ObjectSynthesizer validate(ObjectSynthesizer target) {
-        target.interfaces.forEach(each -> requireState(each, when(methods().andThen(stream())).then(noneMatch(isDefaultMethod()))));
+        target.interfaces.forEach(each -> requireState(each, when(InternalFunctions.methods().andThen(stream())).then(noneMatch(isDefaultMethod()))));
         return target;
       }
     },
