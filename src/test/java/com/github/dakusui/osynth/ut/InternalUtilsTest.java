@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
-import com.github.dakusui.osynth.Utils;
+import com.github.dakusui.osynth.utils.InternalUtils;
 import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 
@@ -12,22 +12,22 @@ import static com.github.dakusui.crest.Crest.assertThat;
 import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.utils.UtUtils.rootCause;
 
-public class UtilsTest extends UtBase {
+public class InternalUtilsTest extends UtBase {
   @Test(expected = Error.class)
   public void givenError$whenRethrown$thenErrorIsThrown() {
-    throw Utils.rethrow(new Error());
+    throw InternalUtils.rethrow(new Error());
   }
 
   @Test(expected = RuntimeException.class)
   public void givenCheckedException$whenRethrown$thenRuntimeExceptionThrown() {
-    throw Utils.rethrow(new IOException());
+    throw InternalUtils.rethrow(new IOException());
   }
 
   @Test(expected = AssertionInCatchClauseFinished.class)
   public void givenCheckedException$whenRethrown$thenCheckedExceptionWrapped() {
     Exception checkedException = new IOException();
     try {
-      throw Utils.rethrow(checkedException);
+      throw InternalUtils.rethrow(checkedException);
     } catch (RuntimeException e) {
       assertThat(
           rootCause(e),

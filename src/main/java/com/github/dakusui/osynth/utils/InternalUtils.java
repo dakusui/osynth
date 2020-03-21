@@ -1,6 +1,6 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.utils;
 
-public enum Utils {
+public enum InternalUtils {
   ;
 
   public static RuntimeException rethrow(Throwable e) {

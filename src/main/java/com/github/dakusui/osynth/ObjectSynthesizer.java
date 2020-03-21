@@ -1,35 +1,60 @@
 package com.github.dakusui.osynth;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import com.github.dakusui.osynth.core.*;
+import com.github.dakusui.osynth.utils.InternalFunctions;
 
-import static com.github.dakusui.osynth.Messages.*;
-import static com.github.dakusui.osynth.MethodHandler.*;
-import static com.github.dakusui.osynth.Utils.rethrow;
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Objects.requireNonNull;
+import java.lang.reflect.Method;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+
+import static com.github.dakusui.osynth.utils.InternalPredicates.*;
+import static com.github.dakusui.osynth.utils.Messages.notAnInterface;
+import static com.github.dakusui.pcond.Preconditions.*;
+import static com.github.dakusui.pcond.functions.Functions.stream;
+import static com.github.dakusui.pcond.functions.Predicates.*;
 
 public class ObjectSynthesizer {
-  public static final FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc ->
-      method ->
-          (self, args) -> {
-            throw new IllegalArgumentException(noHandlerFound(desc.handlerObjects, method));
-          };
+  enum ValidationMode {
+    SYNTHESIZE {
+      @Override
+      ObjectSynthesizer validate(ObjectSynthesizer target) {
+        target.interfaces.forEach(each -> requireState(target.handlerObjects, when(stream()).then(noneMatch(isInstanceOf(each)))));
+        return target;
+      }
+    },
+    TWEAK {
+      @Override
+      ObjectSynthesizer validate(ObjectSynthesizer target) {
+        target.interfaces.forEach(each -> requireState(each, when(InternalFunctions.methods().andThen(stream())).then(noneMatch(isDefaultMethod()))));
+        return target;
+      }
+    },
+
+    /**
+     * No validation is made.
+     */
+    NOTHING {
+      @Override
+      ObjectSynthesizer validate(ObjectSynthesizer target) {
+        return target;
+      }
+    };
+
+    abstract ObjectSynthesizer validate(ObjectSynthesizer target);
+
+
+  }
+
+  public static final FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc -> (Method method) -> Optional.empty();
   private final List<Class<?>> interfaces = new LinkedList<>();
-  private List<Object> handlerObjects = new LinkedList<>();
-  private List<MethodHandler> handlers = new LinkedList<>();
+  private final List<Object> handlerObjects = new LinkedList<>();
+  private final List<MethodHandler> handlers = new LinkedList<>();
   private FallbackHandlerFactory fallbackHandlerFactory;
+  private ValidationMode validationMode;
 
   public ObjectSynthesizer() {
+    this.validationMode = ValidationMode.NOTHING;
     this.fallbackHandlerFactory(DEFAULT_FALLBACK_HANDLER_FACTORY);
   }
 
@@ -76,23 +101,41 @@ public class ObjectSynthesizer {
     return this;
   }
 
+  public ObjectSynthesizer validationMode(ValidationMode validationMode) {
+    this.validationMode = requireNonNull(validationMode);
+    return this;
+  }
+
   @SuppressWarnings("unchecked")
   public <T> T synthesize() {
     return (T) this.synthesize(Object.class);
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T synthesize(Class<T> anInterface) {
-    requireNonNull(anInterface);
-    if (this.interfaces.stream().noneMatch(anInterface::isAssignableFrom)) {
-      throw new IllegalArgumentException(noMatchingInterface(anInterface, interfaces));
-    }
-    return (T) this.createProxyFactory().create();
+  public <T> T synthesize(Class<T> aClass) {
+    requireNonNull(aClass);
+    requireArgument(aClass, or(isEqualTo(Object.class), isInterfaceClass().and(matchesAnyOf(interfaces, isAssignableFrom(aClass)))));
+    return (T) this.validationMode
+        .validate(this)
+        .createProxyFactory(this.createProxyDescriptor())
+        .create();
   }
 
-  private ProxyFactory createProxyFactory() {
-    ProxyDescriptor descriptor = createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory);
-    return new ProxyFactory(descriptor);
+  @SuppressWarnings("unchecked")
+  public <T> T resynthesizeFrom(T base) {
+    Synthesized synthesized = (Synthesized) requireArgument(base, isNotNull().and(isInstanceOf(Synthesized.class)));
+    return (T) createProxyFactory(
+        synthesized.descriptor()
+            .overrideWith(this.createProxyDescriptor()))
+        .create();
+  }
+
+  private ProxyFactory createProxyFactory(ProxyDescriptor proxyDescriptor) {
+    return new ProxyFactory(proxyDescriptor);
+  }
+
+  private ProxyDescriptor createProxyDescriptor() {
+    return createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory);
   }
 
   protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
@@ -101,6 +144,14 @@ public class ObjectSynthesizer {
         handlers,
         handlerObjects,
         fallbackHandlerFactory);
+  }
+
+  public static ObjectSynthesizer synthesizer() {
+    return create(false).validationMode(ValidationMode.SYNTHESIZE);
+  }
+
+  public static ObjectSynthesizer tweaker() {
+    return create(true).validationMode(ValidationMode.TWEAK);
   }
 
   public static ObjectSynthesizer create(boolean auto) {
@@ -119,233 +170,5 @@ public class ObjectSynthesizer {
 
   public static MethodHandler.Builder methodCall(String methodName, Class<?>... parameterTypes) {
     return MethodHandler.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
-  }
-
-  @FunctionalInterface
-  public interface FallbackHandlerFactory extends Function<ProxyDescriptor, Function<Method, BiFunction<Object, Object[], Object>>> {
-  }
-
-  public static class ProxyDescriptor {
-    private final List<Class<?>> interfaces;
-    private final List<MethodHandler> handlers;
-    private final List<MethodHandler> builtInHandlers;
-    private final List<Object> handlerObjects;
-    private final FallbackHandlerFactory fallbackHandlerFactory;
-
-    public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
-      this.interfaces = interfaces;
-      this.handlers = handlers;
-      this.handlerObjects = handlerObjects;
-      this.interfaces.add(Describable.class);
-      this.builtInHandlers = asList(
-          hashCodeHandler(this),
-          equalsHandler(this, describeIfPossible()),
-          toStringHandler(this, v -> "proxy:" + v.toString()),
-          builderByNameAndParameterTypes("describe").with((self, args) -> this)
-      );
-      this.fallbackHandlerFactory = fallbackHandlerFactory;
-    }
-
-    private Function<Object, Object> describeIfPossible() {
-      return v -> v instanceof Describable ?
-          ((Describable) v).describe() :
-          v;
-    }
-
-    Stream<MethodHandler> streamAllHandlers() {
-      return Stream.concat(this.handlers.stream(), this.builtInHandlers.stream());
-    }
-
-    @Override
-    public int hashCode() {
-      return handlers.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object anotherObject) {
-      if (this == anotherObject)
-        return true;
-      ProxyDescriptor another;
-      if ((anotherObject instanceof ProxyDescriptor)) {
-        another = (ProxyDescriptor) anotherObject;
-        return this.interfaces().equals(another.interfaces()) &&
-            this.handlers().equals(another.handlers()) &&
-            this.handlerObjects().equals(another.handlerObjects()) &&
-            this.fallbackHandlerFactory.equals(another.fallbackHandlerFactory);
-      }
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      return "osynth:" + this.getClass().getCanonicalName() + "@" + System.identityHashCode(this);
-    }
-
-    protected List<Class<?>> interfaces() {
-      return unmodifiableList(this.interfaces);
-    }
-
-    protected List<MethodHandler> handlers() {
-      return unmodifiableList(this.handlers);
-    }
-
-    protected List<Object> handlerObjects() {
-      return unmodifiableList(this.handlerObjects);
-    }
-
-    public BiFunction<Object, Object[], Object> fallbackHandler(Method method) {
-      return this.fallbackHandlerFactory.apply(this).apply(method);
-    }
-  }
-
-  public interface Describable {
-    ProxyDescriptor describe();
-  }
-
-  private static class ProxyFactory {
-    private final ProxyDescriptor descriptor;
-    private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-    private final Map<Class<?>, MethodHandles.Lookup> lookups;
-
-    private ProxyFactory(ProxyDescriptor descriptor) {
-      this.descriptor = descriptor;
-      this.methodHandlersCache = new HashMap<>();
-      this.lookups = new HashMap<>();
-      this.descriptor.interfaces.forEach(this::lookupObjectFor);
-    }
-
-    private MethodHandles.Lookup lookupObjectFor(Class<?> anInterface) {
-      return this.lookups.computeIfAbsent(anInterface, ProxyFactory::createLookup);
-    }
-
-    private static synchronized MethodHandles.Lookup createLookup(Class<?> anInterface) {
-      Constructor<MethodHandles.Lookup> constructor;
-      try {
-        constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
-        constructor.setAccessible(true);
-        try {
-          return constructor.newInstance(anInterface);
-        } catch (InvocationTargetException e) {
-          throw e.getTargetException();
-        }
-      } catch (Throwable e) {
-        throw new RuntimeException(failedToInstantiate(anInterface), e);
-      }
-    }
-
-    @SuppressWarnings({"Convert2MethodRef"})
-    Object create() {
-      return Proxy.newProxyInstance(
-          ProxyFactory.class.getClassLoader(),
-          this.descriptor.interfaces.toArray(new Class<?>[0]),
-          (proxy, method, args) -> handleMethodCall(proxy, method, args)
-      );
-    }
-
-    private Object handleMethodCall(Object proxy, Method method, Object[] args) {
-      return lookUpMethodCallHandler(method).apply(proxy, args);
-    }
-
-    private BiFunction<Object, Object[], Object> lookUpMethodCallHandler(Method method) {
-      if (!this.methodHandlersCache.containsKey(method)) {
-        method.setAccessible(true);
-        this.methodHandlersCache.put(method, createMethodCallHandler(method));
-      }
-      return this.methodHandlersCache.get(method);
-    }
-
-    private BiFunction<Object, Object[], Object> createMethodCallHandler(Method method) {
-      return this.descriptor.streamAllHandlers()
-          .filter(handler -> handler.test(method))
-          .map(handler -> (BiFunction<Object, Object[], Object>) handler)
-          .findFirst()
-          .orElseGet(
-              () -> this.descriptor.handlerObjects().stream()
-                  .filter(h -> hasMethod(h.getClass(), method))
-                  .map(h -> (BiFunction<Object, Object[], Object>) (Object o, Object[] o2) -> invokeMethod(h, method, o2))
-                  .findFirst()
-                  .orElseGet(() -> {
-                    try {
-                      Optional<Method> methodOptional = this.descriptor.interfaces()
-                          .stream()
-                          .map(each -> getMethodFrom(method, each))
-                          .filter(Optional::isPresent)
-                          .map(Optional::get)
-                          .filter(Method::isDefault)
-                          .findFirst();
-                      if (methodOptional.isPresent())
-                        return defaultMethodInvoker(methodOptional.get());
-                      return invokeFallbackHandler(method, descriptor);
-                    } catch (Throwable t) {
-                      throw rethrow(t);
-                    }
-                  }));
-    }
-
-    private Optional<Method> getMethodFrom(Method method, Class<?> each) {
-      try {
-        return Optional.of(each.getMethod(method.getName(), method.getParameterTypes()));
-      } catch (NoSuchMethodException e) {
-        return Optional.empty();
-      }
-    }
-
-    private static BiFunction<Object, Object[], Object> invokeFallbackHandler(Method method, ProxyDescriptor descriptor) {
-      return descriptor.fallbackHandler(method);
-    }
-
-    private boolean hasMethod(Class<?> aClass, Method method) {
-      return Arrays.stream(aClass.getMethods())
-          .anyMatch(
-              m -> m.getName().equals(method.getName()) &&
-                  Arrays.equals(m.getParameterTypes(), method.getParameterTypes()));
-    }
-
-    private BiFunction<Object, Object[], Object> defaultMethodInvoker(Method method) throws IllegalAccessException {
-      MethodHandle preparedMethodHandle = prepareMethodHandle(method);
-      return (self, args) -> invokeDefaultMethodInDeclaringInterface(self, args, preparedMethodHandle);
-    }
-
-    private MethodHandle prepareMethodHandle(Method method) throws IllegalAccessException {
-      Class<?> declaringInterface = method.getDeclaringClass();
-      return lookupObjectFor(declaringInterface)
-          .in(declaringInterface)
-          .unreflectSpecial(method, declaringInterface);
-    }
-
-    private Object invokeDefaultMethodInDeclaringInterface(Object proxy, Object[] args, MethodHandle preparedMethodHandle) {
-      try {
-        return preparedMethodHandle.bindTo(proxy).invokeWithArguments(args);
-      } catch (Throwable throwable) {
-        throw rethrow(throwable);
-      }
-    }
-
-    private static Object invokeMethod(Object object, Method method, Object[] args) {
-      try {
-        try {
-          method = findMethodInObjectIfNecessary(object, method);
-          boolean wasAccessible = method.isAccessible();
-          method.setAccessible(true);
-          try {
-            return method.invoke(object, args);
-          } finally {
-            method.setAccessible(wasAccessible);
-          }
-        } catch (InvocationTargetException e) {
-          throw e.getTargetException();
-        }
-      } catch (Throwable e) {
-        throw rethrow(e);
-      }
-    }
-
-    private static Method findMethodInObjectIfNecessary(Object object, Method method) throws NoSuchMethodException {
-      assert object.getClass().getMethod(method.getName(), method.getParameterTypes()) != null : String.format("Method:%s presence check in %s should have been done already", method, object.getClass());
-      if (method.getDeclaringClass().isInstance(object))
-        return method;
-      method = object.getClass().getMethod(method.getName(), method.getParameterTypes());
-      return method;
-    }
   }
 }

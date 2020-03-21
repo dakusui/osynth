@@ -1,6 +1,8 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.core.Describable;
+import com.github.dakusui.osynth.core.ProxyDescriptor;
 import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.utils.UtBase;
 import com.github.dakusui.osynth.utils.UtUtils;
@@ -95,14 +97,19 @@ public class ObjectSynthesizerTest extends UtBase {
           .synthesize(Serializable.class);
       System.out.println(x);
     } catch (IllegalArgumentException e) {
+      e.printStackTrace();
       assertThat(
           e,
           asString(call("getMessage").$())
               .check(
-                  substringAfterRegex("No matching interface was found for")
-                      .after("Serializable")
-                      .after("A")
-                      .after("B")
+                  substringAfterRegex("value:")
+                      .after(Serializable.class.getName())
+                      .after("violated")
+                      .after("isEqualTo\\[class java.lang.Object\\]")
+                      .after("isInterface")
+                      .after(A.class.getSimpleName())
+                      .after(B.class.getSimpleName())
+                      .after("isAssignableFrom")
                       .$(),
                   nonEmptyString())
               .$());
@@ -266,7 +273,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test
   public void givenEmptyProxyDescriptor$whenHashCode$thenEqualToHashCodeFromEmptyList() {
-    ObjectSynthesizer.ProxyDescriptor desc = createEmptyDesc();
+    ProxyDescriptor desc = createEmptyDesc();
     assertThat(desc.hashCode(), asInteger().equalTo(emptyList().hashCode()).$());
   }
 
@@ -284,19 +291,96 @@ public class ObjectSynthesizerTest extends UtBase {
         .addHandlerObject((X) () -> "bMethodX in lambda")
         .synthesize();
     System.out.println(x.bMethod());
-    System.out.println(((ObjectSynthesizer.Describable) x).describe());
+    System.out.println(((Describable) x).describe());
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void givenNoExplicitInterface$whenSynthesizeObjectInNonAutoMode$thenErrorIsThrown() {
     B b = ObjectSynthesizer.create(false)
         .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
-        .synthesize();
+        .synthesize(B.class);
     System.out.println(b.bMethod());
   }
 
-  protected ObjectSynthesizer.ProxyDescriptor createEmptyDesc() {
-    return new ObjectSynthesizer.ProxyDescriptor(
+  @Test
+  public void givenSynthesizedObject$whenResynthesize$overridingHandlerIsInvoked() {
+    A a = ObjectSynthesizer.create(false)
+        .addInterface(A.class)
+        .handle(methodCall("aMethod").with((self, args) -> "OverridingA was called"))
+        .synthesize();
+    A aa = ObjectSynthesizer.create(false)
+        .handle(methodCall("aMethod").with((self, args) -> "Re-OverridingA was called"))
+        .resynthesizeFrom(a);
+    System.out.println(aa.aMethod());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void givenSynthesizerWithInterfaceB$whenSynthesizeWithB$thenThrowsException() {
+    try {
+      B b = ObjectSynthesizer.synthesizer()
+          .addInterface(B.class)
+          .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
+          .synthesize();
+      System.out.println(b.bMethod());
+    } catch (IllegalStateException e) {
+      assertThat(
+          e.getMessage(),
+          asString().containsString("violated precondition:value stream noneMatch[isInstanceOf[com.github.dakusui.osynth.ut.ObjectSynthesizerTest.B]]").$());
+      throw e;
+    }
+  }
+
+  @Test
+  public void givenSynthesizerWithInterfaceB$whenSynthesizeWithNonB$thenReturnValueFromNonB() {
+    B b = ObjectSynthesizer.synthesizer()
+        .addInterface(B.class)
+        .addHandlerObject(new Object() {
+          /**
+           * This method is called through the synthesizer
+           */
+          @SuppressWarnings("unused")
+          public String bMethod() {
+            return "bMethod in handlerObject";
+          }
+        })
+        .synthesize();
+    System.out.println(b.bMethod());
+    assertThat(b.bMethod(), asString().equalTo("bMethod in handlerObject").$());
+  }
+
+  @Test
+  public void givenTweakerWithInterfaceB$whenSynthesizeWithB$thenReturnValueFromB() {
+    B b = ObjectSynthesizer.tweaker()
+        .addInterface(B.class)
+        .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
+        .synthesize();
+    System.out.println(b.bMethod());
+    assertThat(b.bMethod(), asString().equalTo("bMethod in lambda (test10) was called.").$());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void givenTweakerWithInterfaceA$whenSynthesizeWithA$thenThrowsException() {
+    try {
+      A a = ObjectSynthesizer.tweaker()
+          .addInterface(A.class)
+          .addHandlerObject((new A() {
+            @Override
+            public String aMethod() {
+              throw new RuntimeException("aMethod in handlerObject: This method should not be called because A.class is registered and synthesizer is in 'tweak' mode.");
+            }
+          }))
+          .synthesize();
+      System.out.println(a.aMethod());
+    } catch (IllegalStateException e) {
+      assertThat(
+          e.getMessage(),
+          asString().containsString("value:A violated precondition:value methods->stream noneMatch[isDefaultMethod]").$());
+      throw e;
+    }
+  }
+
+  protected ProxyDescriptor createEmptyDesc() {
+    return new ProxyDescriptor(
         new LinkedList<>(),
         new LinkedList<>(),
         new LinkedList<>(),

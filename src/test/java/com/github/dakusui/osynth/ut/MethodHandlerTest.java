@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.MethodHandler;
+import com.github.dakusui.osynth.core.MethodHandler;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
