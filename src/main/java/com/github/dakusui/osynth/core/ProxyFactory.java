@@ -1,5 +1,7 @@
 package com.github.dakusui.osynth.core;
 
+import com.github.dakusui.osynth.Synthesized;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
