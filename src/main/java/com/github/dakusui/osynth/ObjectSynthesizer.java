@@ -125,7 +125,7 @@ public class ObjectSynthesizer {
   public <T> T resynthesizeFrom(T base) {
     Synthesized synthesized = (Synthesized) requireArgument(base, isNotNull().and(isInstanceOf(Synthesized.class)));
     return (T) createProxyFactory(
-        synthesized.descriptor()
+        synthesized.osynthProxyDescriptor()
             .overrideWith(this.createProxyDescriptor()))
         .create();
   }
