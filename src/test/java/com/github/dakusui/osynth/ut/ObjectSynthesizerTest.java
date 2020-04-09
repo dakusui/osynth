@@ -325,7 +325,7 @@ public class ObjectSynthesizerTest extends UtBase {
     } catch (IllegalStateException e) {
       assertThat(
           e.getMessage(),
-          asString().containsString("violated precondition:value stream noneMatch[isInstanceOf[com.github.dakusui.osynth.ut.ObjectSynthesizerTest.B]]").$());
+          asString().containsString("violated precondition:value stream noneMatch[isInstanceOf[B]]").$());
       throw e;
     }
   }

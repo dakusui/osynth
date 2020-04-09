@@ -1,6 +1,9 @@
 package com.github.dakusui.osynth;
 
-import com.github.dakusui.osynth.core.*;
+import com.github.dakusui.osynth.core.FallbackHandlerFactory;
+import com.github.dakusui.osynth.core.MethodHandler;
+import com.github.dakusui.osynth.core.ProxyDescriptor;
+import com.github.dakusui.osynth.core.ProxyFactory;
 import com.github.dakusui.osynth.utils.InternalFunctions;
 
 import java.lang.reflect.Method;
@@ -47,11 +50,11 @@ public class ObjectSynthesizer {
   }
 
   public static final FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc -> (Method method) -> Optional.empty();
-  private final List<Class<?>> interfaces = new LinkedList<>();
-  private final List<Object> handlerObjects = new LinkedList<>();
-  private final List<MethodHandler> handlers = new LinkedList<>();
-  private FallbackHandlerFactory fallbackHandlerFactory;
-  private ValidationMode validationMode;
+  private final       List<Class<?>>         interfaces                       = new LinkedList<>();
+  private final       List<Object>           handlerObjects                   = new LinkedList<>();
+  private final       List<MethodHandler>    handlers                         = new LinkedList<>();
+  private             FallbackHandlerFactory fallbackHandlerFactory;
+  private             ValidationMode         validationMode;
 
   public ObjectSynthesizer() {
     this.validationMode = ValidationMode.NOTHING;
