@@ -33,7 +33,7 @@ public class ProxyFactory {
 
   private static Method retrieveDescriptorMethod() {
     try {
-      return Synthesized.class.getMethod("descriptor");
+      return Synthesized.class.getMethod("osynthProxyDescriptor");
     } catch (NoSuchMethodException e) {
       throw rethrow(e);
     }
