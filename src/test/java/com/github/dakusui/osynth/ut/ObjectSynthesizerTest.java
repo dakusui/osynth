@@ -323,9 +323,12 @@ public class ObjectSynthesizerTest extends UtBase {
           .synthesize();
       System.out.println(b.bMethod());
     } catch (IllegalStateException e) {
+      e.printStackTrace();
       assertThat(
           e.getMessage(),
-          asString().containsString("violated precondition:value stream noneMatch[isInstanceOf[B]]").$());
+          asString()
+              .containsString("violated precondition:value stream noneMatch[isInstanceOf[")
+              .containsString("B]]").$());
       throw e;
     }
   }
