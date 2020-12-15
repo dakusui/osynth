@@ -43,7 +43,7 @@ public class ObjectSynthesizerTest extends UtBase {
     }
   }
 
-  private Object fallbackObject = new Object();
+  private final Object fallbackObject = new Object();
 
   @Test
   public void givenHandlerForMethodInB$whenMethodInBCalled$thenHandlerIsRun() {
@@ -323,9 +323,12 @@ public class ObjectSynthesizerTest extends UtBase {
           .synthesize();
       System.out.println(b.bMethod());
     } catch (IllegalStateException e) {
+      e.printStackTrace();
       assertThat(
           e.getMessage(),
-          asString().containsString("violated precondition:value stream noneMatch[isInstanceOf[B]]").$());
+          asString()
+              .containsString("violated precondition:value stream noneMatch[isInstanceOf[")
+              .containsString("B]]").$());
       throw e;
     }
   }
@@ -372,9 +375,10 @@ public class ObjectSynthesizerTest extends UtBase {
           .synthesize();
       System.out.println(a.aMethod());
     } catch (IllegalStateException e) {
+      e.printStackTrace();
       assertThat(
           e.getMessage(),
-          asString().containsString("value:A violated precondition:value methods->stream noneMatch[isDefaultMethod]").$());
+          asString().containsString("A violated precondition:value methods->stream noneMatch[isDefaultMethod]").$());
       throw e;
     }
   }

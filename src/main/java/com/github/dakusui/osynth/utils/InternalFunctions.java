@@ -1,6 +1,9 @@
 package com.github.dakusui.osynth.utils;
 
+import com.github.dakusui.pcond.core.printable.PrintableFunctionFactory;
+
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -13,6 +16,10 @@ public enum InternalFunctions {
   @SuppressWarnings("unchecked")
   public static <T> Function<T, List<Method>> methods() {
     return (Function<T, List<Method>>) Def.METHODS;
+  }
+
+  public static <T> Function<T, List<T>> listOf() {
+    return PrintableFunctionFactory.function("listOf", Collections::singletonList);
   }
 
   enum Def {

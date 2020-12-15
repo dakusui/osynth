@@ -11,9 +11,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.dakusui.osynth.utils.InternalFunctions.listOf;
 import static com.github.dakusui.osynth.utils.InternalPredicates.*;
 import static com.github.dakusui.osynth.utils.Messages.notAnInterface;
 import static com.github.dakusui.pcond.Preconditions.*;
+import static com.github.dakusui.pcond.functions.Experimentals.nest;
+import static com.github.dakusui.pcond.functions.Experimentals.toContextPredicate;
 import static com.github.dakusui.pcond.functions.Functions.stream;
 import static com.github.dakusui.pcond.functions.Predicates.*;
 
@@ -22,14 +25,14 @@ public class ObjectSynthesizer {
     SYNTHESIZE {
       @Override
       ObjectSynthesizer validate(ObjectSynthesizer target) {
-        target.interfaces.forEach(each -> requireState(target.handlerObjects, when(stream()).then(noneMatch(isInstanceOf(each)))));
+        target.interfaces.forEach(each -> requireState(target.handlerObjects, transform(stream()).check(noneMatch(isInstanceOf(each)))));
         return target;
       }
     },
     TWEAK {
       @Override
       ObjectSynthesizer validate(ObjectSynthesizer target) {
-        target.interfaces.forEach(each -> requireState(each, when(InternalFunctions.methods().andThen(stream())).then(noneMatch(isDefaultMethod()))));
+        target.interfaces.forEach(each -> requireState(each, transform(InternalFunctions.methods().andThen(stream())).check(noneMatch(isDefaultMethod()))));
         return target;
       }
     },
@@ -117,7 +120,15 @@ public class ObjectSynthesizer {
   @SuppressWarnings("unchecked")
   public <T> T synthesize(Class<T> aClass) {
     requireNonNull(aClass);
-    requireArgument(aClass, or(isEqualTo(Object.class), isInterfaceClass().and(matchesAnyOf(interfaces, isAssignableFrom(aClass)))));
+    requireArgument(
+        aClass,
+        or(isEqualTo(Object.class),
+            isInterfaceClass()
+                .and(transform(
+                    listOf()
+                        .andThen(stream())
+                        .andThen(nest(interfaces)))
+                    .check(anyMatch(toContextPredicate(isAssignableFrom()))))));
     return (T) this.validationMode
         .validate(this)
         .createProxyFactory(this.createProxyDescriptor())
