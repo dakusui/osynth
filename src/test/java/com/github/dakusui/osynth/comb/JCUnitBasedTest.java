@@ -14,15 +14,17 @@ import com.github.dakusui.osynth.comb.model.MethodType;
 import com.github.dakusui.osynth.comb.model.ObjectSynthesizerWrapper;
 import com.github.dakusui.osynth.comb.model.TargetMethodDef;
 import com.github.dakusui.osynth.utils.UtBase;
-import com.github.dakusui.pcond.functions.Predicates;
 import org.junit.ComparisonFailure;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import java.util.Collections;
+import java.util.List;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.utils.UtUtils.rootCause;
 import static com.github.dakusui.pcond.Assertions.precondition;
-import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
@@ -395,6 +397,17 @@ public class JCUnitBasedTest extends UtBase {
       if (!exceptionClass.isInstance(t))
         throw new ComparisonFailure("Not an expected exceptioin type", exceptionClass.getName(), t.getClass().getName());
     }
+  }
+
+  /**
+   * A method to workaround an incompatibility introduced in JUnit 4.13.1, where a test class run by a runner extending
+   * {@link Parameterized} must have a static method annotated with {@link Parameterized.Parameters} and returning a list
+   * even if the extending runner is responsible for providing the parameter automatically.
+   * @return An empty list.
+   */
+  @Parameterized.Parameters
+  public static List<Object[]> aDummyParameterMethod() {
+    return Collections.emptyList();
   }
 
   interface Executable {
