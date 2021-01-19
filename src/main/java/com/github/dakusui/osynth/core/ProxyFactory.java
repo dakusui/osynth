@@ -19,10 +19,10 @@ import static com.github.dakusui.osynth.utils.InternalUtils.rethrow;
 import static com.github.dakusui.osynth.utils.Messages.failedToInstantiate;
 
 public class ProxyFactory {
-  public static final Method DESCRIPTOR_METHOD = retrieveDescriptorMethod();
-  private final ProxyDescriptor descriptor;
-  private final Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
-  private final Map<Class<?>, MethodHandles.Lookup> lookups;
+  public static final Method                                            DESCRIPTOR_METHOD = retrieveDescriptorMethod();
+  private final       ProxyDescriptor                                   descriptor;
+  private final       Map<Method, BiFunction<Object, Object[], Object>> methodHandlersCache;
+  private final       Map<Class<?>, MethodHandles.Lookup>               lookups;
 
   public ProxyFactory(ProxyDescriptor descriptor) {
     this.descriptor = descriptor;
@@ -58,7 +58,7 @@ public class ProxyFactory {
     }
   }
 
-  @SuppressWarnings({"Convert2MethodRef"})
+  @SuppressWarnings({ "Convert2MethodRef" })
   public Object create() {
     return Proxy.newProxyInstance(
         ProxyFactory.class.getClassLoader(),
@@ -168,7 +168,6 @@ public class ProxyFactory {
   }
 
   private static Method findMethodInObjectIfNecessary(Object object, Method method) throws NoSuchMethodException {
-    assert object.getClass().getMethod(method.getName(), method.getParameterTypes()) != null : String.format("Method:%s presence check in %s should have been done already", method, object.getClass());
     if (method.getDeclaringClass().isInstance(object))
       return method;
     method = object.getClass().getMethod(method.getName(), method.getParameterTypes());
