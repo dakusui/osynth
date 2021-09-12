@@ -388,6 +388,7 @@ public class ObjectSynthesizerTest extends UtBase {
         new LinkedList<>(),
         new LinkedList<>(),
         new LinkedList<>(),
-        ObjectSynthesizer.DEFAULT_FALLBACK_HANDLER_FACTORY);
+        ObjectSynthesizer.DEFAULT_FALLBACK_HANDLER_FACTORY,
+        ProxyDescriptor.HandlerSelectionOrder.V1_0);
   }
 }

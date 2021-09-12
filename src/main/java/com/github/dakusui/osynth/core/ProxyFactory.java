@@ -76,12 +76,12 @@ public class ProxyFactory {
   private BiFunction<Object, Object[], Object> lookUpMethodCallHandler(Method method) {
     if (!this.methodHandlersCache.containsKey(method)) {
       method.setAccessible(true);
-      this.methodHandlersCache.put(method, createMethodCallHandler(method));
+      this.methodHandlersCache.put(method, this.descriptor.handlerSelectionOrder().createMethodCallHandler(this, method));
     }
     return this.methodHandlersCache.get(method);
   }
 
-  private BiFunction<Object, Object[], Object> createMethodCallHandler(Method method) {
+  BiFunction<Object, Object[], Object> createV10MethodCallHandler(Method method) {
     return this.descriptor.streamAllHandlers()
         .filter(handler -> handler.test(method))
         .map(handler -> (BiFunction<Object, Object[], Object>) handler)
@@ -102,11 +102,41 @@ public class ProxyFactory {
                         .findFirst();
                     if (methodOptional.isPresent())
                       return defaultMethodInvoker(methodOptional.get());
-                    return invokeFallbackHandler(method, descriptor);
+                    return fallbackHandlerInvoker(method, descriptor);
                   } catch (Throwable t) {
                     throw rethrow(t);
                   }
                 }));
+  }
+
+  BiFunction<Object, Object[], Object> createV20MethodCallHandler(Method method) {
+    return this.descriptor.streamAllHandlers()
+        .filter(handler -> handler.test(method))
+        .map(handler -> (BiFunction<Object, Object[], Object>) handler)
+        .findFirst()
+        .orElseGet(
+            () -> this.descriptor.interfaces()
+                .stream()
+                .map((Class<?> each) -> getMethodFrom(method, each))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(Method::isDefault)
+                .findFirst()
+                .map(this::_defaultMethodInvoker)
+                .orElseGet(() -> this.descriptor.handlerObjects().stream()
+                    .filter((Object h) -> hasMethod(h.getClass(), method))
+                    .map((Object h) -> (BiFunction<Object, Object[], Object>) (Object o, Object[] o2) -> invokeMethod(h, method, o2))
+                    .findFirst()
+                    .orElseGet(() -> fallbackHandlerInvoker(method, descriptor))))
+        ;
+  }
+
+  private BiFunction<Object, Object[], Object> _defaultMethodInvoker(Method m) {
+    try {
+      return defaultMethodInvoker(m);
+    } catch (IllegalAccessException e) {
+      throw rethrow(e);
+    }
   }
 
   private Optional<Method> getMethodFrom(Method method, Class<?> each) {
@@ -117,7 +147,7 @@ public class ProxyFactory {
     }
   }
 
-  private static BiFunction<Object, Object[], Object> invokeFallbackHandler(Method method, ProxyDescriptor descriptor) {
+  private static BiFunction<Object, Object[], Object> fallbackHandlerInvoker(Method method, ProxyDescriptor descriptor) {
     return descriptor.fallbackHandler(method);
   }
 

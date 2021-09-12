@@ -24,12 +24,12 @@ public class DefaultMethodToDefaultMethodCallTest {
 
   public static class GivenHandlerObjectImplementingTestInterfaceAndMethodHandlerForCalleeMethod extends UtBase {
     /**
-     * This is a test for counter intuitive behavior.
+     * This is a test for counterintuitive behavior.
      * Since implementation of a default method is "synthesized" in an implementation class when the implementing class is compiled,
      * call on the callee method from the caller is invoked directly on "this", not through the dynamic proxy.
-     * Hence the method handler is ignored even if it is given to the object synthesize for the callee method.
+     * Hence, the method handler is ignored even if it is given to the object synthesizer for the callee method.
      * <p>
-     * Best practice to avoid this is not to add a handler object.
+     * Best practice for avoiding this is not to add a handler object.
      */
     @Test
     public void whenCallerMethodIsInvoked$thenCalleeInHandlerObjectIsInvoked() throws NoSuchMethodException {

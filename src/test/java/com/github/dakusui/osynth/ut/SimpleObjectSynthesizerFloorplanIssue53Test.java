@@ -1,11 +1,13 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.core.ProxyDescriptor;
 import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.SimpleObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.core.ProxyDescriptor.HandlerSelectionOrder.V1_0;
 
 /**
  * A test class to fix a behavior reported as an issue #53 of floorplan library.
@@ -72,6 +74,7 @@ public class SimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
         .handle(methodCall("method6").with((object, args) -> "Synth:method6"))
         .handle(methodCall("method7").with((object, args) -> "Synth:method7"))
         .handle(methodCall("method8").with((object, args) -> "Synth:method8"))
+        .handlerSelectionOrder(V1_0)
         .synthesize();
 
     System.out.println(base.method2());

@@ -1,9 +1,6 @@
 package com.github.dakusui.osynth.core;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
-
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -16,16 +13,35 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 public class ProxyDescriptor {
-  private final List<Class<?>> interfaces;
+  public enum HandlerSelectionOrder {
+    V1_0 {
+      @Override
+      BiFunction<Object, Object[], Object> createMethodCallHandler(ProxyFactory proxyFactory, Method method) {
+        return proxyFactory.createV10MethodCallHandler(method);
+      }
+    },
+    V2_0 {
+      @Override
+      BiFunction<Object, Object[], Object> createMethodCallHandler(ProxyFactory proxyFactory, Method method) {
+        return proxyFactory.createV20MethodCallHandler(method);
+      }
+    };
+
+    abstract BiFunction<Object, Object[], Object> createMethodCallHandler(ProxyFactory proxyFactory, Method method);
+  }
+
+  private final List<Class<?>>         interfaces;
   private final List<MethodHandler>    handlers;
   private final List<MethodHandler>    builtInHandlers;
   private final List<Object>           handlerObjects;
   private final FallbackHandlerFactory fallbackHandlerFactory;
+  private final HandlerSelectionOrder  handlerSelectionOrder;
 
-  public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
+  public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory, HandlerSelectionOrder handlerSelectionOrder) {
     this.interfaces = interfaces;
     this.handlers = handlers;
     this.handlerObjects = handlerObjects;
+    this.handlerSelectionOrder = handlerSelectionOrder;
     this.interfaces.add(Describable.class);
     this.builtInHandlers = asList(
         hashCodeHandler(this),
@@ -89,11 +105,16 @@ public class ProxyDescriptor {
         .orElseThrow(() -> new IllegalArgumentException(noHandlerFound(this.handlerObjects, method)));
   }
 
+  public HandlerSelectionOrder handlerSelectionOrder() {
+    return this.handlerSelectionOrder;
+  }
+
   public ProxyDescriptor overrideWith(ProxyDescriptor proxyDescriptor) {
     return new ProxyDescriptor(
         Stream.concat(proxyDescriptor.interfaces().stream(), this.interfaces().stream()).distinct().collect(toList()),
         Stream.concat(proxyDescriptor.handlers().stream(), this.handlers().stream()).distinct().collect(toList()),
         Stream.concat(proxyDescriptor.handlerObjects().stream(), this.handlerObjects().stream()).distinct().collect(toList()),
-        this.fallbackHandlerFactory.compose(proxyDescriptor.fallbackHandlerFactory));
+        this.fallbackHandlerFactory.compose(proxyDescriptor.fallbackHandlerFactory),
+        this.handlerSelectionOrder);
   }
 }

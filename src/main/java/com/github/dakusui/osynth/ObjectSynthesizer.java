@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.dakusui.osynth.core.ProxyDescriptor.HandlerSelectionOrder.V2_0;
 import static com.github.dakusui.osynth.utils.InternalFunctions.listOf;
 import static com.github.dakusui.osynth.utils.InternalPredicates.*;
 import static com.github.dakusui.osynth.utils.Messages.notAnInterface;
@@ -21,6 +22,7 @@ import static com.github.dakusui.pcond.functions.Functions.stream;
 import static com.github.dakusui.pcond.functions.Predicates.*;
 
 public class ObjectSynthesizer {
+
   enum ValidationMode {
     SYNTHESIZE {
       @Override
@@ -59,9 +61,12 @@ public class ObjectSynthesizer {
   private             FallbackHandlerFactory fallbackHandlerFactory;
   private             ValidationMode         validationMode;
 
+  private ProxyDescriptor.HandlerSelectionOrder handlerSelectionOrder;
+
   public ObjectSynthesizer() {
-    this.validationMode = ValidationMode.NOTHING;
-    this.fallbackHandlerFactory(DEFAULT_FALLBACK_HANDLER_FACTORY);
+    this.fallbackHandlerFactory(DEFAULT_FALLBACK_HANDLER_FACTORY)
+        .handlerSelectionOrder(V2_0)
+        .validationMode(ValidationMode.NOTHING);
   }
 
   public ObjectSynthesizer addInterface(Class<?> anInterface) {
@@ -112,6 +117,11 @@ public class ObjectSynthesizer {
     return this;
   }
 
+  public ObjectSynthesizer handlerSelectionOrder(ProxyDescriptor.HandlerSelectionOrder handlerSelectionOrder) {
+    this.handlerSelectionOrder = requireNonNull(handlerSelectionOrder);
+    return this;
+  }
+
   @SuppressWarnings("unchecked")
   public <T> T synthesize() {
     return (T) this.synthesize(Object.class);
@@ -149,15 +159,16 @@ public class ObjectSynthesizer {
   }
 
   private ProxyDescriptor createProxyDescriptor() {
-    return createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory);
+    return createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory, handlerSelectionOrder);
   }
 
-  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
+  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory, ProxyDescriptor.HandlerSelectionOrder handlerSelectionOrder) {
     return new ProxyDescriptor(
         interfaces,
         handlers,
         handlerObjects,
-        fallbackHandlerFactory);
+        fallbackHandlerFactory,
+        handlerSelectionOrder);
   }
 
   public static ObjectSynthesizer synthesizer() {
