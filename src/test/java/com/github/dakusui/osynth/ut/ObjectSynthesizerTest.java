@@ -15,6 +15,7 @@ import java.util.List;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.core.ProxyDescriptor.HandlerSelectionOrder.V1_0;
 import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.utils.UtUtils.nonEmptyString;
 import static java.util.Collections.emptyList;
@@ -208,6 +209,7 @@ public class ObjectSynthesizerTest extends UtBase {
           }
         })
         .addHandlerObject((B) () -> "Overridden B")
+        .handlerSelectionOrder(V1_0)
         .synthesize();
     A a = (A) x;
     B b = (B) x;
@@ -389,6 +391,6 @@ public class ObjectSynthesizerTest extends UtBase {
         new LinkedList<>(),
         new LinkedList<>(),
         ObjectSynthesizer.DEFAULT_FALLBACK_HANDLER_FACTORY,
-        ProxyDescriptor.HandlerSelectionOrder.V1_0);
+        V1_0);
   }
 }

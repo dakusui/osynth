@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import static com.github.dakusui.crest.Crest.asInteger;
 import static com.github.dakusui.crest.Crest.assertThat;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.core.ProxyDescriptor.HandlerSelectionOrder.V1_0;
 
 @RunWith(Enclosed.class)
 public class DefaultMethodToDefaultMethodCallTest {
@@ -43,6 +44,7 @@ public class DefaultMethodToDefaultMethodCallTest {
           .addHandlerObject(handlerObject)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
+          .handlerSelectionOrder(V1_0)
           .synthesize();
       int result = i.caller();
       System.out.println(result);
@@ -86,6 +88,7 @@ public class DefaultMethodToDefaultMethodCallTest {
             }
           })
           .addInterface(TestInterface.class)
+          .handlerSelectionOrder(V1_0)
           .synthesize();
       int result = i.caller();
       System.out.println(result);
