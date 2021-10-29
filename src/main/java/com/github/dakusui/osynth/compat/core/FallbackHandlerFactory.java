@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.core;
+package com.github.dakusui.osynth.compat.core;
 
 import java.lang.reflect.Method;
 import java.util.Optional;

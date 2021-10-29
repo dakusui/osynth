@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.CompatSimpleObjectSynthesizer;
 import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Before;
 import org.junit.Test;
@@ -8,9 +9,8 @@ import org.junit.Test;
 import java.util.Objects;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.SimpleObjectSynthesizer.methodCall;
 
-public class SimpleObjectSynthesizerTest extends UtBase {
+public class CompatSimpleObjectSynthesizerTest extends UtBase {
   private X handlerObject;
 
   interface A {
@@ -90,9 +90,9 @@ public class SimpleObjectSynthesizerTest extends UtBase {
 
   @Test
   public void whenMethodsCalled$thenProxiedToIntendedMethods() {
-    X x = new SimpleObjectSynthesizer<>(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
+    X x = new CompatSimpleObjectSynthesizer<>(X.class)
+        .handle(ObjectSynthesizer.methodCall("aMethod").with((self, args) -> "a is called"))
+        .handle(ObjectSynthesizer.methodCall("bMethod").with((self, args) -> "b is called"))
         .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
@@ -109,9 +109,9 @@ public class SimpleObjectSynthesizerTest extends UtBase {
 
   @Test
   public void whenEqualsOnAnotherObjectNotEqual$thenFalse() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
+    X x = CompatSimpleObjectSynthesizer.create(X.class)
+        .handle(ObjectSynthesizer.methodCall("aMethod").with((self, args) -> "a is called"))
+        .handle(ObjectSynthesizer.methodCall("bMethod").with((self, args) -> "b is called"))
         .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
@@ -122,9 +122,9 @@ public class SimpleObjectSynthesizerTest extends UtBase {
 
   @Test
   public void whenEqualsOnAnotherXNotEqual$thenFalse() {
-    X x = SimpleObjectSynthesizer.create(X.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
+    X x = CompatSimpleObjectSynthesizer.create(X.class)
+        .handle(ObjectSynthesizer.methodCall("aMethod").with((self, args) -> "a is called"))
+        .handle(ObjectSynthesizer.methodCall("bMethod").with((self, args) -> "b is called"))
         .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
@@ -135,9 +135,9 @@ public class SimpleObjectSynthesizerTest extends UtBase {
 
   @Test
   public void whenDefaultMethodCalled$thenValueReturned() {
-    Y y = SimpleObjectSynthesizer.create(Y.class)
-        .handle(methodCall("aMethod").with((self, args) -> "a is called"))
-        .handle(methodCall("bMethod").with((self, args) -> "b is called"))
+    Y y = CompatSimpleObjectSynthesizer.create(Y.class)
+        .handle(ObjectSynthesizer.methodCall("aMethod").with((self, args) -> "a is called"))
+        .handle(ObjectSynthesizer.methodCall("bMethod").with((self, args) -> "b is called"))
         .addHandlerObject(handlerObject)
         .synthesize();
     assertThat(
@@ -158,7 +158,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
   }
 
   private static <T> T createProxyFor(@SuppressWarnings("SameParameterValue") Class<T> klass, T obj) {
-    return SimpleObjectSynthesizer.create(klass).addHandlerObject(obj).synthesize(klass);
+    return CompatSimpleObjectSynthesizer.create(klass).addHandlerObject(obj).synthesize(klass);
   }
 
   private Y createY() {

@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.core;
+package com.github.dakusui.osynth.compat.core;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
 

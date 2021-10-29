@@ -1,9 +1,11 @@
 package com.github.dakusui.osynth;
 
+import com.github.dakusui.osynth.compat.CompatObjectSynthesizer;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 
+@SuppressWarnings("deprecation")
 public class Examples {
   interface Hello {
     String hello(String name);
@@ -25,7 +27,7 @@ public class Examples {
 
   @Test
   public void example1() {
-    HelloWorld helloWorld = new ObjectSynthesizer()
+    HelloWorld helloWorld = new CompatObjectSynthesizer()
         .addInterface(HelloWorld.class)
         .handle(methodCall("bye").with((self, args) -> "Bye."))
         .synthesize();
@@ -35,7 +37,7 @@ public class Examples {
 
   @Test
   public void example2() {
-    HelloWorld helloWorld = ObjectSynthesizer.create(false)
+    HelloWorld helloWorld = CompatObjectSynthesizer.create(false)
         .addInterface(HelloWorld.class)
         .addHandlerObject((HelloWorld) () -> "Bye.")
         .synthesize();
@@ -45,7 +47,7 @@ public class Examples {
 
   @Test
   public void example3() {
-    HelloWorld helloWorld = ObjectSynthesizer.create(true)
+    HelloWorld helloWorld = CompatObjectSynthesizer.create(true)
         .addHandlerObject((HelloWorld) () -> "Bye.")
         .synthesize();
     System.out.println(helloWorld.hello("world"));
@@ -54,7 +56,7 @@ public class Examples {
 
   @Test
   public void example4() {
-    HelloWorld helloWorld = ObjectSynthesizer.create(true)
+    HelloWorld helloWorld = CompatObjectSynthesizer.create(true)
         .addHandlerObject((HelloWorld) () -> "Bye.")
         .synthesize();
     System.out.println(helloWorld.hello("world"));
@@ -63,7 +65,7 @@ public class Examples {
 
   @Test
   public void example5() {
-    Hello hello = new ObjectSynthesizer()
+    Hello hello = new CompatObjectSynthesizer()
         .addInterface(Hello.class)
         .addInterface(Bye.class)
         .addHandlerObject((HelloWorld) () -> "Bye.")

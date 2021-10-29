@@ -1,11 +1,11 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.CompatSimpleObjectSynthesizer;
 import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.SimpleObjectSynthesizer.methodCall;
 
 /**
  * A test class to fix a behavior reported as an issue #53 of floorplan library.
@@ -19,7 +19,7 @@ import static com.github.dakusui.osynth.SimpleObjectSynthesizer.methodCall;
  * method7  Absent      Present     Present   Synth
  * method8  Present     Present     Present   Synth
  */
-public class SimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
+public class CompatSimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
   public interface Base {
     default String method2() {
       return "Base:method2";
@@ -51,7 +51,7 @@ public class SimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
 
   @Test
   public void test() {
-    Base base = SimpleObjectSynthesizer.create(Base.class)
+    Base base = CompatSimpleObjectSynthesizer.create(Base.class)
         .addHandlerObject(new FallbackBase() {
           @Override
           public String method3() {
@@ -69,9 +69,9 @@ public class SimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
 
           }
         })
-        .handle(methodCall("method6").with((object, args) -> "Synth:method6"))
-        .handle(methodCall("method7").with((object, args) -> "Synth:method7"))
-        .handle(methodCall("method8").with((object, args) -> "Synth:method8"))
+        .handle(ObjectSynthesizer.methodCall("method6").with((object, args) -> "Synth:method6"))
+        .handle(ObjectSynthesizer.methodCall("method7").with((object, args) -> "Synth:method7"))
+        .handle(ObjectSynthesizer.methodCall("method8").with((object, args) -> "Synth:method8"))
         .synthesize();
 
     System.out.println(base.method2());

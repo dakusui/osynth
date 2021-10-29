@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.ut.issues;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.CompatObjectSynthesizer;
 import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -39,7 +39,7 @@ public class DefaultMethodToDefaultMethodCallTest {
           return -100;
         }
       };
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = CompatObjectSynthesizer.create(false)
           .addHandlerObject(handlerObject)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
@@ -57,7 +57,7 @@ public class DefaultMethodToDefaultMethodCallTest {
 
     @Test
     public void whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = CompatObjectSynthesizer.create(false)
           .addHandlerObject(new TestInterface() {
             @Override
             public int caller() {
@@ -74,7 +74,7 @@ public class DefaultMethodToDefaultMethodCallTest {
   public static class GivenSimpleHandlerObjectOverridingCalleeMethod extends UtBase {
     @Test
     public void whenCallerMethodIsInvoked$thenCalleeInHandlerObjectIsRun() {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = CompatObjectSynthesizer.create(false)
           .addHandlerObject(new Object() {
             /**
              * Even a compiler doesn't its usage, this method is called through the ObjectSynthesizer.
@@ -96,7 +96,7 @@ public class DefaultMethodToDefaultMethodCallTest {
   public static class GivenNoHandlerObjectAndMethodHandlerForCalleeMethod extends UtBase {
     @Test
     public void whenCallerMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() throws NoSuchMethodException {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = CompatObjectSynthesizer.create(false)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
           .synthesize();
@@ -109,7 +109,7 @@ public class DefaultMethodToDefaultMethodCallTest {
 
     @Test
     public void whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = CompatObjectSynthesizer.create(false)
           .handle(methodCall("caller").with((self, args) -> 100))
           .addInterface(TestInterface.class)
           .synthesize();

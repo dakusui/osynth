@@ -4,7 +4,7 @@ import com.github.dakusui.osynth.comb.def.I1;
 import com.github.dakusui.osynth.comb.def.I1N;
 import com.github.dakusui.osynth.comb.def.I2;
 import com.github.dakusui.osynth.comb.def.I2N;
-import com.github.dakusui.osynth.core.FallbackHandlerFactory;
+import com.github.dakusui.osynth.compat.core.FallbackHandlerFactory;
 
 import java.util.*;
 import java.util.function.BiFunction;

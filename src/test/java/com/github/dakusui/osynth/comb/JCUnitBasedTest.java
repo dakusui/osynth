@@ -6,8 +6,8 @@ import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.*;
-import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.compat.CompatObjectSynthesizer;
+import com.github.dakusui.osynth.compat.CompatSimpleObjectSynthesizer;
 import com.github.dakusui.osynth.comb.def.I;
 import com.github.dakusui.osynth.comb.model.ExceptionType;
 import com.github.dakusui.osynth.comb.model.MethodType;
@@ -360,7 +360,7 @@ public class JCUnitBasedTest extends UtBase {
     assert precondition(methodType, isNotNull());
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
     Class<?>[] interfaces = targetMethodDef.getMethodType().interfaces(targetMethodDef.getExceptionType());
-    Object obj = new ObjectSynthesizerWrapper(requireNonNull(SimpleObjectSynthesizer.create(interfaces[0])))
+    Object obj = new ObjectSynthesizerWrapper(requireNonNull(CompatSimpleObjectSynthesizer.create(interfaces[0])))
         .addMethodHandlers(targetMethodDef, numMethodHandlers)
         .addHandlerObjects(targetMethodDef, numHandlerObjects)
         .setFallbackHandlerFactory(targetMethodDef, customFallback)
@@ -380,7 +380,7 @@ public class JCUnitBasedTest extends UtBase {
       int numHandlerObjects,
       boolean customFallback,
       TargetMethodDef targetMethodDef) {
-    ObjectSynthesizer objectSynthesizer = ObjectSynthesizer.create(auto);
+    CompatObjectSynthesizer objectSynthesizer = CompatObjectSynthesizer.create(auto);
     objectSynthesizer.addInterface(I.class);
     return new ObjectSynthesizerWrapper(objectSynthesizer)
         .addMethodHandlers(targetMethodDef, numMethodHandlers)

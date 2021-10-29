@@ -1,7 +1,6 @@
 package com.github.dakusui.osynth.utils;
 
 
-
 import com.github.dakusui.crest.utils.printable.Printable;
 import org.hamcrest.CoreMatchers;
 
@@ -15,14 +14,13 @@ import static org.junit.Assume.assumeThat;
 
 public enum UtUtils {
   ;
-  static final        PrintStream STDOUT = System.out;
-  static final        PrintStream STDERR = System.err;
   public static final PrintStream NOP    = new PrintStream(new OutputStream() {
     @Override
     public void write(int b) {
     }
   });
-
+  static final        PrintStream STDOUT = System.out;
+  static final        PrintStream STDERR = System.err;
 
   /**
    * A method to pretend to run a shell command. This just prints out given format
@@ -34,7 +32,7 @@ public enum UtUtils {
    * @param args Arguments to be embedded in a format string {@code fmt}.
    */
   public static void runShell(String fmt, Object... args) {
-    System.out.println(String.format(fmt, args));
+    System.out.printf((fmt) + "%n", args);
   }
 
   /**

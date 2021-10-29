@@ -1,6 +1,6 @@
-package com.github.dakusui.osynth.core;
+package com.github.dakusui.osynth.compat.core;
 
-import com.github.dakusui.osynth.Synthesized;
+import com.github.dakusui.osynth.compat.Synthesized;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

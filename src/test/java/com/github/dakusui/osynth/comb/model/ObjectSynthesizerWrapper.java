@@ -1,8 +1,8 @@
 package com.github.dakusui.osynth.comb.model;
 
-import com.github.dakusui.osynth.core.FallbackHandlerFactory;
-import com.github.dakusui.osynth.core.MethodHandler;
-import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.core.FallbackHandlerFactory;
+import com.github.dakusui.osynth.compat.core.MethodHandler;
+import com.github.dakusui.osynth.compat.CompatObjectSynthesizer;
 import com.github.dakusui.osynth.comb.def.I1N;
 import com.github.dakusui.osynth.comb.def.I2N;
 
@@ -16,8 +16,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizerWrapper {
-  final ObjectSynthesizer objectSynthesizer;
-  final MethodHandler[]   methodHandlersRegisteredAlways = new MethodHandler[] {
+  final CompatObjectSynthesizer objectSynthesizer;
+  final MethodHandler[]         methodHandlersRegisteredAlways = new MethodHandler[] {
       methodCall("apply0_both").with((o, objects) -> "apply0_both:I1:methodHandler"),
       methodCall("apply0_both").with((o, objects) -> "apply0_both:I2:methodHandler")
   };
@@ -26,7 +26,7 @@ public class ObjectSynthesizerWrapper {
       methodCall("apply0_2").with((o, objects) -> "apply0_2:I2:methodHandler")
   };
 
-  public ObjectSynthesizerWrapper(ObjectSynthesizer objectSynthesizer) {
+  public ObjectSynthesizerWrapper(CompatObjectSynthesizer objectSynthesizer) {
     this.objectSynthesizer = objectSynthesizer;
   }
 
@@ -78,7 +78,7 @@ public class ObjectSynthesizerWrapper {
   }
 
   private static void example() {
-    Object obj = new ObjectSynthesizer()
+    Object obj = new CompatObjectSynthesizer()
         .handle(ObjectSynthesizerWrapper.createMethodHandler(1, MethodType.NORMAL, null))
         .addHandlerObject(new Object())
         .addInterface(I1N.class)

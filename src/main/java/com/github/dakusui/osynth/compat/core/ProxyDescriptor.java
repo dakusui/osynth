@@ -1,15 +1,12 @@
-package com.github.dakusui.osynth.core;
-
-import com.github.dakusui.osynth.ObjectSynthesizer;
+package com.github.dakusui.osynth.compat.core;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.osynth.core.MethodHandler.*;
+import static com.github.dakusui.osynth.compat.core.MethodHandler.*;
 import static com.github.dakusui.osynth.utils.Messages.noHandlerFound;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;

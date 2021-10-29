@@ -1,11 +1,12 @@
 package com.github.dakusui.osynth.perf;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.CompatObjectSynthesizer;
 import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 
+@SuppressWarnings("deprecation")
 public class Perf extends UtBase {
   interface Acc {
     Integer increment(Integer value);
@@ -72,21 +73,21 @@ public class Perf extends UtBase {
   }
 
   Acc synthesizeObjectWithMethodHandler() {
-    return new ObjectSynthesizer()
+    return new CompatObjectSynthesizer()
         .addInterface(Acc.class)
         .handle(methodCall("increment", Integer.class).with((self, args) -> ((Integer) args[0]) + 1))
         .synthesize(Acc.class);
   }
 
   Acc synthesizeObjectWithHandlerObject() {
-    return new ObjectSynthesizer()
+    return new CompatObjectSynthesizer()
         .addInterface(Acc.class)
         .addHandlerObject((Acc) value -> value + 1)
         .synthesize(Acc.class);
   }
 
   Acc synthesizeObjectWithDefaultMethod() {
-    return new ObjectSynthesizer()
+    return new CompatObjectSynthesizer()
         .addInterface(AccDefault.class)
         .synthesize(Acc.class);
   }
