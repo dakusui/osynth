@@ -10,7 +10,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface MethodHandler extends BiFunction<Object, Object[], Object>, Predicate<Method> {
+public interface MethodHandler {
   Predicate<Method> matcher();
 
   BiFunction<Object, Object[], Object> function();
@@ -112,7 +112,7 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
         public BiFunction<Object, Object[], Object> function() {
           return function;
         }
-
+/*
         @Override
         public Object apply(Object self, Object[] objects) {
           return function.apply(self, objects);
@@ -122,7 +122,7 @@ public interface MethodHandler extends BiFunction<Object, Object[], Object>, Pre
         public boolean test(Method method) {
           return matcher.test(method);
         }
-
+*/
         @Override
         public int hashCode() {
           return function.hashCode();

@@ -83,8 +83,8 @@ public class ProxyFactory {
 
   private BiFunction<Object, Object[], Object> createMethodCallHandler(Method method) {
     return this.descriptor.streamAllHandlers()
-        .filter(handler -> handler.test(method))
-        .map(handler -> (BiFunction<Object, Object[], Object>) handler)
+        .filter(handler -> handler.matcher().test(method))
+        .map(MethodHandler::function)
         .findFirst()
         .orElseGet(
             () -> this.descriptor.handlerObjects().stream()
