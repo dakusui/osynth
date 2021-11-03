@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
 
 public class ParameterizedMethodHandlingTest extends UtBase {
   interface Single {

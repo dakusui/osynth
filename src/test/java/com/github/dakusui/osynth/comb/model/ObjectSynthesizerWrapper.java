@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 
 import static com.github.dakusui.crest.Crest.asString;
 import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 

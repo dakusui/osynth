@@ -14,7 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished.assertionInCatchClauseFinished;
 import static com.github.dakusui.osynth.utils.UtUtils.nonEmptyString;
 import static java.util.Collections.emptyList;

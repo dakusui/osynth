@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 
 import static com.github.dakusui.crest.Crest.asInteger;
 import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
 
 @RunWith(Enclosed.class)
 public class DefaultMethodToDefaultMethodCallTest {

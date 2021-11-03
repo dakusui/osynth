@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.compat.core;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.ObjectSynthesizer;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

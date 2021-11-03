@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth;
+package com.github.dakusui.osynth.compat;
 
 import com.github.dakusui.osynth.compat.core.MethodHandler;
 

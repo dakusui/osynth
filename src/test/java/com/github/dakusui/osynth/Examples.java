@@ -3,7 +3,7 @@ package com.github.dakusui.osynth;
 import com.github.dakusui.osynth.compat.CompatObjectSynthesizer;
 import org.junit.Test;
 
-import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
 
 @SuppressWarnings("deprecation")
 public class Examples {

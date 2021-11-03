@@ -1,6 +1,5 @@
 package com.github.dakusui.osynth.compat;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.compat.core.FallbackHandlerFactory;
 import com.github.dakusui.osynth.compat.core.MethodHandler;
 import com.github.dakusui.osynth.compat.core.ProxyDescriptor;
