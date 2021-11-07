@@ -140,9 +140,9 @@ public class ProxyFactory {
         .unreflectSpecial(method, declaringInterface);
   }
 
-  private Object invokeDefaultMethodInDeclaringInterface(Object proxy, Object[] args, MethodHandle preparedMethodHandle) {
+  private static Object invokeDefaultMethodInDeclaringInterface(Object proxy, Object[] args, MethodHandle methodHandle) {
     try {
-      return preparedMethodHandle.bindTo(proxy).invokeWithArguments(args);
+      return methodHandle.bindTo(proxy).invokeWithArguments(args);
     } catch (Throwable throwable) {
       throw rethrow(throwable);
     }

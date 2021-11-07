@@ -1,7 +1,6 @@
 package com.github.dakusui.osynth.utils;
 
-
-import com.github.dakusui.crest.utils.printable.Printable;
+import com.github.dakusui.thincrest_pcond.functions.Printable;
 import org.hamcrest.CoreMatchers;
 
 import java.io.OutputStream;
