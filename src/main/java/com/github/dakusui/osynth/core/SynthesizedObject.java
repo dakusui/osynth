@@ -1,101 +1,56 @@
 package com.github.dakusui.osynth.core;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.annotations.OsynthInternal;
 import com.github.dakusui.osynth.utils.InternalUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.osynth.utils.InternalPredicates.*;
+import static com.github.dakusui.osynth.utils.InternalUtils.invokeMethod;
+import static com.github.dakusui.osynth.utils.InternalUtils.toMethodHandle;
 import static com.github.dakusui.pcond.Assertions.that;
-import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
-import static com.github.dakusui.pcond.functions.Predicates.and;
 import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
 import static java.util.Collections.emptyList;
 
 public interface SynthesizedObject {
+  @OsynthInternal
+  Object handleMethodInvocationRequest(Method method, Object[] args);
 
-  default Object handleMethod(Method method, Object[] args) {
-    return this.methodHandlerFor(method)
-        .map(MethodHandler::function)
-        .orElseGet(() -> methodHandlingFunctionBasedOnDefaultImplementationFor(method)
-            .orElseGet(() -> methodHandlingFunctionInFallbackObjectFor(method)))
-        .apply(this, args);
-  }
-
-  default BiFunction<SynthesizedObject, Object[], Object> methodHandlingFunctionInFallbackObjectFor(Method method) {
-    return InternalUtils.createMethodHandlingFunctionFor(descriptor().fallbackObject().orElse(null), method);
-  }
-
-  default Optional<BiFunction<SynthesizedObject, Object[], Object>> methodHandlingFunctionBasedOnDefaultImplementationFor(Method method) {
-    return InternalUtils.toMethodHandle(method).map(InternalUtils::toMethodHandlingFunction);
-  }
-
-  default <T> T castTo(Class<T> klass) {
-    return require(klass, and(
-        isNotNull(),
-        isInterfaceClass(),
-        matchesAnyOf(
-            descriptor().registeredInterfaceClasses(),
-            isAssignableFrom(klass)))).cast(this);
-  }
-
-  default Iterable<Class<?>> interfaces() {
-    return descriptor().registeredInterfaceClasses();
-  }
-
-  default Optional<MethodHandler> methodHandlerFor(Method method) {
-    return methodHandlersFor(method).findFirst();
-  }
-
-  default Stream<MethodHandler> methodHandlersFor(Method method) {
-    return descriptor().registeredMethodHandlers().stream()
-        .filter(each -> each.matcher().test(method));
-  }
-
-  default SynthesizedObject base() {
-    Descriptor baseDescriptor = descriptor();
-    return ObjectSynthesizer.createSynthesizedObject(new Descriptor() {
-      @Override
-      public List<Class<?>> registeredInterfaceClasses() {
-        return baseDescriptor.registeredInterfaceClasses();
-      }
-
-      @Override
-      public Optional<Object> fallbackObject() {
-        return baseDescriptor.fallbackObject();
-      }
-
-      @Override
-      public List<MethodHandler> registeredMethodHandlers() {
-        return emptyList();
-      }
-    });
-  }
-
-  default Object fallback() {
-    return descriptor().fallbackObject().orElse(null);
-  }
-
+  @OsynthInternal
   Descriptor descriptor();
+
+  @OsynthInternal
+  <T> T castTo(Class<T> klass);
+
+  @OsynthInternal
+  Iterable<Class<?>> interfaces();
+
+  @OsynthInternal
+  Stream<MethodHandlerEntry> methodHandlersFor(Method method);
+
+  @OsynthInternal
+  SynthesizedObject base();
+
+  @OsynthInternal
+  Object fallback();
 
   interface Descriptor {
     default ClassLoader classLoader() {
       return this.getClass().getClassLoader();
     }
 
-    List<MethodHandler> registeredMethodHandlers();
+    List<MethodHandlerEntry> registeredMethodHandlers();
 
     List<Class<?>> registeredInterfaceClasses();
 
     Optional<Object> fallbackObject();
 
     class Builder {
-      final List<MethodHandler> methodHandlers   = new LinkedList<>();
-      final List<Class<?>>      interfaceClasses = new LinkedList<>();
+      final List<MethodHandlerEntry> methodHandlerEntries = new LinkedList<>();
+      final List<Class<?>>           interfaceClasses     = new LinkedList<>();
       Object      fallbackObject = null;
       ClassLoader classLoader;
 
@@ -110,8 +65,8 @@ public interface SynthesizedObject {
       }
 
       @SuppressWarnings("UnusedReturnValue")
-      public Builder addMethodHandler(MethodHandler methodHandler) {
-        this.methodHandlers.add(methodHandler);
+      public Builder addMethodHandler(MethodHandlerEntry methodHandlerEntry) {
+        this.methodHandlerEntries.add(methodHandlerEntry);
         return this;
       }
 
@@ -128,13 +83,13 @@ public interface SynthesizedObject {
       }
 
       public Descriptor build() {
-        List<MethodHandler> methodHandlers = new ArrayList<>(this.methodHandlers);
+        List<MethodHandlerEntry> methodHandlerEntries = new ArrayList<>(this.methodHandlerEntries);
         List<Class<?>> interfaceClasses = new ArrayList<>(new LinkedHashSet<>(this.interfaceClasses));
         Object fallbackObject = this.fallbackObject;
         return new Descriptor() {
           @Override
-          public List<MethodHandler> registeredMethodHandlers() {
-            return methodHandlers;
+          public List<MethodHandlerEntry> registeredMethodHandlers() {
+            return methodHandlerEntries;
           }
 
           @Override
@@ -154,16 +109,100 @@ public interface SynthesizedObject {
   class Impl implements SynthesizedObject {
 
     private final Descriptor descriptor;
+    private final Object proxy;
 
-    public Impl(Descriptor descriptor) {
+    public Impl(Object proxy, Descriptor descriptor) {
       assert that(descriptor, isNotNull());
+      this.proxy = proxy;
       this.descriptor = descriptor;
     }
 
 
     @Override
+    @OsynthInternal
     public Descriptor descriptor() {
       return this.descriptor;
+    }
+
+    @OsynthInternal
+    public Object handleMethodInvocationRequest(Method method, Object[] args) {
+      if (method.getAnnotation(OsynthInternal.class) != null)
+        return invokeMethod(method, this, args);
+      return this.methodHandlerFor(method)
+          .map(MethodHandlerEntry::function)
+          .orElseGet(() -> methodHandlerBasedOnDefaultImplementationFor(method)
+              .orElseGet(() -> methodHandlerFunctionInFallbackObjectFor(method)))
+          .apply(this, args);
+    }
+
+    @OsynthInternal
+    public MethodHandler methodHandlerFunctionInFallbackObjectFor(Method method) {
+      return InternalUtils.createMethodHandlerFor(descriptor().fallbackObject().orElse(null), method);
+    }
+
+    @OsynthInternal
+    public Optional<MethodHandler> methodHandlerBasedOnDefaultImplementationFor(Method method) {
+      return toMethodHandle(method).map(InternalUtils::toMethodHandler);
+    }
+
+    @Override
+    @OsynthInternal
+    public <T> T castTo(Class<T> klass) {
+      return klass.cast(this.proxy);
+      /*
+      return require(klass, and(
+          isNotNull(),
+          isInterfaceClass(),
+          matchesAnyOf(
+              descriptor().registeredInterfaceClasses(),
+              isAssignableFrom(klass)))).cast(this);
+       */
+    }
+
+    @Override
+    @OsynthInternal
+    public Iterable<Class<?>> interfaces() {
+      return descriptor().registeredInterfaceClasses();
+    }
+
+    @OsynthInternal
+    public Optional<MethodHandlerEntry> methodHandlerFor(Method method) {
+      return methodHandlersFor(method).findFirst();
+    }
+
+    @Override
+    @OsynthInternal
+    public Stream<MethodHandlerEntry> methodHandlersFor(Method method) {
+      return descriptor().registeredMethodHandlers().stream()
+          .filter(each -> each.matcher().test(method));
+    }
+
+    @Override
+    @OsynthInternal
+    public SynthesizedObject base() {
+      Descriptor baseDescriptor = descriptor();
+      return ObjectSynthesizer.createSynthesizedObject(new Descriptor() {
+        @Override
+        public List<Class<?>> registeredInterfaceClasses() {
+          return baseDescriptor.registeredInterfaceClasses();
+        }
+
+        @Override
+        public Optional<Object> fallbackObject() {
+          return baseDescriptor.fallbackObject();
+        }
+
+        @Override
+        public List<MethodHandlerEntry> registeredMethodHandlers() {
+          return emptyList();
+        }
+      });
+    }
+
+    @Override
+    @OsynthInternal
+    public Object fallback() {
+      return descriptor().fallbackObject().orElse(null);
     }
   }
 }

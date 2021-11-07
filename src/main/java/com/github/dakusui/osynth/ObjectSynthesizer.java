@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth;
 
-import com.github.dakusui.osynth.core.MethodHandler;
+import com.github.dakusui.osynth.core.MethodHandlerEntry;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 
 import java.lang.reflect.Proxy;
@@ -14,8 +14,8 @@ import static com.github.dakusui.pcond.functions.Predicates.and;
 import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
 
 public interface ObjectSynthesizer {
-  static MethodHandler.Builder methodCall(String methodName, Class<?>... parameterTypes) {
-    return MethodHandler.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
+  static MethodHandlerEntry.Builder methodCall(String methodName, Class<?>... parameterTypes) {
+    return MethodHandlerEntry.builderByNameAndParameterTypes(requireNonNull(methodName), requireNonNull(parameterTypes));
   }
 
   static ObjectSynthesizer create() {
@@ -28,16 +28,16 @@ public interface ObjectSynthesizer {
   }
 
   static SynthesizedObject createSynthesizedObject(SynthesizedObject.Descriptor descriptor) {
-    SynthesizedObject synthesizedObject = new SynthesizedObject.Impl(descriptor);
-    return (SynthesizedObject) Proxy.newProxyInstance(
+    //SynthesizedObject synthesizedObject = new SynthesizedObject.Impl(descriptor);
+    return new SynthesizedObject.Impl(Proxy.newProxyInstance(
         descriptor.classLoader(),
         Stream.concat(
                 descriptor.registeredInterfaceClasses().stream(),
                 Stream.of(SynthesizedObject.class))
             .distinct()
             .toArray((IntFunction<Class<?>[]>) Class[]::new),
-        (proxy, method, args) -> synthesizedObject.handleMethod(method, args)
-    );
+        (proxy, method, args) -> ((SynthesizedObject) proxy).handleMethodInvocationRequest(method, args)),
+        descriptor);
   }
 
   default ObjectSynthesizer addInterface(Class<?> interfaceClass) {
@@ -46,9 +46,9 @@ public interface ObjectSynthesizer {
     return this;
   }
 
-  default ObjectSynthesizer handle(MethodHandler methodHandler) {
-    requireNonNull(methodHandler);
-    descriptorBuilder().addMethodHandler(methodHandler);
+  default ObjectSynthesizer handle(MethodHandlerEntry methodHandlerEntry) {
+    requireNonNull(methodHandlerEntry);
+    descriptorBuilder().addMethodHandler(methodHandlerEntry);
     return this;
   }
 
