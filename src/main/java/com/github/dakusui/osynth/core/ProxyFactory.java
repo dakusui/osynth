@@ -8,10 +8,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -28,7 +25,7 @@ public class ProxyFactory {
     this.descriptor = descriptor;
     this.methodHandlersCache = new HashMap<>();
     this.lookups = new HashMap<>();
-    this.descriptor.interfaces().forEach(this::lookupObjectFor);
+    this.descriptor.interfaces().forEach(anInterface -> lookupObjectFor(anInterface, this.lookups));
   }
 
   private static Method retrieveDescriptorMethod() {
@@ -39,8 +36,8 @@ public class ProxyFactory {
     }
   }
 
-  private MethodHandles.Lookup lookupObjectFor(Class<?> anInterface) {
-    return this.lookups.computeIfAbsent(anInterface, ProxyFactory::createLookup);
+  private static MethodHandles.Lookup lookupObjectFor(Class<?> anInterface, Map<Class<?>, MethodHandles.Lookup> lookups) {
+    return lookups.computeIfAbsent(anInterface, ProxyFactory::createLookup);
   }
 
   private static synchronized MethodHandles.Lookup createLookup(Class<?> anInterface) {
@@ -83,35 +80,41 @@ public class ProxyFactory {
 
   private BiFunction<Object, Object[], Object> createMethodCallHandler(Method method) {
     return this.descriptor.streamAllHandlers()
-        .filter(handler -> handler.test(method))
+        .filter((MethodHandler methodHandler) -> methodHandler.test(method))
         .map(handler -> (BiFunction<Object, Object[], Object>) handler)
         .findFirst()
         .orElseGet(
             () -> this.descriptor.handlerObjects().stream()
-                .filter(h -> hasMethod(h.getClass(), method))
-                .map(h -> (BiFunction<Object, Object[], Object>) (Object o, Object[] o2) -> invokeMethod(h, method, o2))
+                .filter((Object handlerObject) -> classHasMethod(handlerObject.getClass(), method))
+                .map((Object handlerObject) -> createMethodHandlerForMethod(method, handlerObject))
                 .findFirst()
-                .orElseGet(() -> {
-                  try {
-                    Optional<Method> methodOptional = this.descriptor.interfaces()
-                        .stream()
-                        .map(each -> getMethodFrom(method, each))
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .filter(Method::isDefault)
-                        .findFirst();
-                    if (methodOptional.isPresent())
-                      return defaultMethodInvoker(methodOptional.get());
-                    return invokeFallbackHandler(method, descriptor);
-                  } catch (Throwable t) {
-                    throw rethrow(t);
-                  }
-                }));
+                .orElseGet(() -> createMethodHandlerForMethod(method, this.descriptor.interfaces(), descriptor)));
   }
 
-  private Optional<Method> getMethodFrom(Method method, Class<?> each) {
+  private static BiFunction<Object, Object[], Object> createMethodHandlerForMethod(Method method, Object handlerObject) {
+    return (Object o, Object[] args) -> invokeMethod(handlerObject, method, args);
+  }
+
+  private BiFunction<Object, Object[], Object> createMethodHandlerForMethod(Method method, List<Class<?>> interfaces, ProxyDescriptor descriptor) {
     try {
-      return Optional.of(each.getMethod(method.getName(), method.getParameterTypes()));
+      Optional<Method> methodOptional = interfaces
+          .stream()
+          .map(each -> getMethodFrom(method, each))
+          .filter(Optional::isPresent)
+          .map(Optional::get)
+          .filter(Method::isDefault)
+          .findFirst();
+      if (methodOptional.isPresent())
+        return defaultMethodInvoker(methodOptional.get(), this.lookups);
+      return invokeFallbackHandler(method, descriptor);
+    } catch (Throwable t) {
+      throw rethrow(t);
+    }
+  }
+
+  private Optional<Method> getMethodFrom(Method method, Class<?> klass) {
+    try {
+      return Optional.of(klass.getMethod(method.getName(), method.getParameterTypes()));
     } catch (NoSuchMethodException e) {
       return Optional.empty();
     }
@@ -121,26 +124,26 @@ public class ProxyFactory {
     return descriptor.fallbackHandler(method);
   }
 
-  private boolean hasMethod(Class<?> aClass, Method method) {
+  private static boolean classHasMethod(Class<?> aClass, Method method) {
     return Arrays.stream(aClass.getMethods())
         .anyMatch(
             m -> m.getName().equals(method.getName()) &&
                 Arrays.equals(m.getParameterTypes(), method.getParameterTypes()));
   }
 
-  private BiFunction<Object, Object[], Object> defaultMethodInvoker(Method method) throws IllegalAccessException {
-    MethodHandle preparedMethodHandle = prepareMethodHandle(method);
+  private static BiFunction<Object, Object[], Object> defaultMethodInvoker(Method method, Map<Class<?>, MethodHandles.Lookup> lookups) throws IllegalAccessException {
+    MethodHandle preparedMethodHandle = prepareMethodHandle(method, lookups);
     return (self, args) -> invokeDefaultMethodInDeclaringInterface(self, args, preparedMethodHandle);
   }
 
-  private MethodHandle prepareMethodHandle(Method method) throws IllegalAccessException {
+  private static MethodHandle prepareMethodHandle(Method method, Map<Class<?>, MethodHandles.Lookup> lookups) throws IllegalAccessException {
     Class<?> declaringInterface = method.getDeclaringClass();
-    return lookupObjectFor(declaringInterface)
+    return lookupObjectFor(declaringInterface, lookups)
         .in(declaringInterface)
         .unreflectSpecial(method, declaringInterface);
   }
 
-  private Object invokeDefaultMethodInDeclaringInterface(Object proxy, Object[] args, MethodHandle preparedMethodHandle) {
+  private static Object invokeDefaultMethodInDeclaringInterface(Object proxy, Object[] args, MethodHandle preparedMethodHandle) {
     try {
       return preparedMethodHandle.bindTo(proxy).invokeWithArguments(args);
     } catch (Throwable throwable) {

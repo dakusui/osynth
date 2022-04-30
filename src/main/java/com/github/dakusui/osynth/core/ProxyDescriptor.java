@@ -1,9 +1,6 @@
 package com.github.dakusui.osynth.core;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
-
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -16,7 +13,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 public class ProxyDescriptor {
-  private final List<Class<?>> interfaces;
+  private final List<Class<?>>         interfaces;
   private final List<MethodHandler>    handlers;
   private final List<MethodHandler>    builtInHandlers;
   private final List<Object>           handlerObjects;

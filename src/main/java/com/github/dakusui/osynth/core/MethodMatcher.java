@@ -11,6 +11,17 @@ public interface MethodMatcher extends Predicate<Method> {
 
   Class<?>[] parameterTypes();
 
+  @Override
+  default boolean test(Method method) {
+    AtomicInteger i = new AtomicInteger(0);
+    return Objects.equals(
+        methodName(),
+        method.getName()) &&
+        parameterTypes().length == method.getParameterCount() &&
+        Arrays.stream(parameterTypes())
+            .allMatch(type -> type.isAssignableFrom(method.getParameterTypes()[i.getAndIncrement()]));
+  }
+
   static MethodMatcher createMethodMatcher(String methodName, Class<?>[] parameterTypes) {
     return new MethodMatcher() {
       @Override
@@ -39,16 +50,6 @@ public interface MethodMatcher extends Predicate<Method> {
         return false;
       }
 
-      @Override
-      public boolean test(Method method) {
-        AtomicInteger i = new AtomicInteger(0);
-        return Objects.equals(
-            methodName,
-            method.getName()) &&
-            parameterTypes.length == method.getParameterCount() &&
-            Arrays.stream(parameterTypes)
-                .allMatch(type -> type.isAssignableFrom(method.getParameterTypes()[i.getAndIncrement()]));
-      }
     };
   }
 }
