@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth.core;
 
 import com.github.dakusui.osynth.Synthesized;
+import com.github.dakusui.osynth.utils.InternalUtils;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -73,12 +74,12 @@ public class ProxyFactory {
   private BiFunction<Object, Object[], Object> lookUpMethodCallHandler(Method method) {
     if (!this.methodHandlersCache.containsKey(method)) {
       method.setAccessible(true);
-      this.methodHandlersCache.put(method, createMethodCallHandler(method));
+      this.methodHandlersCache.put(method, createMethodHandlerFor(method));
     }
     return this.methodHandlersCache.get(method);
   }
 
-  private BiFunction<Object, Object[], Object> createMethodCallHandler(Method method) {
+  private BiFunction<Object, Object[], Object> createMethodHandlerFor(Method method) {
     return this.descriptor.streamAllHandlers()
         .filter((MethodHandler methodHandler) -> methodHandler.test(method))
         .map(handler -> (BiFunction<Object, Object[], Object>) handler)
@@ -88,40 +89,32 @@ public class ProxyFactory {
                 .filter((Object handlerObject) -> classHasMethod(handlerObject.getClass(), method))
                 .map((Object handlerObject) -> createMethodHandlerForMethod(method, handlerObject))
                 .findFirst()
-                .orElseGet(() -> createMethodHandlerForMethod(method, this.descriptor.interfaces(), descriptor)));
+                .orElseGet(() -> createMethodHandlerForMethod(method, this.descriptor.interfaces(), this.descriptor, this.lookups)));
   }
 
   private static BiFunction<Object, Object[], Object> createMethodHandlerForMethod(Method method, Object handlerObject) {
     return (Object o, Object[] args) -> invokeMethod(handlerObject, method, args);
   }
 
-  private BiFunction<Object, Object[], Object> createMethodHandlerForMethod(Method method, List<Class<?>> interfaces, ProxyDescriptor descriptor) {
+  private static BiFunction<Object, Object[], Object> createMethodHandlerForMethod(Method method, List<Class<?>> interfaces, ProxyDescriptor descriptor, Map<Class<?>, MethodHandles.Lookup> lookups) {
     try {
       Optional<Method> methodOptional = interfaces
           .stream()
-          .map(each -> getMethodFrom(method, each))
+          .map(each -> InternalUtils.getMethodFrom(method, each))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .filter(Method::isDefault)
           .findFirst();
       if (methodOptional.isPresent())
-        return defaultMethodInvoker(methodOptional.get(), this.lookups);
+        return defaultMethodInvoker(methodOptional.get(), lookups);
       return invokeFallbackHandler(method, descriptor);
     } catch (Throwable t) {
       throw rethrow(t);
     }
   }
 
-  private Optional<Method> getMethodFrom(Method method, Class<?> klass) {
-    try {
-      return Optional.of(klass.getMethod(method.getName(), method.getParameterTypes()));
-    } catch (NoSuchMethodException e) {
-      return Optional.empty();
-    }
-  }
-
   private static BiFunction<Object, Object[], Object> invokeFallbackHandler(Method method, ProxyDescriptor descriptor) {
-    return descriptor.fallbackHandler(method);
+    return descriptor.fallbackMethodHandlerFor(method);
   }
 
   private static boolean classHasMethod(Class<?> aClass, Method method) {

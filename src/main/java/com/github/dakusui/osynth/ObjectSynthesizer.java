@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth;
 
-import com.github.dakusui.osynth.core.FallbackHandlerFactory;
+import com.github.dakusui.osynth.core.FallbackMethodHandlerFactory;
 import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.ProxyDescriptor;
 import com.github.dakusui.osynth.core.ProxyFactory;
@@ -52,12 +52,12 @@ public class ObjectSynthesizer {
 
   }
 
-  public static final FallbackHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc -> (Method method) -> Optional.empty();
-  private final       List<Class<?>>         interfaces                       = new LinkedList<>();
+  public static final FallbackMethodHandlerFactory DEFAULT_FALLBACK_HANDLER_FACTORY = desc -> (Method method) -> Optional.empty();
+  private final       List<Class<?>>               interfaces                       = new LinkedList<>();
   private final       List<Object>           handlerObjects                   = new LinkedList<>();
-  private final       List<MethodHandler>    handlers                         = new LinkedList<>();
-  private             FallbackHandlerFactory fallbackHandlerFactory;
-  private             ValidationMode         validationMode;
+  private final       List<MethodHandler>          handlers                         = new LinkedList<>();
+  private             FallbackMethodHandlerFactory fallbackMethodHandlerFactory;
+  private             ValidationMode               validationMode;
 
   public ObjectSynthesizer() {
     this.validationMode = ValidationMode.NOTHING;
@@ -102,8 +102,8 @@ public class ObjectSynthesizer {
     return this;
   }
 
-  public ObjectSynthesizer fallbackHandlerFactory(FallbackHandlerFactory fallbackHandlerFactory) {
-    this.fallbackHandlerFactory = requireNonNull(fallbackHandlerFactory);
+  public ObjectSynthesizer fallbackHandlerFactory(FallbackMethodHandlerFactory fallbackMethodHandlerFactory) {
+    this.fallbackMethodHandlerFactory = requireNonNull(fallbackMethodHandlerFactory);
     return this;
   }
 
@@ -149,15 +149,15 @@ public class ObjectSynthesizer {
   }
 
   private ProxyDescriptor createProxyDescriptor() {
-    return createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackHandlerFactory);
+    return createProxyDescriptor(interfaces, handlers, handlerObjects, fallbackMethodHandlerFactory);
   }
 
-  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
+  protected ProxyDescriptor createProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackMethodHandlerFactory fallbackMethodHandlerFactory) {
     return new ProxyDescriptor(
         interfaces,
         handlers,
         handlerObjects,
-        fallbackHandlerFactory);
+        fallbackMethodHandlerFactory);
   }
 
   public static ObjectSynthesizer synthesizer() {

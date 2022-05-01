@@ -13,13 +13,13 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
 public class ProxyDescriptor {
-  private final List<Class<?>>         interfaces;
-  private final List<MethodHandler>    handlers;
-  private final List<MethodHandler>    builtInHandlers;
-  private final List<Object>           handlerObjects;
-  private final FallbackHandlerFactory fallbackHandlerFactory;
+  private final List<Class<?>>               interfaces;
+  private final List<MethodHandler>          handlers;
+  private final List<MethodHandler>          builtInHandlers;
+  private final List<Object>                 handlerObjects;
+  private final FallbackMethodHandlerFactory fallbackMethodHandlerFactory;
 
-  public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackHandlerFactory fallbackHandlerFactory) {
+  public ProxyDescriptor(List<Class<?>> interfaces, List<MethodHandler> handlers, List<Object> handlerObjects, FallbackMethodHandlerFactory fallbackMethodHandlerFactory) {
     this.interfaces = interfaces;
     this.handlers = handlers;
     this.handlerObjects = handlerObjects;
@@ -30,7 +30,7 @@ public class ProxyDescriptor {
         toStringHandler(this, v -> "proxy:" + v.toString()),
         builderByNameAndParameterTypes("describe").with((self, args) -> this)
     );
-    this.fallbackHandlerFactory = fallbackHandlerFactory;
+    this.fallbackMethodHandlerFactory = fallbackMethodHandlerFactory;
   }
 
   private Function<Object, Object> describeIfPossible() {
@@ -58,7 +58,7 @@ public class ProxyDescriptor {
       return this.interfaces().equals(another.interfaces()) &&
           this.handlers().equals(another.handlers()) &&
           this.handlerObjects().equals(another.handlerObjects()) &&
-          this.fallbackHandlerFactory.equals(another.fallbackHandlerFactory);
+          this.fallbackMethodHandlerFactory.equals(another.fallbackMethodHandlerFactory);
     }
     return false;
   }
@@ -80,8 +80,9 @@ public class ProxyDescriptor {
     return unmodifiableList(this.handlerObjects);
   }
 
-  public BiFunction<Object, Object[], Object> fallbackHandler(Method method) {
-    return this.fallbackHandlerFactory.apply(this)
+  public BiFunction<Object, Object[], Object> fallbackMethodHandlerFor(Method method) {
+    return this.fallbackMethodHandlerFactory
+        .apply(this)
         .apply(method)
         .orElseThrow(() -> new IllegalArgumentException(noHandlerFound(this.handlerObjects, method)));
   }
@@ -91,6 +92,6 @@ public class ProxyDescriptor {
         Stream.concat(proxyDescriptor.interfaces().stream(), this.interfaces().stream()).distinct().collect(toList()),
         Stream.concat(proxyDescriptor.handlers().stream(), this.handlers().stream()).distinct().collect(toList()),
         Stream.concat(proxyDescriptor.handlerObjects().stream(), this.handlerObjects().stream()).distinct().collect(toList()),
-        this.fallbackHandlerFactory.compose(proxyDescriptor.fallbackHandlerFactory));
+        this.fallbackMethodHandlerFactory.compose(proxyDescriptor.fallbackMethodHandlerFactory));
   }
 }

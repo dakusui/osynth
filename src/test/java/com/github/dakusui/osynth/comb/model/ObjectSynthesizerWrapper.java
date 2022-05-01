@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.comb.model;
 
-import com.github.dakusui.osynth.core.FallbackHandlerFactory;
+import com.github.dakusui.osynth.core.FallbackMethodHandlerFactory;
 import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.comb.def.I1N;
@@ -30,7 +30,7 @@ public class ObjectSynthesizerWrapper {
     this.objectSynthesizer = objectSynthesizer;
   }
 
-  public static FallbackHandlerFactory createFallbackHandlerFactory(MethodType methodType, ExceptionType exceptionType) {
+  public static FallbackMethodHandlerFactory createFallbackHandlerFactory(MethodType methodType, ExceptionType exceptionType) {
     return methodType.createFallbackHandlerFactory(exceptionType);
   }
 
