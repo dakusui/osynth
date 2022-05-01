@@ -1,22 +1,29 @@
 package com.github.dakusui.osynth.neo;
 
+import com.github.dakusui.pcond.functions.Functions;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
+import static com.github.dakusui.osynth.neo.ObjectSynthesizer.Utils.*;
 import static com.github.dakusui.pcond.Assertions.that;
+import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
+import static com.github.dakusui.pcond.functions.Functions.call;
 import static com.github.dakusui.pcond.functions.Functions.parameter;
 import static com.github.dakusui.pcond.functions.Predicates.*;
-import static java.util.stream.Collectors.toList;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.*;
 
 public class ObjectSynthesizer {
-  private final SynthesizedObject.Descriptor.Builder descriptorBuilder;
+  public static final Set<MethodSignature>                 RESERVED_METHOD_SIGNATURES = reservedMethodSignatures();
+  private final       SynthesizedObject.Descriptor.Builder descriptorBuilder;
 
   public ObjectSynthesizer() {
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder();
@@ -43,15 +50,33 @@ public class ObjectSynthesizer {
   }
 
   public SynthesizedObject synthesize() {
-    return (SynthesizedObject) Utils.createProxy(update(this.descriptorBuilder.build()));
+    return (SynthesizedObject) Utils.createProxy(updateDescriptor(validateDescriptor(this.descriptorBuilder.build())));
   }
 
-  protected SynthesizedObject.Descriptor update(SynthesizedObject.Descriptor descriptor) {
-    return validate(descriptor);
-  }
-
-  protected SynthesizedObject.Descriptor validate(SynthesizedObject.Descriptor descriptor) {
+  protected SynthesizedObject.Descriptor updateDescriptor(SynthesizedObject.Descriptor descriptor) {
     return descriptor;
+  }
+
+  protected SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
+    assert that(descriptor, isNotNull());
+    require(
+        descriptor,
+        withMessage(() -> format("You tried to override reserved methods.: %n%s",
+                reservedMethodMisOverridings(descriptor.methodHandlers.keySet())
+                    .stream()
+                    .map(MethodSignature::toString)
+                    .collect(joining("%n  ", "  ", ""))),
+            transform(descriptorMethodHandlers()
+                .andThen(mapKeySet(parameter()))
+                .andThen(Functions.stream()))
+                .check(noneMatch(collectionContainsValue(RESERVED_METHOD_SIGNATURES, parameter())))));
+    return descriptor;
+  }
+
+  private List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {
+    return methodSignatures.stream()
+        .filter(RESERVED_METHOD_SIGNATURES::contains)
+        .collect(toList());
   }
 
   public enum Utils {
@@ -79,6 +104,13 @@ public class ObjectSynthesizer {
       }
     }
 
+    static Set<MethodSignature> reservedMethodSignatures() {
+      return Arrays.stream(SynthesizedObject.class.getMethods())
+          .filter(each -> each.isAnnotationPresent(ReservedByOSynth.class))
+          .map(MethodSignature::create)
+          .collect(toSet());
+    }
+
     static Optional<MethodHandler> findMethodHandlerFor(MethodSignature methodSignature, SynthesizedObject.Descriptor descriptor) {
       return Optional.ofNullable(descriptor.methodHandlers.get(methodSignature));
     }
@@ -100,6 +132,18 @@ public class ObjectSynthesizer {
       } catch (InstantiationException | IllegalAccessException e) {
         throw new RuntimeException(e);
       }
+    }
+
+    static Function<Object, Map<MethodSignature, MethodHandler>> descriptorMethodHandlers() {
+      return call(instanceMethod(parameter(), "methodHandlers"));
+    }
+
+    static Function<Object, Collection<?>> mapKeySet(Object value) {
+      return call(instanceMethod(value, "keySet"));
+    }
+
+    static Predicate<Object> collectionContainsValue(Collection<MethodSignature> targetSet, Object value) {
+      return callp(instanceMethod(targetSet, "contains", value));
     }
   }
 }

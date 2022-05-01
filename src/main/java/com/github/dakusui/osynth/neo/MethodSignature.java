@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
+import static java.util.stream.Collectors.joining;
 
 public final class MethodSignature {
   final String     name;
@@ -26,6 +27,15 @@ public final class MethodSignature {
       return false;
     MethodSignature another = (MethodSignature) anotherObject;
     return Objects.equals(this.name, another.name) && Arrays.equals(this.parameterClasses, another.parameterClasses);
+  }
+
+  @Override
+  public String toString() {
+    return String.format("%s(%s)",
+        this.name,
+        Arrays.stream(this.parameterClasses)
+            .map(Class::getSimpleName)
+            .collect(joining(",")));
   }
 
   static MethodSignature create(String name, Class<?>[] parameterClasses) {
