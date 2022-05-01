@@ -7,9 +7,13 @@ import com.github.dakusui.osynth.neo.BuiltInHandlerFactory.ForToString;
 
 import java.util.*;
 
+import static com.github.dakusui.osynth.neo.SynthesizedObject.PrivateUtils.reservedMethodSignatures;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
+import static java.util.stream.Collectors.toSet;
 
 public interface SynthesizedObject {
+  Set<MethodSignature> RESERVED_METHOD_SIGNATURES = reservedMethodSignatures();
+
   @BuiltInHandlerFactory(ForDescriptor.class)
   @ReservedByOSynth
   Descriptor descriptor();
@@ -46,6 +50,17 @@ public interface SynthesizedObject {
   @Override
   String toString();
 
+  enum PrivateUtils {
+    ;
+
+    public static Set<MethodSignature> reservedMethodSignatures() {
+      return Arrays.stream(SynthesizedObject.class.getMethods())
+          .filter(each -> each.isAnnotationPresent(ReservedByOSynth.class))
+          .map(MethodSignature::create)
+          .collect(toSet());
+    }
+  }
+
   final class Descriptor {
     final List<Class<?>>                          interfaces;
     final Object                                  fallbackObject;
@@ -71,6 +86,10 @@ public interface SynthesizedObject {
       return this.classLoader;
     }
 
+    private Map<MethodSignature, ? extends MethodHandler> methodHandlers() {
+      return Collections.unmodifiableMap(this.methodHandlers);
+    }
+
     public static class Builder {
       final List<Class<?>>                          interfaces;
       final HashMap<MethodSignature, MethodHandler> methodHandlers;
@@ -80,6 +99,12 @@ public interface SynthesizedObject {
       public Builder() {
         interfaces = new LinkedList<>();
         methodHandlers = new HashMap<>();
+      }
+
+      public Builder(Descriptor descriptor) {
+        this();
+        this.interfaces.addAll(descriptor.interfaces());
+        this.methodHandlers.putAll(descriptor.methodHandlers());
       }
 
       public Builder fallbackObject(Object fallbackObject) {

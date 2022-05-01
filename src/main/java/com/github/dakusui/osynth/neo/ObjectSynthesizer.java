@@ -1,29 +1,28 @@
 package com.github.dakusui.osynth.neo;
 
-import com.github.dakusui.pcond.functions.Functions;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.neo.ObjectSynthesizer.Utils.*;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
-import static com.github.dakusui.pcond.functions.Functions.call;
-import static com.github.dakusui.pcond.functions.Functions.parameter;
+import static com.github.dakusui.pcond.functions.Functions.*;
 import static com.github.dakusui.pcond.functions.Predicates.*;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 public class ObjectSynthesizer {
-  public static final Set<MethodSignature>                 RESERVED_METHOD_SIGNATURES = reservedMethodSignatures();
-  private final       SynthesizedObject.Descriptor.Builder descriptorBuilder;
+  private final SynthesizedObject.Descriptor.Builder descriptorBuilder;
 
   public ObjectSynthesizer() {
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder();
@@ -54,7 +53,13 @@ public class ObjectSynthesizer {
   }
 
   protected SynthesizedObject.Descriptor updateDescriptor(SynthesizedObject.Descriptor descriptor) {
-    return descriptor;
+    SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
+    SynthesizedObject.Descriptor.Builder b = builder;
+    createMethodHandlersFor(SynthesizedObject.class, descriptor, builder::addMethodHandler)
+        .forEach(each -> b.addMethodHandler(each.signature(), each.handler()));
+    if (descriptor.classLoader() == null)
+      builder = builder.classLoader(SynthesizedObject.class.getClassLoader());
+    return builder.build();
   }
 
   protected SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
@@ -68,15 +73,9 @@ public class ObjectSynthesizer {
                     .collect(joining("%n  ", "  ", ""))),
             transform(descriptorMethodHandlers()
                 .andThen(mapKeySet(parameter()))
-                .andThen(Functions.stream()))
-                .check(noneMatch(collectionContainsValue(RESERVED_METHOD_SIGNATURES, parameter())))));
+                .andThen(stream()))
+                .check(noneMatch(collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
     return descriptor;
-  }
-
-  private List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {
-    return methodSignatures.stream()
-        .filter(RESERVED_METHOD_SIGNATURES::contains)
-        .collect(toList());
   }
 
   public enum Utils {
@@ -104,22 +103,14 @@ public class ObjectSynthesizer {
       }
     }
 
-    static Set<MethodSignature> reservedMethodSignatures() {
-      return Arrays.stream(SynthesizedObject.class.getMethods())
-          .filter(each -> each.isAnnotationPresent(ReservedByOSynth.class))
-          .map(MethodSignature::create)
-          .collect(toSet());
-    }
-
     static Optional<MethodHandler> findMethodHandlerFor(MethodSignature methodSignature, SynthesizedObject.Descriptor descriptor) {
       return Optional.ofNullable(descriptor.methodHandlers.get(methodSignature));
     }
 
-    private static List<MethodHandler> createMethodHandlersFor(Class<?> targetClass, SynthesizedObject.Descriptor descriptor) {
+    static Stream<MethodHandlerEntry> createMethodHandlersFor(Class<?> targetClass, SynthesizedObject.Descriptor descriptor, BiConsumer<MethodSignature, MethodHandler> updater) {
       return Arrays.stream(targetClass.getMethods())
           .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
-          .map(each -> createMethodHandlerFor(each, descriptor))
-          .collect(toList());
+          .map(each -> MethodHandlerEntry.create(MethodSignature.create(each), createMethodHandlerFor(each, descriptor)));
     }
 
     private static MethodHandler createMethodHandlerFor(Method method, SynthesizedObject.Descriptor descriptor) {
@@ -142,8 +133,14 @@ public class ObjectSynthesizer {
       return call(instanceMethod(value, "keySet"));
     }
 
-    static Predicate<Object> collectionContainsValue(Collection<MethodSignature> targetSet, Object value) {
+    static Predicate<Object> collectionContainsValue(Collection<?> targetSet, Object value) {
       return callp(instanceMethod(targetSet, "contains", value));
+    }
+
+    static List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {
+      return methodSignatures.stream()
+          .filter(SynthesizedObject.RESERVED_METHOD_SIGNATURES::contains)
+          .collect(toList());
     }
   }
 }
