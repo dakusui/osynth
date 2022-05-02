@@ -18,6 +18,10 @@ public interface SynthesizedObject {
   @ReservedByOSynth
   Descriptor descriptor();
 
+  default MethodHandler methodHandlerFor(MethodSignature methodSignature) {
+    return descriptor().methodHandlers.get(methodSignature);
+  }
+
   @ReservedByOSynth
   default List<Class<?>> interfaces() {
     return this.descriptor().interfaces();

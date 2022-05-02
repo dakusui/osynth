@@ -1,78 +1,18 @@
-[plantuml]
-----
-class SynthesizeObject {
-  List<MethodHandler> methodHandlers()
-  List<Interfaces>    interfaces()
-  Optional<Object>    fallbackObject()
-}
-
-class A2 extends SynthesizedObject {
-}
-
-object "a2Object:A2" as a2 {
-}
-
-firstObject::SynthesizedObject *--> SynthesizedObject
-
-SynthesizedObject *--> SynthesizedObject
-----
-
-When a method invocation request is received,
-
-1. Try to find the narrowest possible matching method handler from `methodHandlers()`.
-2. Try to find the matching default implementation in the `interfaces()`.
-3. If a `fallbackObject` is present, a method invocation will be attempted on it.
-
-Note that the `fallbackObject` can be another synthesized object.
-
-== Inside a `MethodHandler`
-
-How to make a call within the same synthesized object.
-
-== Methods in `java.lang.Object` class
-
-Methods declared in `java.lang.Object` are always available for all the objects in Java.
-Therefore, for the proxy objects synthesized by our `osynth` library, you can also call them.
-
-[text]
-.Methods defined in `java.lang.Object`.
-----
-+-------- public
-|+------- protected
-||+------ private
-|||
-|||  +--- final
-|||  |+-- native
-|||  ||+- static
-|||  |||
-X    XX  getClass []
-X    XX  notify []
-X    XX  notifyAll []
-X    X   wait [long, int]
-X    XX  wait [long]
-X    X   wait []
-X     X  hashCode []
-X        equals [class java.lang.Object]
-X        toString []
- X    X  clone []
- X       finalize []
-  X   XX registerNatives []
-----
-
-Some methods defined in `java.lang.Object` are treated by the dynamic proxy mechanism of Java's core API<<Proxy>>.
-When they are called, the method call request is intercepted by the dynamic proxy mechanism and passed to your invocation handler.
-This allows us to customize the behaviors of these methods but at the same time we need appropriately to take care of situations , where such method calls are made from inside the invocation handler itself.
-Otherwise, the call makes another call on the same method, which results in the infinite recursive call and `StackOverflow` error.
-More notably, such a specification is defined for `hashCode()`, `equals(Object)`, and `toString()` methods, which are called implicitly.
-
-The `osynth` library has its own built-in method handlers for those methods, which serve as default behaviors for a synthesized object.
-
 == The structure of a "synthesized object"
 
+The Figure <<synthesizedObjectStructure>> shows how each synthesized object is structured.
+
 [plantuml]
+[[synthesizedObjectStructure]]
+.Synthesized Object Structure
 ----
 hide empty members
 top to bottom direction
+
+class ObjectSynthesizer {
+}
+interface InvocationHandler {
+}
 
 interface "BiFunction<SynthesizedObject,Object[],Object>" as bf1 {
 }
@@ -85,52 +25,46 @@ interface "SynthesizedObject" as so1 {
   {abstract} +MethodHandler methodHandlerFor(MethodSignature)
   {abstract} +Object fallbackObject()
 }
-interface "MethodHandler" as mh1 extends bf1 {
-}
 interface "SynthesizedObject" as so2 {
 }
+interface "MethodHandler" as mh1 extends bf1 {
+}
+interface "MethodSignature" as ms1 {
+}
+class "Proxy" as px1 {
+}
 
-so1 "1" --> "*" mh1
-so1 "1" --> "*" cl1: interfaces
+ObjectSynthesizer ..> so1
+ObjectSynthesizer .right.> InvocationHandler
+so1 "1" -right-> "*" mh1
+so1 .right.> ms1
+so1 "1" -left-> "*" cl1: interfaces
 so1 "1" --> "1" obj1: fallbackObject
+so1 "1" *-up-> "1" InvocationHandler
+InvocationHandler "1" -down-> "1" so1
+px1 .up.|> obj1
+
+interface "MethodHandler" as mh2
+interface "MethodSignature" as ms2
+class "Class<?>" as cl2 {
+}
+class "Object" as obj2 {
+}
+
+so2 -up-|> px1
+
+so2 "1" -right-> "*" mh2
+so2 "1" .right.> "*" ms2
+so2 "1" -down-> "1" obj2: fallbackObject
+so2 "1" -left-> "*" cl2: interfaces
+
 ----
 
-[source]
-----
-hide empty members
-top to bottom direction
+Roughly speaking, when a method handling request comes into a synthesized object, it tries to find an appropriate handler from registered method handlers and then from `default` methods of registered interfaces.
+If nothing is found, then the request will be delegated to a fallback object.
+If the fallback object is another synthesized object, the handler searching procedure will be repeated on that synthesized project.
 
-interface SynthesizedObject {
-  {abstract} +List<Class<?>> interfaces()
-  {abstract} +MethodHandler methodHandlerFor(MethodSignature)
-}
-interface MethodHandler {
-}
-class Class<?> {
-}
-class Object {
-}
-object "synthesizedObject::SynthesizedObject" as SynthesizedObject {
-}
-object "fallbackSynthesizedObject::SynthesizedObject" as SynthesizedObject {
-}
-object "fallbackObject::Object" as Object {
-}
-object "interface::Class<?>" as Class {
-}
-object "methodHandler::MethodHandler" as MethodHandler {
-}
-
-SynthesizedObject <|-- synthesizedObject
-MethodHandler <|-- methodHandler
-synthesizedObject "methodHandlers" o--> methodHandler
-synthesizedObject "1" --> "*" interface
-synthesizedObject "1" --> "1" fallbackSynthesizedObject
-fallbackSynthesizedObject "methodHandlers" o--> methodHandlerForFallbackSynthesiedObject
-fallbackSynthesizedObject "1" --> "*" interfaceForFallbackSynthesiedObject
-fallbackSynthesizedObject "1" --> "1" fallbackObject
-----
-
+Once the control goes into a fallback object, it will not go out from the object.
 
 == Method Dispatching Mechanism
 
@@ -140,13 +74,22 @@ A method invocation can be handled in three ways.
 2. If an appropriate method handler is not found, `default` method is searched.
 3. If any `default` method is not found, then the request is delegated to "fallback object".
 
+These are executed in this order one by one.
 Throughout these steps, methods are identified by its name and parameter types *only* and their declaring classes and returning types do not matter.
 That is, even if a method invocation happens for `InterfaceA#methodA(String)`, it might be handled by a `default` method defined as `InterfaceB#methodA(String)`.
 In case the returning type does not match with the calling side intended (in the case above, suppose that the `InterfaceA#methodA(String)` is returning `int`, but the `InterfaceB#methodA(String)` is returning `Set<Integer>`), it will result in a runtime error.
 
+=== Method Signature
+
+A `MethodSignature` is a class designed to identify a method call destination.
+It consists of a name of a method and a list of parameter types (`Class` es).
+It is used as a key of a map to store method handlers (`MethodHandler` s).
+
 === Method Handlers
 
-(t.b.d.)
+A `MethodHandler` class is extending a `BiFunction<SynthesizedObject, Object[], Object>>`.
+`SynthesizedObject` is a proxy object which the `osynth` library forces every synthesized object to implement.
+It has some convenient methods to access the framework level information, such as `interfaces()`, `fallbackObject()`, and `methodHandlers`.
 
 === `default` methods
 
