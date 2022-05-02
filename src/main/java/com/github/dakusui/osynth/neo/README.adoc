@@ -11,53 +11,74 @@ top to bottom direction
 
 class ObjectSynthesizer {
 }
-interface InvocationHandler {
+package "synthesized object" <<Rectangle>> {
+    interface InvocationHandler {
+    }
+    interface "BiFunction<SynthesizedObject,Object[],Object>" as bf1 {
+    }
+    class "Class<?>" as cl1 {
+    }
+    interface "SynthesizedObject" as so1 {
+      {abstract} +List<Class<?>> interfaces()
+      {abstract} +MethodHandler methodHandlerFor(MethodSignature)
+      {abstract} +Object fallbackObject()
+    }
+    interface "MethodHandler" as mh1 extends bf1 {
+    }
+    class "MethodSignature" as ms1 {
+    }
 }
-
-interface "BiFunction<SynthesizedObject,Object[],Object>" as bf1 {
+package "inside a synthesized object" as inside <<Rectangle>> {
+    interface "SynthesizedObject" as so2 {
+    }
+    class "Class<?>" as cl2 {
+    }
+    interface "MethodHandler" as mh2
+    class "MethodSignature" as ms2
+    package "interfaces" as intpkg <<Rectangle>> {
+        class "InterfaceA" as int1 <<example>> {
+        }
+        class "InterfaceB" as int2 <<example>> {
+        }
+    }
+    class "java.lang.reflect.Proxy" as proxy {
+    }
+    object actualObject
 }
-class "Class<?>" as cl1 {
+package "another fallback object" <<Rectangle>> {
+    class "Object" as obj3 {
+    }
 }
-class "Object" as obj1 {
-}
-interface "SynthesizedObject" as so1 {
-  {abstract} +List<Class<?>> interfaces()
-  {abstract} +MethodHandler methodHandlerFor(MethodSignature)
-  {abstract} +Object fallbackObject()
-}
-interface "SynthesizedObject" as so2 {
-}
-interface "MethodHandler" as mh1 extends bf1 {
-}
-interface "MethodSignature" as ms1 {
-}
-class "Proxy" as px1 {
-}
-
-ObjectSynthesizer ..> so1
-ObjectSynthesizer .right.> InvocationHandler
+ObjectSynthesizer ..right..> so1
+ObjectSynthesizer ..right..> InvocationHandler
 so1 "1" -right-> "*" mh1
 so1 .right.> ms1
 so1 "1" -left-> "*" cl1: interfaces
-so1 "1" --> "1" obj1: fallbackObject
+so1 "1" -down-> "1" so2: fallbackObject
 so1 "1" *-up-> "1" InvocationHandler
 InvocationHandler "1" -down-> "1" so1
-px1 .up.|> obj1
 
-interface "MethodHandler" as mh2
-interface "MethodSignature" as ms2
-class "Class<?>" as cl2 {
-}
-class "Object" as obj2 {
-}
-
-so2 -up-|> px1
-
+so2 "1" .right..> "*" ms2
 so2 "1" -right-> "*" mh2
-so2 "1" .right.> "*" ms2
-so2 "1" -down-> "1" obj2: fallbackObject
 so2 "1" -left-> "*" cl2: interfaces
+actualObject .up.> so2
+actualObject -up-> proxy
+actualObject .up.> int1
+actualObject .up.> int2
+so2 "1" --down--> "1" obj3: fallbackObject
 
+note as N1
+A fallback object can be a SynthesizedObject or
+a normal object
+end note
+N1 .up. inside
+N1 .right. obj3
+note as N2
+An actual object extends/implements Proxy,
+SynthesizedObject, and interfaces held by
+SynthesizedObject
+end note
+N2 .up. actualObject
 ----
 
 Roughly speaking, when a method handling request comes into a synthesized object, it tries to find an appropriate handler from registered method handlers and then from `default` methods of registered interfaces.
@@ -65,6 +86,33 @@ If nothing is found, then the request will be delegated to a fallback object.
 If the fallback object is another synthesized object, the handler searching procedure will be repeated on that synthesized project.
 
 Once the control goes into a fallback object, it will not go out from the object.
+
+=== `SynthesizedObject` interface
+
+(t.b.d.)
+
+=== `MethodHandler` interface
+
+(t.b.d.)
+
+=== `MethodSignature` class
+
+(t.b.d.)
+
+=== `ObjectSynthesizer` class
+
+(t.b.d.)
+
+
+=== Important Core Java API classes
+
+==== `java.lang.reflect.Proxy`
+
+(t.b.d.)
+
+==== `java.lang.reflect.InvocationHandler` interface
+
+(t.b.d.)
 
 == Method Dispatching Mechanism
 
@@ -101,7 +149,6 @@ When no appropriate way to handle a method call is found in the current synthesi
 The fallback object might be either a conventional Java object or another synthesized object.
 The delegation happens using a reflection.
 The current synthesized object tries to find a method by name and parameter types in the fallback object.
-
 
 == References
 
