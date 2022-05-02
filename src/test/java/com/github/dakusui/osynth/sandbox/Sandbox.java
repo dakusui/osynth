@@ -4,12 +4,10 @@ import org.junit.Test;
 import sun.reflect.CallerSensitive;
 import sun.reflect.Reflection;
 
+import java.io.Serializable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Proxy;
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -536,7 +534,7 @@ public class Sandbox {
   public void whatIfGetLookUpThroughFunkyMethodAndGoForward() throws Throwable {
 
     Class<?> anInterfaceClass = RInterface.class;
-    MethodHandles.Lookup lookup = createMethodHandlesLookupFor(anInterfaceClass).in(anInterfaceClass);
+    MethodHandles.Lookup lookup = createMethodHandlesLookupFor(anInterfaceClass);
     System.out.println("N");
     System.out.println(lookup.unreflect(anInterfaceClass.getMethod("aMethod")));
     System.out.println(lookup.unreflectSpecial(anInterfaceClass.getMethod("aMethod"), anInterfaceClass).bindTo(createDummyProxy(anInterfaceClass)).invoke());
@@ -623,5 +621,27 @@ public class Sandbox {
         return null;
       }
     }, anInterfaceClass);
+  }
+
+  @Test
+  public void testProxyWithReflectionMethodInvocation() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    Proxy proxy = createProxy(new InvocationHandler() {
+      @Override
+      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("hello : " + method.getName());
+        return "Hello: " + method.getName();
+      }
+    }, PInterface.class, QInterface.class, RInterface.class, SInterface.class);
+    System.out.println(proxy.getClass().getMethod("aMethod").invoke(proxy));
+  }
+
+  @Test
+  public void whatIsSuperclassOfSerializable() {
+    System.out.println(Serializable.class.getSuperclass());
+  }
+  @Test
+  public void whatIsSuperclassOfProxy() {
+    System.out.println(createDummyProxy(Serializable.class).getClass().getSuperclass());
+    System.out.println(createDummyProxy(Serializable.class).getClass().getSuperclass().getSuperclass());
   }
 }

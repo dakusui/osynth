@@ -67,6 +67,99 @@ More notably, such a specification is defined for `hashCode()`, `equals(Object)`
 
 The `osynth` library has its own built-in method handlers for those methods, which serve as default behaviors for a synthesized object.
 
+== The structure of a "synthesized object"
+
+[plantuml]
+----
+hide empty members
+top to bottom direction
+
+interface "BiFunction<SynthesizedObject,Object[],Object>" as bf1 {
+}
+class "Class<?>" as cl1 {
+}
+class "Object" as obj1 {
+}
+interface "SynthesizedObject" as so1 {
+  {abstract} +List<Class<?>> interfaces()
+  {abstract} +MethodHandler methodHandlerFor(MethodSignature)
+  {abstract} +Object fallbackObject()
+}
+interface "MethodHandler" as mh1 extends bf1 {
+}
+interface "SynthesizedObject" as so2 {
+}
+
+so1 "1" --> "*" mh1
+so1 "1" --> "*" cl1: interfaces
+so1 "1" --> "1" obj1: fallbackObject
+----
+
+[source]
+----
+hide empty members
+top to bottom direction
+
+interface SynthesizedObject {
+  {abstract} +List<Class<?>> interfaces()
+  {abstract} +MethodHandler methodHandlerFor(MethodSignature)
+}
+interface MethodHandler {
+}
+class Class<?> {
+}
+class Object {
+}
+object "synthesizedObject::SynthesizedObject" as SynthesizedObject {
+}
+object "fallbackSynthesizedObject::SynthesizedObject" as SynthesizedObject {
+}
+object "fallbackObject::Object" as Object {
+}
+object "interface::Class<?>" as Class {
+}
+object "methodHandler::MethodHandler" as MethodHandler {
+}
+
+SynthesizedObject <|-- synthesizedObject
+MethodHandler <|-- methodHandler
+synthesizedObject "methodHandlers" o--> methodHandler
+synthesizedObject "1" --> "*" interface
+synthesizedObject "1" --> "1" fallbackSynthesizedObject
+fallbackSynthesizedObject "methodHandlers" o--> methodHandlerForFallbackSynthesiedObject
+fallbackSynthesizedObject "1" --> "*" interfaceForFallbackSynthesiedObject
+fallbackSynthesizedObject "1" --> "1" fallbackObject
+----
+
+
+== Method Dispatching Mechanism
+
+A method invocation can be handled in three ways.
+
+1. Search for a method handler.
+2. If an appropriate method handler is not found, `default` method is searched.
+3. If any `default` method is not found, then the request is delegated to "fallback object".
+
+Throughout these steps, methods are identified by its name and parameter types *only* and their declaring classes and returning types do not matter.
+That is, even if a method invocation happens for `InterfaceA#methodA(String)`, it might be handled by a `default` method defined as `InterfaceB#methodA(String)`.
+In case the returning type does not match with the calling side intended (in the case above, suppose that the `InterfaceA#methodA(String)` is returning `int`, but the `InterfaceB#methodA(String)` is returning `Set<Integer>`), it will result in a runtime error.
+
+=== Method Handlers
+
+(t.b.d.)
+
+=== `default` methods
+
+(t.b.d.)
+
+=== The fall-backing mechanism
+
+When no appropriate way to handle a method call is found in the current synthesized object, the `osynth` delegates the procedure to its "fallback object".
+The fallback object might be either a conventional Java object or another synthesized object.
+The delegation happens using a reflection.
+The current synthesized object tries to find a method by name and parameter types in the fallback object.
+
+
 == References
 
 - [[[Proxy, 1]]] "Proxy (Java Platform SE 8)" https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Proxy.html
