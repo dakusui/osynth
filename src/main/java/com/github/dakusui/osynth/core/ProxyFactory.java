@@ -38,21 +38,21 @@ public class ProxyFactory {
   }
 
   private static MethodHandles.Lookup lookupObjectFor(Class<?> anInterface, Map<Class<?>, MethodHandles.Lookup> lookups) {
-    return lookups.computeIfAbsent(anInterface, ProxyFactory::createLookup);
+    return lookups.computeIfAbsent(anInterface, ProxyFactory::createMethodHandlesLookupFor);
   }
 
-  private static synchronized MethodHandles.Lookup createLookup(Class<?> anInterface) {
+  public static synchronized MethodHandles.Lookup createMethodHandlesLookupFor(Class<?> anInterfaceClass) {
     Constructor<MethodHandles.Lookup> constructor;
     try {
       constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);
       constructor.setAccessible(true);
       try {
-        return constructor.newInstance(anInterface);
+        return constructor.newInstance(anInterfaceClass);
       } catch (InvocationTargetException e) {
         throw e.getTargetException();
       }
     } catch (Throwable e) {
-      throw new RuntimeException(failedToInstantiate(anInterface), e);
+      throw new RuntimeException(failedToInstantiate(anInterfaceClass), e);
     }
   }
 
@@ -89,18 +89,18 @@ public class ProxyFactory {
                 .filter((Object handlerObject) -> classHasMethod(handlerObject.getClass(), method))
                 .map((Object handlerObject) -> createMethodHandlerForMethod(method, handlerObject))
                 .findFirst()
-                .orElseGet(() -> createMethodHandlerForMethod(method, this.descriptor.interfaces(), this.descriptor, this.lookups)));
+                .orElseGet(() -> createMethodHandlerForMethodFromLookups(method, this.lookups, this.descriptor.interfaces(), this.descriptor)));
   }
 
   private static BiFunction<Object, Object[], Object> createMethodHandlerForMethod(Method method, Object handlerObject) {
     return (Object o, Object[] args) -> invokeMethod(handlerObject, method, args);
   }
 
-  private static BiFunction<Object, Object[], Object> createMethodHandlerForMethod(Method method, List<Class<?>> interfaces, ProxyDescriptor descriptor, Map<Class<?>, MethodHandles.Lookup> lookups) {
+  private static BiFunction<Object, Object[], Object> createMethodHandlerForMethodFromLookups(Method method, Map<Class<?>, MethodHandles.Lookup> lookups, List<Class<?>> interfaces, ProxyDescriptor descriptor) {
     try {
       Optional<Method> methodOptional = interfaces
           .stream()
-          .map(each -> InternalUtils.getMethodFrom(method, each))
+          .map((Class<?> eachClass) -> InternalUtils.getMethodFrom(method, eachClass))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .filter(Method::isDefault)
