@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth3.core;
+package com.github.dakusui.osynth2.core;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

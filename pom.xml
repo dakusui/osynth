@@ -247,7 +247,7 @@
                         <jvmArg>-Dunderpitest=yes</jvmArg>
                     </jvmArgs>
                     <targetClasses>
-                        <param>com.github.dakusui.osynth3.*</param>
+                        <param>com.github.dakusui.osynth2.*</param>
                     </targetClasses>
                     <targetTests>
                         <param>*Test</param>

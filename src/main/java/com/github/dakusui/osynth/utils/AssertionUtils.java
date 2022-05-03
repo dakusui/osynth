@@ -1,8 +1,8 @@
 package com.github.dakusui.osynth.utils;
 
-import com.github.dakusui.osynth3.core.MethodHandler;
-import com.github.dakusui.osynth3.core.MethodSignature;
-import com.github.dakusui.osynth3.core.SynthesizedObject;
+import com.github.dakusui.osynth2.core.MethodHandler;
+import com.github.dakusui.osynth2.core.MethodSignature;
+import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.pcond.core.refl.MethodQuery;
 
 import java.lang.annotation.Annotation;

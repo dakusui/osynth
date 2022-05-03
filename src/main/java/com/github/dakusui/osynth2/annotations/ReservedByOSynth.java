@@ -1,6 +1,5 @@
-package com.github.dakusui.osynth3.annotations;
+package com.github.dakusui.osynth2.annotations;
 
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 

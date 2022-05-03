@@ -1,11 +1,11 @@
-package com.github.dakusui.osynth3.ut;
+package com.github.dakusui.osynth2.ut;
 
-import com.github.dakusui.osynth3.ObjectSynthesizer;
-import com.github.dakusui.osynth3.core.SynthesizedObject;
+import com.github.dakusui.osynth2.ObjectSynthesizer;
+import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.osynth.utils.UtBase;
 import org.junit.Test;
 
-import static com.github.dakusui.osynth3.ObjectSynthesizer.method;
+import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.functions.Predicates.allOf;
 import static com.github.dakusui.pcond.functions.Predicates.containsString;

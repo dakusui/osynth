@@ -1,14 +1,14 @@
-package com.github.dakusui.osynth3;
+package com.github.dakusui.osynth2;
 
-import com.github.dakusui.osynth3.core.MethodHandlerEntry;
-import com.github.dakusui.osynth3.core.MethodSignature;
-import com.github.dakusui.osynth3.core.OsynthInvocationHandler;
-import com.github.dakusui.osynth3.core.SynthesizedObject;
+import com.github.dakusui.osynth2.core.MethodHandlerEntry;
+import com.github.dakusui.osynth2.core.MethodSignature;
+import com.github.dakusui.osynth2.core.OsynthInvocationHandler;
+import com.github.dakusui.osynth2.core.SynthesizedObject;
 
 import java.lang.reflect.Proxy;
 import java.util.*;
 
-import static com.github.dakusui.osynth3.ObjectSynthesizer.Utils.*;
+import static com.github.dakusui.osynth2.ObjectSynthesizer.Utils.*;
 import static com.github.dakusui.osynth.utils.AssertionUtils.*;
 import static com.github.dakusui.pcond.Assertions.postcondition;
 import static com.github.dakusui.pcond.Assertions.that;
