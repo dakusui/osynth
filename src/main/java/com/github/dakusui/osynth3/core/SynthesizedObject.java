@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth3;
+package com.github.dakusui.osynth3.core;
 
 import com.github.dakusui.osynth3.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth3.annotations.ReservedByOSynth;
@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.osynth3.SynthesizedObject.PrivateUtils.reservedMethodSignatures;
+import static com.github.dakusui.osynth3.core.SynthesizedObject.PrivateUtils.reservedMethodSignatures;
 import static com.github.dakusui.osynth.utils.AssertionUtils.methodIsAnnotationPresent;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;

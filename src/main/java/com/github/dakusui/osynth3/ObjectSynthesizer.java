@@ -1,5 +1,10 @@
 package com.github.dakusui.osynth3;
 
+import com.github.dakusui.osynth3.core.MethodHandlerEntry;
+import com.github.dakusui.osynth3.core.MethodSignature;
+import com.github.dakusui.osynth3.core.OsynthInvocationHandler;
+import com.github.dakusui.osynth3.core.SynthesizedObject;
+
 import java.lang.reflect.Proxy;
 import java.util.*;
 

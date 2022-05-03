@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth3;
+package com.github.dakusui.osynth3.core;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;

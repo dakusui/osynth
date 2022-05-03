@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.utils;
 
-import com.github.dakusui.osynth3.MethodSignature;
-import com.github.dakusui.osynth3.SynthesizedObject;
+import com.github.dakusui.osynth3.core.MethodSignature;
+import com.github.dakusui.osynth3.core.SynthesizedObject;
 
 import java.lang.reflect.Method;
 import java.util.List;

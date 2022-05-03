@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth3.annotations;
 
-import com.github.dakusui.osynth3.MethodHandler;
-import com.github.dakusui.osynth3.SynthesizedObject;
+import com.github.dakusui.osynth3.core.MethodHandler;
+import com.github.dakusui.osynth3.core.SynthesizedObject;
 
 import java.lang.annotation.Retention;
 
