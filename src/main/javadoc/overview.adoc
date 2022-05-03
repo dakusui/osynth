@@ -1,6 +1,6 @@
 = The ObjectSynthesizer library
 
-NOTE:: ```osynth``` doesn't to "bytecode manipulation".
+NOTE:: ```osynth``` doesn't do "bytecode manipulation".
 
 == Usecases
 

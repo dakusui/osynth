@@ -8,12 +8,12 @@ import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
-class OsynthInvocationHandler implements InvocationHandler {
+public class OsynthInvocationHandler implements InvocationHandler {
   final         Map<MethodSignature, MethodHandler> methodHandlers;
   final         List<Class<?>>                      interfaceClasses;
   private final Object                              fallbackObject;
 
-  OsynthInvocationHandler(Map<MethodSignature, MethodHandler> methodHandlers, List<Class<?>> interfaceClasses, Object fallbackObject) {
+  public OsynthInvocationHandler(Map<MethodSignature, MethodHandler> methodHandlers, List<Class<?>> interfaceClasses, Object fallbackObject) {
     this.methodHandlers = requireNonNull(methodHandlers);
     this.interfaceClasses = requireNonNull(interfaceClasses);
     this.fallbackObject = requireNonNull(fallbackObject);

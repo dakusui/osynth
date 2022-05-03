@@ -2,6 +2,7 @@ package com.github.dakusui.osynth3.core;
 
 import com.github.dakusui.osynth3.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth3.annotations.ReservedByOSynth;
+import com.github.dakusui.pcond.functions.Predicates;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -72,7 +73,7 @@ public interface SynthesizedObject {
           .collect(toSet());
     }
 
-    static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Descriptor descriptor, BiConsumer<MethodSignature, MethodHandler> updater) {
+    public static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Descriptor descriptor, BiConsumer<MethodSignature, MethodHandler> updater) {
       return Arrays.stream(SynthesizedObject.class.getMethods())
           .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
           .map((Method eachMethod) -> MethodHandlerEntry.create(
@@ -163,6 +164,10 @@ public interface SynthesizedObject {
 
       public Descriptor build() {
         return new Descriptor(this.interfaces, this.methodHandlers, this.fallbackObject, this.classLoader);
+      }
+
+      public List<Class<?>> interfaces() {
+        return unmodifiableList(this.interfaces);
       }
     }
   }

@@ -27,7 +27,7 @@ public class ObjectSynthesizer {
       require(
           descriptor,
           withMessage(() -> String.format("You tried to override reserved methods.: %n%s",
-                  reservedMethodMisOverridings(descriptor.methodHandlers.keySet())
+                  reservedMethodMisOverridings(descriptor.methodHandlers().keySet())
                       .stream()
                       .map(MethodSignature::toString)
                       .collect(joining("%n  ", "  ", ""))),
@@ -51,7 +51,7 @@ public class ObjectSynthesizer {
           .forEach(each -> b.addMethodHandler(each.signature(), each.handler()));
       if (descriptor.classLoader() == null)
         builder = builder.classLoader(SynthesizedObject.class.getClassLoader());
-      if (!builder.interfaces.contains(SynthesizedObject.class))
+      if (!builder.interfaces().contains(SynthesizedObject.class))
         builder.addInterface(SynthesizedObject.class);
       return builder.build();
     };
