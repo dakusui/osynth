@@ -3,9 +3,10 @@ package com.github.dakusui.osynth.utils;
 import com.github.dakusui.osynth.neo.MethodHandler;
 import com.github.dakusui.osynth.neo.MethodSignature;
 import com.github.dakusui.osynth.neo.SynthesizedObject;
+import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.pcond.core.refl.MethodQuery;
-import com.github.dakusui.pcond.functions.Functions;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
@@ -55,5 +56,9 @@ public enum AssertionUtils {
 
   public static Predicate<Object> collectionContainsValue(Collection<?> targetSet, Object value) {
     return callp(instanceMethod(targetSet, "contains", value));
+  }
+
+  public static Predicate<Method> methodIsAnnotationPresent(Class<? extends Annotation> annotation) {
+    return callp(instanceMethod(parameter(), "isAnnotationPresent", annotation));
   }
 }

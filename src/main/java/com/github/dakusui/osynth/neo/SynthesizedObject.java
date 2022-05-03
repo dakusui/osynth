@@ -7,10 +7,17 @@ import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForHashCo
 import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForToString;
 import com.github.dakusui.osynth.neo.annotations.ReservedByOSynth;
 
+import java.lang.reflect.Method;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.neo.SynthesizedObject.PrivateUtils.reservedMethodSignatures;
+import static com.github.dakusui.osynth.utils.AssertionUtils.methodIsAnnotationPresent;
+import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
+import static com.github.dakusui.pcond.functions.Predicates.and;
+import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
 import static java.util.stream.Collectors.toSet;
 
 public interface SynthesizedObject {
@@ -66,6 +73,26 @@ public interface SynthesizedObject {
           .map(MethodSignature::create)
           .collect(toSet());
     }
+
+    static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Descriptor descriptor, BiConsumer<MethodSignature, MethodHandler> updater) {
+      return Arrays.stream(SynthesizedObject.class.getMethods())
+          .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
+          .map((Method eachMethod) -> MethodHandlerEntry.create(
+              MethodSignature.create(eachMethod),
+              createBuiltInMethodHandlerFor(eachMethod, descriptor)));
+    }
+
+    static MethodHandler createBuiltInMethodHandlerFor(Method method, Descriptor descriptor) {
+      assert that(method, and(
+          isNotNull(),
+          methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
+      BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);
+      try {
+        return annotation.value().newInstance().create(descriptor);
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   final class Descriptor {
@@ -75,10 +102,10 @@ public interface SynthesizedObject {
     final ClassLoader                             classLoader;
 
     public Descriptor(List<Class<?>> interfaces, Map<MethodSignature, MethodHandler> methodHandlers, Object fallbackObject, ClassLoader classLoader) {
-      this.methodHandlers = new HashMap<>(requireNonNull(methodHandlers));
-      this.interfaces = new LinkedList<>(requireNonNull(interfaces));
-      this.fallbackObject = fallbackObject;
-      this.classLoader = classLoader;
+      this.methodHandlers = new HashMap<>(Objects.requireNonNull(methodHandlers));
+      this.interfaces = new LinkedList<>(Objects.requireNonNull(interfaces));
+      this.fallbackObject = Objects.requireNonNull(fallbackObject);
+      this.classLoader = Objects.requireNonNull(classLoader);
     }
 
     public List<Class<?>> interfaces() {
@@ -93,8 +120,8 @@ public interface SynthesizedObject {
       return this.classLoader;
     }
 
-    Map<MethodSignature, ? extends MethodHandler> methodHandlers() {
-      return Collections.unmodifiableMap(this.methodHandlers);
+    public Map<MethodSignature, MethodHandler> methodHandlers() {
+      return this.methodHandlers;
     }
 
     public static class Builder {
@@ -112,6 +139,8 @@ public interface SynthesizedObject {
         this();
         this.interfaces.addAll(descriptor.interfaces());
         this.methodHandlers.putAll(descriptor.methodHandlers());
+        this.classLoader = descriptor.classLoader;
+        this.fallbackObject = descriptor.fallbackObject;
       }
 
       public Builder fallbackObject(Object fallbackObject) {

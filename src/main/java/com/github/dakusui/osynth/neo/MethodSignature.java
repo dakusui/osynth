@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 import static java.util.stream.Collectors.joining;
 
 public final class MethodSignature {
@@ -12,13 +11,13 @@ public final class MethodSignature {
   final Class<?>[] parameterClasses;
 
   public MethodSignature(String name, Class<?>[] parameterClasses) {
-    this.name = requireNonNull(name);
-    this.parameterClasses = requireNonNull(parameterClasses);
+    this.name = Objects.requireNonNull(name);
+    this.parameterClasses = Objects.requireNonNull(parameterClasses);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(this.name) + Objects.hashCode(this.parameterClasses);
+    return Objects.hashCode(this.name);
   }
 
   @Override
@@ -31,11 +30,7 @@ public final class MethodSignature {
 
   @Override
   public String toString() {
-    return String.format("%s(%s)",
-        this.name,
-        Arrays.stream(this.parameterClasses)
-            .map(Class::getSimpleName)
-            .collect(joining(",")));
+    return String.format("%s(%s)", this.name, Arrays.stream(this.parameterClasses).map(Class::getSimpleName).collect(joining(",")));
   }
 
   public String name() {
