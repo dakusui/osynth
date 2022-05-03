@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.neo;
+package com.github.dakusui.osynth3;
 
 import java.util.function.BiFunction;
 

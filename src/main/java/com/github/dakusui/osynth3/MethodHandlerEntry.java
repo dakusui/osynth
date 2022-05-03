@@ -1,6 +1,4 @@
-package com.github.dakusui.osynth.neo;
-
-import com.github.dakusui.pcond.Preconditions;
+package com.github.dakusui.osynth3;
 
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 import static com.github.dakusui.pcond.Preconditions.requireState;

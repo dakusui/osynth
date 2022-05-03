@@ -1,29 +1,27 @@
-package com.github.dakusui.osynth.neo;
+package com.github.dakusui.osynth3;
 
-import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory;
-import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForDescriptor;
-import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForEquals;
-import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForHashCode;
-import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForToString;
-import com.github.dakusui.osynth.neo.annotations.ReservedByOSynth;
+import com.github.dakusui.osynth3.annotations.BuiltInHandlerFactory;
+import com.github.dakusui.osynth3.annotations.ReservedByOSynth;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.osynth.neo.SynthesizedObject.PrivateUtils.reservedMethodSignatures;
+import static com.github.dakusui.osynth3.SynthesizedObject.PrivateUtils.reservedMethodSignatures;
 import static com.github.dakusui.osynth.utils.AssertionUtils.methodIsAnnotationPresent;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 import static com.github.dakusui.pcond.functions.Predicates.and;
 import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
 
 public interface SynthesizedObject {
   Set<MethodSignature> RESERVED_METHOD_SIGNATURES = reservedMethodSignatures();
 
-  @BuiltInHandlerFactory(ForDescriptor.class)
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForDescriptor.class)
   @ReservedByOSynth
   Descriptor descriptor();
 
@@ -52,15 +50,15 @@ public interface SynthesizedObject {
         .orElseThrow(NoSuchElementException::new);
   }
 
-  @BuiltInHandlerFactory(ForEquals.class)
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForEquals.class)
   @Override
   boolean equals(Object object);
 
-  @BuiltInHandlerFactory(ForHashCode.class)
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForHashCode.class)
   @Override
   int hashCode();
 
-  @BuiltInHandlerFactory(ForToString.class)
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForToString.class)
   @Override
   String toString();
 
@@ -109,7 +107,7 @@ public interface SynthesizedObject {
     }
 
     public List<Class<?>> interfaces() {
-      return this.interfaces;
+      return unmodifiableList(this.interfaces);
     }
 
     public Object fallbackObject() {
@@ -121,7 +119,7 @@ public interface SynthesizedObject {
     }
 
     public Map<MethodSignature, MethodHandler> methodHandlers() {
-      return this.methodHandlers;
+      return unmodifiableMap(this.methodHandlers);
     }
 
     public static class Builder {

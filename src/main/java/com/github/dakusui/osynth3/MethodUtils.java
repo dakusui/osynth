@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.neo;
+package com.github.dakusui.osynth3;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -10,8 +10,8 @@ import java.util.Optional;
 
 import static com.github.dakusui.osynth.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth.utils.Messages.failedToInstantiate;
+import static com.github.dakusui.osynth.utils.Messages.formatMessageForMissingMethodHandler;
 import static com.github.dakusui.pcond.Assertions.that;
-import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.functions.Predicates.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -23,14 +23,16 @@ public enum MethodUtils {
     Objects.requireNonNull(fallbackObject);
     return (synthesizedObject, args) -> {
       try {
-//        assert that(synthesizedObject, and(
-//            isNotNull(),
-//            transform(synthesizedObjectFallbackObject()).check(isSameReferenceAs(fallbackObject))));
-        return fallbackObject.getClass()
-            .getMethod(methodSignature.name(), methodSignature.parameterClasses())
+        assert synthesizedObject != null &&
+            synthesizedObject.fallbackObject() == fallbackObject;
+        Method method = fallbackObject.getClass().getMethod(
+            methodSignature.name(),
+            methodSignature.parameterClasses());
+        method.setAccessible(true);
+        return method
             .invoke(fallbackObject, args);
       } catch (NoSuchMethodException e) {
-        throw new UnsupportedOperationException(e);
+        throw new UnsupportedOperationException(formatMessageForMissingMethodHandler(methodSignature, synthesizedObject, e), e);
       } catch (InvocationTargetException |
                IllegalAccessException e) {
         throw new RuntimeException(e);

@@ -1,9 +1,9 @@
 package com.github.dakusui.osynth.sandbox;
 
-import com.github.dakusui.osynth.neo.MethodHandler;
-import com.github.dakusui.osynth.neo.MethodSignature;
-import com.github.dakusui.osynth.neo.MethodUtils;
-import com.github.dakusui.osynth.neo.SynthesizedObject;
+import com.github.dakusui.osynth3.MethodHandler;
+import com.github.dakusui.osynth3.MethodSignature;
+import com.github.dakusui.osynth3.MethodUtils;
+import com.github.dakusui.osynth3.SynthesizedObject;
 import org.junit.Test;
 
 import java.util.Arrays;

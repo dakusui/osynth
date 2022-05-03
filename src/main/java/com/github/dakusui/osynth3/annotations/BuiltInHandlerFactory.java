@@ -1,7 +1,7 @@
-package com.github.dakusui.osynth.neo.annotations;
+package com.github.dakusui.osynth3.annotations;
 
-import com.github.dakusui.osynth.neo.MethodHandler;
-import com.github.dakusui.osynth.neo.SynthesizedObject;
+import com.github.dakusui.osynth3.MethodHandler;
+import com.github.dakusui.osynth3.SynthesizedObject;
 
 import java.lang.annotation.Retention;
 
@@ -18,7 +18,14 @@ public @interface BuiltInHandlerFactory {
   class ForToString implements MethodHandlerFactory {
     @Override
     public MethodHandler create(SynthesizedObject.Descriptor descriptor) {
-      return (synthesizedObject, objects) -> synthesizedObject.fallbackObject().toString();
+      return (synthesizedObject, objects) -> composeFormattedString(synthesizedObject);
+    }
+
+    private static String composeFormattedString(SynthesizedObject synthesizedObject) {
+      return String.format("osynth:{methodHandlers=%s,interfaces=%s,fallback:%s}",
+          synthesizedObject.descriptor().methodHandlers(),
+          synthesizedObject.descriptor().interfaces(),
+          synthesizedObject.fallbackObject().toString());
     }
   }
 

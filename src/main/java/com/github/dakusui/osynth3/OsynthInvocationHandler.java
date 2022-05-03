@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.neo;
+package com.github.dakusui.osynth3;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.github.dakusui.pcond.Assertions.that;
-import static com.github.dakusui.pcond.functions.Predicates.*;
 import static java.util.Objects.requireNonNull;
 
 class OsynthInvocationHandler implements InvocationHandler {

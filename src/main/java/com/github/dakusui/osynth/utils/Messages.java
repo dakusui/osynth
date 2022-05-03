@@ -1,5 +1,8 @@
 package com.github.dakusui.osynth.utils;
 
+import com.github.dakusui.osynth3.MethodSignature;
+import com.github.dakusui.osynth3.SynthesizedObject;
+
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -29,5 +32,9 @@ public enum Messages {
 
   public static String notAnInterface(Class<?> anInterface) {
     return format("A given class:'%s' is not an interface.", anInterface);
+  }
+
+  public static String formatMessageForMissingMethodHandler(MethodSignature methodSignature, SynthesizedObject synthesizedObject, NoSuchMethodException e) {
+    return format("An appropriate method handler/implementation for '%s' was not found in '%s': %s", methodSignature, synthesizedObject, e.getMessage());
   }
 }

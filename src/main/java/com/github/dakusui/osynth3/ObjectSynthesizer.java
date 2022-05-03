@@ -1,10 +1,9 @@
-package com.github.dakusui.osynth.neo;
+package com.github.dakusui.osynth3;
 
 import java.lang.reflect.Proxy;
 import java.util.*;
 
-import static com.github.dakusui.osynth.neo.ObjectSynthesizer.Utils.*;
-import static com.github.dakusui.osynth.neo.SynthesizedObject.RESERVED_METHOD_SIGNATURES;
+import static com.github.dakusui.osynth3.ObjectSynthesizer.Utils.*;
 import static com.github.dakusui.osynth.utils.AssertionUtils.*;
 import static com.github.dakusui.pcond.Assertions.postcondition;
 import static com.github.dakusui.pcond.Assertions.that;
@@ -22,7 +21,7 @@ public class ObjectSynthesizer {
       assert that(descriptor, isNotNull());
       require(
           descriptor,
-          withMessage(() -> format("You tried to override reserved methods.: %n%s",
+          withMessage(() -> String.format("You tried to override reserved methods.: %n%s",
                   reservedMethodMisOverridings(descriptor.methodHandlers.keySet())
                       .stream()
                       .map(MethodSignature::toString)
@@ -30,7 +29,7 @@ public class ObjectSynthesizer {
               transform(descriptorMethodHandlers()
                   .andThen(mapKeySet(parameter()))
                   .andThen(stream()))
-                  .check(noneMatch(collectionContainsValue(RESERVED_METHOD_SIGNATURES, parameter())))));
+                  .check(noneMatch(collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
       return descriptor;
     };
 
@@ -148,7 +147,7 @@ public class ObjectSynthesizer {
 
     static List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {
       return methodSignatures.stream()
-          .filter(RESERVED_METHOD_SIGNATURES::contains)
+          .filter(SynthesizedObject.RESERVED_METHOD_SIGNATURES::contains)
           .collect(toList());
     }
   }
