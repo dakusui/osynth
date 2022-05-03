@@ -32,14 +32,6 @@ public class Sandbox {
     ((I1) p1).method1();
   }
 
-  private static Proxy createProxy(InvocationHandler h, Class<?>... interfaces) {
-    return (Proxy) Proxy.newProxyInstance(
-        Sandbox.class.getClassLoader(),
-        interfaces,
-        h
-    );
-  }
-
   @Test
   public void test1() {
     Arrays.stream(Object.class.getDeclaredMethods())
@@ -130,85 +122,6 @@ public class Sandbox {
     }.method(new Object());
   }
 
-  private static String modifiers(Method method) {
-    return String.format("%s  %s%s%s",
-        scopeOf(method),
-        isFinal(method),
-        isNative(method),
-        isStatic(method));
-  }
-
-  private static String isFinal(Method method) {
-    if (Modifier.isFinal(method.getModifiers()))
-      return "X";
-    return " ";
-  }
-
-  private static String isNative(Method method) {
-    if (Modifier.isNative(method.getModifiers()))
-      return "X";
-    return " ";
-  }
-
-  private static String isStatic(Method method) {
-    if (Modifier.isStatic(method.getModifiers()))
-      return "X";
-    return " ";
-  }
-
-  private static String scopeOf(Method method) {
-    // public
-    //  protected
-    //   private
-    // xxx
-    if (Modifier.isPublic(method.getModifiers()))
-      return "X  ";
-    if (Modifier.isProtected(method.getModifiers()))
-      return " X ";
-    if (Modifier.isPrivate(method.getModifiers()))
-      return "  X";
-    return "   ";
-  }
-
-  public interface I1 {
-    void method1();
-  }
-
-  public interface AInterface {
-    default void method(String s) {
-      System.out.println("  AInterface");
-    }
-
-    default void stringMethod(String s) {
-      System.out.println("  AInterface");
-    }
-  }
-
-  public interface A2Interface extends AInterface {
-  }
-
-  public interface BInterface {
-    default void method(Object v) {
-      System.out.println("  BInterface");
-    }
-
-    default void stringMethod(String s) {
-      System.out.println("  BInterface");
-    }
-  }
-
-  public interface C1Interface extends AInterface, BInterface {
-    default void stringMethod(String s) {
-
-    }
-  }
-
-  public interface C2Interface extends BInterface, AInterface {
-    default void stringMethod(String s) {
-
-    }
-  }
-
   /**
    * This test prints following.
    *
@@ -264,22 +177,6 @@ public class Sandbox {
     System.out.println(lookup.in(A2Interface.class).unreflect(A2Interface.class.getMethod("method", String.class)));
   }
 
-  public interface PInterface {
-    void aMethod();
-  }
-
-  interface QInterface extends PInterface {
-    default void aMethod() {
-      System.out.println("A default implementation in QInterface");
-    }
-  }
-
-  public interface RInterface extends QInterface {
-    default void aMethod() {
-      System.out.println("A default implementation in RInterface");
-    }
-  }
-
   @Test
   public void testOverriddenMethod() throws Throwable {
     MethodHandles.Lookup lookup = createMethodHandlesLookupFor(RInterface.class);
@@ -294,10 +191,6 @@ public class Sandbox {
     System.out.println("in Q get from P: " + lookup.in(QInterface.class).unreflect(PInterface.class.getMethod("aMethod")));
     System.out.println("in R get from P: " + lookup.in(RInterface.class).unreflect(PInterface.class.getMethod("aMethod")));
   }
-
-  public interface SInterface extends RInterface {
-  }
-
 
   @Test
   public void testOverriddenMethod$verticalBehavior2() throws Throwable {
@@ -378,23 +271,6 @@ public class Sandbox {
     rInterface.aMethod();
   }
 
-
-  interface XInterface {
-    void aMethod();
-  }
-
-  interface YInterface {
-    default void aMethod() {
-      System.out.println("A default implementation in QInterface");
-    }
-  }
-
-  interface ZInterface {
-    default void aMethod() {
-      System.out.println("A default implementation in RInterface");
-    }
-  }
-
   /**
    * This test prints the following output.
    *
@@ -414,6 +290,7 @@ public class Sandbox {
    *
    * [[[1, Proxy]]] "java.lang.reflect.Proxy" https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Proxy.html
    */
+  @SuppressWarnings("JavadocLinkAsPlainText")
   @Test
   public void testMultipleInheritanceWithProxy6() {
     {
@@ -461,17 +338,6 @@ public class Sandbox {
     });
   }
 
-  @CallerSensitive
-  public static void main(String... args) {
-    System.out.println(new Object() {
-      @Override
-      @CallerSensitive
-      public String toString() {
-        return Reflection.getCallerClass().toString();
-      }
-    });
-  }
-
   @Test
   public void whatIfGetLookUpThroughNormalMethod() throws NoSuchMethodException, IllegalAccessException {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
@@ -506,7 +372,6 @@ public class Sandbox {
     System.out.println(lookup.in(SInterface.class).unreflect(RInterface.class.getMethod("aMethod")));
     System.out.println(lookup.in(SInterface.class).unreflect(SInterface.class.getMethod("aMethod")));
   }
-
 
   @Test
   public void whatIfGetLookUpThroughNormalMethodAndGoForward() throws Throwable {
@@ -556,27 +421,6 @@ public class Sandbox {
     }
   }
 
-
-  private static Object invokeSpecialMethod(Class<?> anInterfaceClass, Proxy proxy, String methodName) {
-    try {
-      Method method = anInterfaceClass.getMethod(methodName);
-      String prefix = "--" + anInterfaceClass.getSimpleName() + ":";
-      if (method.isDefault()) {
-        return prefix +
-            MethodHandles.lookup()
-                .in(anInterfaceClass)
-                .unreflectSpecial(method, anInterfaceClass)
-                .bindTo(proxy)
-                .invoke();
-      }
-      return prefix + "It was an abstract method";
-    } catch (AbstractMethodError e) {
-      throw e;
-    } catch (Throwable e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   @Test
   public void whatIfGetLookUpThroughSaneMethodAndInvokeNonSpecial$() throws Throwable {
     for (Class<?> anInterfaceClass : new Class[] { PInterface.class, QInterface.class, RInterface.class, SInterface.class }) {
@@ -598,18 +442,6 @@ public class Sandbox {
         System.out.println(e.getMessage());
         e.printStackTrace();
       }
-    }
-  }
-
-  private static Object invokeMethod(Class<?> anInterfaceClass, Proxy proxy, String methodName) {
-    try {
-      return MethodHandles.lookup()
-          .in(anInterfaceClass)
-          .unreflect(anInterfaceClass.getMethod(methodName))
-          .bindTo(proxy)
-          .invoke();
-    } catch (Throwable e) {
-      throw new RuntimeException(e);
     }
   }
 
@@ -639,9 +471,181 @@ public class Sandbox {
   public void whatIsSuperclassOfSerializable() {
     System.out.println(Serializable.class.getSuperclass());
   }
+
   @Test
   public void whatIsSuperclassOfProxy() {
     System.out.println(createDummyProxy(Serializable.class).getClass().getSuperclass());
     System.out.println(createDummyProxy(Serializable.class).getClass().getSuperclass().getSuperclass());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void canIcreateProxyForNonInterfaceClass() {
+    System.out.println(createDummyProxy(String.class));
+  }
+
+  static Proxy createProxy(InvocationHandler h, Class<?>... interfaces) {
+    return (Proxy) Proxy.newProxyInstance(
+        Sandbox.class.getClassLoader(),
+        interfaces,
+        h
+    );
+  }
+
+  private static String modifiers(Method method) {
+    return String.format("%s  %s%s%s",
+        scopeOf(method),
+        isFinal(method),
+        isNative(method),
+        isStatic(method));
+  }
+
+  private static String isFinal(Method method) {
+    if (Modifier.isFinal(method.getModifiers()))
+      return "X";
+    return " ";
+  }
+
+  private static String isNative(Method method) {
+    if (Modifier.isNative(method.getModifiers()))
+      return "X";
+    return " ";
+  }
+
+  private static String isStatic(Method method) {
+    if (Modifier.isStatic(method.getModifiers()))
+      return "X";
+    return " ";
+  }
+
+  private static String scopeOf(Method method) {
+    // public
+    //  protected
+    //   private
+    // xxx
+    if (Modifier.isPublic(method.getModifiers()))
+      return "X  ";
+    if (Modifier.isProtected(method.getModifiers()))
+      return " X ";
+    if (Modifier.isPrivate(method.getModifiers()))
+      return "  X";
+    return "   ";
+  }
+
+  @CallerSensitive
+  public static void main(String... args) {
+    System.out.println(new Object() {
+      @Override
+      @CallerSensitive
+      public String toString() {
+        return Reflection.getCallerClass().toString();
+      }
+    });
+  }
+
+  private static Object invokeSpecialMethod(Class<?> anInterfaceClass, Proxy proxy, String methodName) {
+    try {
+      Method method = anInterfaceClass.getMethod(methodName);
+      String prefix = "--" + anInterfaceClass.getSimpleName() + ":";
+      if (method.isDefault()) {
+        return prefix +
+            MethodHandles.lookup()
+                .in(anInterfaceClass)
+                .unreflectSpecial(method, anInterfaceClass)
+                .bindTo(proxy)
+                .invoke();
+      }
+      return prefix + "It was an abstract method";
+    } catch (AbstractMethodError e) {
+      throw e;
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static Object invokeMethod(Class<?> anInterfaceClass, Proxy proxy, String methodName) {
+    try {
+      return MethodHandles.lookup()
+          .in(anInterfaceClass)
+          .unreflect(anInterfaceClass.getMethod(methodName))
+          .bindTo(proxy)
+          .invoke();
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public interface I1 {
+    void method1();
+  }
+
+  public interface AInterface {
+    default void method(String s) {
+      System.out.println("  AInterface");
+    }
+
+    default void stringMethod(String s) {
+      System.out.println("  AInterface");
+    }
+  }
+
+  public interface A2Interface extends AInterface {
+  }
+
+  public interface BInterface {
+    default void method(Object v) {
+      System.out.println("  BInterface");
+    }
+
+    default void stringMethod(String s) {
+      System.out.println("  BInterface");
+    }
+  }
+
+
+  public interface C1Interface extends AInterface, BInterface {
+    default void stringMethod(String s) {
+
+    }
+  }
+
+  public interface C2Interface extends BInterface, AInterface {
+    default void stringMethod(String s) {
+
+    }
+  }
+
+  public interface PInterface {
+    void aMethod();
+  }
+
+  interface QInterface extends PInterface {
+    default void aMethod() {
+      System.out.println("A default implementation in QInterface");
+    }
+  }
+
+  public interface RInterface extends QInterface {
+    default void aMethod() {
+      System.out.println("A default implementation in RInterface");
+    }
+  }
+
+  public interface SInterface extends RInterface {
+  }
+
+  interface XInterface {
+    void aMethod();
+  }
+
+  interface YInterface {
+    default void aMethod() {
+      System.out.println("A default implementation in QInterface");
+    }
+  }
+
+  interface ZInterface {
+    default void aMethod() {
+      System.out.println("A default implementation in RInterface");
+    }
   }
 }

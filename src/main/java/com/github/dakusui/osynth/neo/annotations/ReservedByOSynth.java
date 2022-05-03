@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.neo;
+package com.github.dakusui.osynth.neo.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

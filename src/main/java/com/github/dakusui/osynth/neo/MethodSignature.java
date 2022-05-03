@@ -38,11 +38,19 @@ public final class MethodSignature {
             .collect(joining(",")));
   }
 
-  static MethodSignature create(String name, Class<?>[] parameterClasses) {
+  public String name() {
+    return this.name;
+  }
+
+  public Class<?>[] parameterClasses() {
+    return Arrays.copyOf(parameterClasses, parameterClasses.length);
+  }
+
+  public static MethodSignature create(String name, Class<?>... parameterClasses) {
     return new MethodSignature(name, parameterClasses);
   }
 
-  static MethodSignature create(Method method) {
+  public static MethodSignature create(Method method) {
     return create(method.getName(), method.getParameterTypes());
   }
 }

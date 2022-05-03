@@ -1,9 +1,11 @@
 package com.github.dakusui.osynth.neo;
 
-import com.github.dakusui.osynth.neo.BuiltInHandlerFactory.ForDescriptor;
-import com.github.dakusui.osynth.neo.BuiltInHandlerFactory.ForEquals;
-import com.github.dakusui.osynth.neo.BuiltInHandlerFactory.ForHashCode;
-import com.github.dakusui.osynth.neo.BuiltInHandlerFactory.ForToString;
+import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory;
+import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForDescriptor;
+import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForEquals;
+import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForHashCode;
+import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory.ForToString;
+import com.github.dakusui.osynth.neo.annotations.ReservedByOSynth;
 
 import java.util.*;
 
@@ -18,6 +20,7 @@ public interface SynthesizedObject {
   @ReservedByOSynth
   Descriptor descriptor();
 
+  @ReservedByOSynth
   default MethodHandler methodHandlerFor(MethodSignature methodSignature) {
     return descriptor().methodHandlers.get(methodSignature);
   }
@@ -90,7 +93,7 @@ public interface SynthesizedObject {
       return this.classLoader;
     }
 
-    private Map<MethodSignature, ? extends MethodHandler> methodHandlers() {
+    Map<MethodSignature, ? extends MethodHandler> methodHandlers() {
       return Collections.unmodifiableMap(this.methodHandlers);
     }
 

@@ -1,19 +1,21 @@
 package com.github.dakusui.osynth.neo;
 
+import com.github.dakusui.osynth.neo.annotations.BuiltInHandlerFactory;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.neo.ObjectSynthesizer.Utils.*;
+import static com.github.dakusui.osynth.utils.AssertionUtils.*;
+import static com.github.dakusui.pcond.Assertions.postcondition;
 import static com.github.dakusui.pcond.Assertions.that;
-import static com.github.dakusui.pcond.Preconditions.require;
-import static com.github.dakusui.pcond.Preconditions.requireNonNull;
+import static com.github.dakusui.pcond.Postconditions.ensure;
+import static com.github.dakusui.pcond.Preconditions.*;
 import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
 import static com.github.dakusui.pcond.functions.Functions.*;
 import static com.github.dakusui.pcond.functions.Predicates.*;
@@ -22,11 +24,50 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class ObjectSynthesizer {
+  interface Validator {
+    Validator DEFAULT = (objectSynthesizer, descriptor) -> {
+      assert that(descriptor, isNotNull());
+      require(
+          descriptor,
+          withMessage(() -> format("You tried to override reserved methods.: %n%s",
+                  reservedMethodMisOverridings(descriptor.methodHandlers.keySet())
+                      .stream()
+                      .map(MethodSignature::toString)
+                      .collect(joining("%n  ", "  ", ""))),
+              transform(descriptorMethodHandlers()
+                  .andThen(mapKeySet(parameter()))
+                  .andThen(stream()))
+                  .check(noneMatch(collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
+      return descriptor;
+    };
+
+    SynthesizedObject.Descriptor validate(ObjectSynthesizer objectSynthesizer, SynthesizedObject.Descriptor descriptor);
+  }
+
+  interface Preprocessor {
+    Preprocessor DEFAULT = (objectSynthesizer, descriptor) -> {
+      SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
+      SynthesizedObject.Descriptor.Builder b = builder;
+      createMethodHandlersFor(SynthesizedObject.class, descriptor, builder::addMethodHandler)
+          .forEach(each -> b.addMethodHandler(each.signature(), each.handler()));
+      if (descriptor.classLoader() == null)
+        builder = builder.classLoader(SynthesizedObject.class.getClassLoader());
+      return builder.build();
+    };
+
+    SynthesizedObject.Descriptor preprocess(ObjectSynthesizer objectSynthesizer, SynthesizedObject.Descriptor descriptor);
+  }
+
   private final SynthesizedObject.Descriptor.Builder descriptorBuilder;
+  private       Validator                            validator;
+  private       Preprocessor                         preprocessor;
 
   public ObjectSynthesizer() {
+    this.classLoader(this.getClass().getClassLoader())
+        .validateWith(Validator.DEFAULT)
+        .preprocessWith(Preprocessor.DEFAULT);
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder();
-    this.classLoader(this.getClass().getClassLoader());
+    ;
   }
 
   public ObjectSynthesizer addInterface(Class<?> interfaceClass) {
@@ -44,38 +85,54 @@ public class ObjectSynthesizer {
     return this;
   }
 
+  public ObjectSynthesizer handle(MethodHandlerEntry handlerEntry) {
+    requireNonNull(handlerEntry);
+    this.descriptorBuilder.addMethodHandler(handlerEntry.signature(), handlerEntry.handler());
+    return this;
+  }
+
+  public ObjectSynthesizer validateWith(Validator validator) {
+    this.validator = requireNonNull(validator);
+    return this;
+  }
+
+  public ObjectSynthesizer preprocessWith(Preprocessor preprocessor) {
+    this.preprocessor = requireNonNull(preprocessor);
+    return this;
+  }
+
   public SynthesizedObject synthesize(Object fallbackObject) {
     return this.fallbackObject(fallbackObject).synthesize();
   }
 
   public SynthesizedObject synthesize() {
-    return (SynthesizedObject) Utils.createProxy(updateDescriptor(validateDescriptor(this.descriptorBuilder.build())));
+    return (SynthesizedObject) Utils.createProxy(processDescriptor(validateDescriptor(this.descriptorBuilder.build())));
   }
 
-  protected SynthesizedObject.Descriptor updateDescriptor(SynthesizedObject.Descriptor descriptor) {
-    SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
-    SynthesizedObject.Descriptor.Builder b = builder;
-    createMethodHandlersFor(SynthesizedObject.class, descriptor, builder::addMethodHandler)
-        .forEach(each -> b.addMethodHandler(each.signature(), each.handler()));
-    if (descriptor.classLoader() == null)
-      builder = builder.classLoader(SynthesizedObject.class.getClassLoader());
-    return builder.build();
+  public static MethodHandlerEntry.Builder handle(String methodName, Class<?>... parameterTypes) {
+    return handle(MethodSignature.create(methodName, parameterTypes));
   }
 
-  protected SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
-    assert that(descriptor, isNotNull());
-    require(
-        descriptor,
-        withMessage(() -> format("You tried to override reserved methods.: %n%s",
-                reservedMethodMisOverridings(descriptor.methodHandlers.keySet())
-                    .stream()
-                    .map(MethodSignature::toString)
-                    .collect(joining("%n  ", "  ", ""))),
-            transform(descriptorMethodHandlers()
-                .andThen(mapKeySet(parameter()))
-                .andThen(stream()))
-                .check(noneMatch(collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
-    return descriptor;
+  public static MethodHandlerEntry.Builder handle(MethodSignature signature) {
+    return new MethodHandlerEntry.Builder().signature(signature);
+  }
+
+  private SynthesizedObject.Descriptor processDescriptor(SynthesizedObject.Descriptor descriptor) {
+    requireState(this.preprocessor, isNotNull());
+    SynthesizedObject.Descriptor ret = this.preprocessor.preprocess(this, descriptor);
+
+    assert postcondition(ret, allOf(
+        transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
+        transform(descriptorClassLoader()).check(isEqualTo(descriptor.classLoader())),
+        transform(descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
+        transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject()))
+    ));
+    return ret;
+  }
+
+  private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
+    requireState(this.validator, isNotNull());
+    return ensure(this.validator.validate(this, descriptor), isNotNull());
   }
 
   public enum Utils {
@@ -123,18 +180,6 @@ public class ObjectSynthesizer {
       } catch (InstantiationException | IllegalAccessException e) {
         throw new RuntimeException(e);
       }
-    }
-
-    static Function<Object, Map<MethodSignature, MethodHandler>> descriptorMethodHandlers() {
-      return call(instanceMethod(parameter(), "methodHandlers"));
-    }
-
-    static Function<Object, Collection<?>> mapKeySet(Object value) {
-      return call(instanceMethod(value, "keySet"));
-    }
-
-    static Predicate<Object> collectionContainsValue(Collection<?> targetSet, Object value) {
-      return callp(instanceMethod(targetSet, "contains", value));
     }
 
     static List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {

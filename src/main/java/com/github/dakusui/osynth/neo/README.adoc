@@ -1,3 +1,5 @@
+= The design of the `osynth` library
+
 == The structure of a "synthesized object"
 
 The Figure <<synthesizedObjectStructure>> shows how each synthesized object is structured.
@@ -87,6 +89,11 @@ If the fallback object is another synthesized object, the handler searching proc
 
 Once the control goes into a fallback object, it will not go out from the object.
 
+=== `ObjectSynthesizer` class
+
+A builder class to synthesize an object from given method handlers, interfaces, and a fallback object.
+(t.b.d.)
+
 === `SynthesizedObject` interface
 
 (t.b.d.)
@@ -98,11 +105,6 @@ Once the control goes into a fallback object, it will not go out from the object
 === `MethodSignature` class
 
 (t.b.d.)
-
-=== `ObjectSynthesizer` class
-
-(t.b.d.)
-
 
 === Important Core Java API classes
 
@@ -152,4 +154,4 @@ The current synthesized object tries to find a method by name and parameter type
 
 == References
 
-- [[[Proxy, 1]]] "Proxy (Java Platform SE 8)" https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Proxy.html
+- [[Proxy, 1]] "Proxy (Java Platform SE 8)" https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Proxy.html

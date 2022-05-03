@@ -1,4 +1,7 @@
-package com.github.dakusui.osynth.neo;
+package com.github.dakusui.osynth.neo.annotations;
+
+import com.github.dakusui.osynth.neo.MethodHandler;
+import com.github.dakusui.osynth.neo.SynthesizedObject;
 
 import java.lang.annotation.Retention;
 
