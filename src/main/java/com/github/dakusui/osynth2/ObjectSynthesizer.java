@@ -9,11 +9,14 @@ import com.github.dakusui.pcond.Validations;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.Messages.messageForReservedMethodOverridingValidationFailure;
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.createMethodHandlersForBuiltInMethods;
+import static com.github.dakusui.osynth2.core.utils.AssertionUtils.methodIsAnnotationPresent;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Postconditions.ensure;
 import static com.github.dakusui.pcond.Preconditions.*;
@@ -25,8 +28,11 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class ObjectSynthesizer {
-  interface Validator {
-    Validator DEFAULT                = toNamedValidator("defaultValidator", (objectSynthesizer, descriptor) -> {
+  interface Stage extends BiFunction<ObjectSynthesizer, SynthesizedObject.Descriptor, SynthesizedObject.Descriptor> {
+  }
+
+  interface Validator extends Stage {
+    Validator DEFAULT = toNamed("defaultValidator", (objectSynthesizer, descriptor) -> {
       assert that(objectSynthesizer, isNotNull());
       assert that(descriptor, isNotNull());
       Validations.validate(
@@ -43,20 +49,20 @@ public class ObjectSynthesizer {
       return descriptor;
     });
 
-    Validator ENFORCE_NO_DUPLICATION = toNamedValidator("noDuplicationEnforcingValidator", (objectSynthesizer, descriptor) -> {
+    Validator ENFORCE_NO_DUPLICATION = toNamed("noDuplicationEnforcingValidator", (objectSynthesizer, descriptor) -> {
       assert that(objectSynthesizer, isNotNull());
       assert that(descriptor, isNotNull());
       require(descriptor, transform(AssertionUtils.descriptorInterfaces().andThen(AssertionUtils.collectionDuplicatedElements())).check(isEmpty()));
       return descriptor;
     });
 
-    Validator PASS_THROUGH = toNamedValidator("passThroughValidator", (objectSynthesizer, descriptor) -> descriptor);
+    Validator PASS_THROUGH = toNamed("passThroughValidator", (objectSynthesizer, descriptor) -> descriptor);
 
     static Validator sequence(Validator... validators) {
-      return toNamedValidator("validatorSequence:" + Arrays.toString(validators), (objectSynthesizer, descriptor) -> {
+      return toNamed("validatorSequence:" + Arrays.toString(validators), (objectSynthesizer, descriptor) -> {
         SynthesizedObject.Descriptor ret = descriptor;
         for (Validator each : validators) {
-          ret = requireNonNull(each).validate(objectSynthesizer, descriptor);
+          ret = requireNonNull(each).apply(objectSynthesizer, descriptor);
           ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
               transform(AssertionUtils.descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
               transform(AssertionUtils.descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
@@ -66,13 +72,13 @@ public class ObjectSynthesizer {
       });
     }
 
-    static Validator toNamedValidator(String name, Validator validator) {
+    static Validator toNamed(String name, Validator validator) {
       require(name, isNotNull());
       require(validator, isNotNull());
       return new Validator() {
         @Override
-        public SynthesizedObject.Descriptor validate(ObjectSynthesizer objectSynthesizer, SynthesizedObject.Descriptor descriptor) {
-          return validator.validate(objectSynthesizer, descriptor);
+        public SynthesizedObject.Descriptor apply(ObjectSynthesizer objectSynthesizer, SynthesizedObject.Descriptor descriptor) {
+          return validator.apply(objectSynthesizer, descriptor);
         }
 
         @Override
@@ -82,25 +88,31 @@ public class ObjectSynthesizer {
       };
     }
 
-    SynthesizedObject.Descriptor validate(
+    SynthesizedObject.Descriptor apply(
         ObjectSynthesizer objectSynthesizer,
         SynthesizedObject.Descriptor descriptor);
   }
 
 
   interface Preprocessor {
-    Preprocessor DEFAULT = toNamedPreprocessor("defaultPreprocessor", (objectSynthesizer, descriptor) -> {
-      assert that(objectSynthesizer, isNotNull());
-      assert that(descriptor, isNotNull());
+    Preprocessor INCLUDE_BUILTIN_METHOD_HANDLERS = toNamedPreprocessor("builtInMethodHandlers", ((objectSynthesizer, descriptor) -> {
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
-      createMethodHandlersForBuiltInMethods(descriptor, builder::addMethodHandler)
+      createMethodHandlersForBuiltInMethods(() -> objectSynthesizer.finalizedDescriptor().orElseThrow(IllegalStateException::new))
           .forEach(each -> builder.addMethodHandler(each.signature(), each.handler()));
+      return builder.build();
+    }));
+    Preprocessor INCLUDE_BUILTIN_INTERFACES      = toNamedPreprocessor("builtInInterfaces", ((objectSynthesizer, descriptor) -> {
+      SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
       if (!builder.interfaces().contains(SynthesizedObject.class))
         builder.addInterface(SynthesizedObject.class);
       return builder.build();
-    });
+    }));
 
-    Preprocessor INCLUDE_INTERFACES_FROM_FALLBACK = toNamedPreprocessor("interfacesFromFallbackIncludingPreprocessor", (objectSynthesizer, descriptor) -> {
+    Preprocessor DEFAULT                          = toNamedPreprocessor("defaultPreprocessor", sequence(
+        INCLUDE_BUILTIN_METHOD_HANDLERS,
+        INCLUDE_BUILTIN_INTERFACES
+    ));
+    Preprocessor INCLUDE_INTERFACES_FROM_FALLBACK = toNamedPreprocessor("interfacesFromFallback", (objectSynthesizer, descriptor) -> {
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
       Set<Class<?>> interfacesInOriginalDescriptor = new HashSet<>(descriptor.interfaces());
       Arrays.stream(descriptor.fallbackObject().getClass().getInterfaces())
@@ -115,19 +127,23 @@ public class ObjectSynthesizer {
       return toNamedPreprocessor("preprocessorSequence:" + Arrays.toString(preprocessors), (objectSynthesizer, descriptor) -> {
         SynthesizedObject.Descriptor ret = descriptor;
         for (Preprocessor each : preprocessors) {
-          ret = ensure(requireNonNull(each).preprocess(objectSynthesizer, descriptor), isNotNull());
+          ret = ensure(requireNonNull(each).apply(objectSynthesizer, ret), isNotNull());
         }
         return ret;
       });
     }
+
+    SynthesizedObject.Descriptor apply(
+        ObjectSynthesizer objectSynthesizer,
+        SynthesizedObject.Descriptor descriptor);
 
     static Preprocessor toNamedPreprocessor(String name, Preprocessor preprocessor) {
       require(name, isNotNull());
       require(preprocessor, isNotNull());
       return new Preprocessor() {
         @Override
-        public SynthesizedObject.Descriptor preprocess(ObjectSynthesizer objectSynthesizer, SynthesizedObject.Descriptor descriptor) {
-          return preprocessor.preprocess(objectSynthesizer, descriptor);
+        public SynthesizedObject.Descriptor apply(ObjectSynthesizer objectSynthesizer, SynthesizedObject.Descriptor descriptor) {
+          return preprocessor.apply(objectSynthesizer, descriptor);
         }
 
         @Override
@@ -137,16 +153,13 @@ public class ObjectSynthesizer {
 
       };
     }
-
-    SynthesizedObject.Descriptor preprocess(
-        ObjectSynthesizer objectSynthesizer,
-        SynthesizedObject.Descriptor descriptor);
   }
 
-  private final SynthesizedObject.Descriptor.Builder descriptorBuilder;
-  private       Validator                            validator;
-  private       Preprocessor                         preprocessor;
-  private       ClassLoader                          classLoader;
+  private final SynthesizedObject.Descriptor.Builder          descriptorBuilder;
+  private       Validator                                     validator;
+  private       Preprocessor                                  preprocessor;
+  private       ClassLoader                                   classLoader;
+  private final AtomicReference<SynthesizedObject.Descriptor> finalizedDescriptor = new AtomicReference<>(null);
 
   public ObjectSynthesizer() {
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder();
@@ -208,7 +221,15 @@ public class ObjectSynthesizer {
   }
 
   public SynthesizedObject synthesize() {
-    return (SynthesizedObject) InternalUtils.createProxy(this.classLoader, preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build())));
+    return (SynthesizedObject) InternalUtils.createProxy(
+        this.classLoader,
+        finalizeDescriptor(preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build()))));
+  }
+
+  private SynthesizedObject.Descriptor finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
+    requireState(this.finalizedDescriptor.get(), isNull());
+    this.finalizedDescriptor.set(descriptor);
+    return finalizedDescriptor().orElseThrow(IllegalStateException::new);
   }
 
   public Preprocessor preprocessor() {
@@ -229,7 +250,7 @@ public class ObjectSynthesizer {
 
   private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
     requireState(this.validator, isNotNull());
-    SynthesizedObject.Descriptor ret = this.validator.validate(this, descriptor);
+    SynthesizedObject.Descriptor ret = this.validator.apply(this, descriptor);
     ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
         transform(AssertionUtils.descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
         transform(AssertionUtils.descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
@@ -239,7 +260,11 @@ public class ObjectSynthesizer {
 
   private SynthesizedObject.Descriptor preprocessDescriptor(SynthesizedObject.Descriptor descriptor) {
     requireState(this.preprocessor, isNotNull());
-    return ensure(this.preprocessor.preprocess(this, descriptor), isNotNull());
+    return ensure(this.preprocessor.apply(this, descriptor), isNotNull());
+  }
+
+  private Optional<SynthesizedObject.Descriptor> finalizedDescriptor() {
+    return Optional.ofNullable(finalizedDescriptor.get());
   }
 
   enum InternalUtils {
@@ -258,25 +283,26 @@ public class ObjectSynthesizer {
           .collect(toList());
     }
 
-    static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(SynthesizedObject.Descriptor descriptor, BiConsumer<MethodSignature, MethodHandler> updater) {
+    static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       return Arrays.stream(SynthesizedObject.class.getMethods())
           .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
           .map((Method eachMethod) -> MethodHandlerEntry.create(
               MethodSignature.create(eachMethod),
-              createBuiltInMethodHandlerFor(eachMethod, descriptor)));
+              createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier)));
     }
 
-    static MethodHandler createBuiltInMethodHandlerFor(Method method, SynthesizedObject.Descriptor descriptor) {
+    static MethodHandler createBuiltInMethodHandlerFor(Method method, Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       assert that(method, and(
           isNotNull(),
-          AssertionUtils.methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
+          methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
       BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);
       try {
-        return annotation.value().newInstance().create(descriptor);
+        return annotation.value().newInstance().create(descriptorSupplier);
       } catch (InstantiationException | IllegalAccessException e) {
         throw new RuntimeException(e);
       }
     }
+
     enum Messages {
       ;
 

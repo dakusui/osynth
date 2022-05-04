@@ -3,6 +3,7 @@ package com.github.dakusui.osynth2.core.utils;
 import com.github.dakusui.osynth2.core.MethodHandler;
 import com.github.dakusui.osynth2.core.MethodSignature;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
+import com.github.dakusui.osynth2.exceptions.OsynthException;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -54,8 +55,10 @@ public enum MethodUtils {
             arguments == null ?
                 emptyList() :
                 asList(arguments));
+      } catch (StackOverflowError | OutOfMemoryError | RuntimeException e) {
+        throw e;
       } catch (Throwable e) {
-        throw new RuntimeException(e);
+        throw new OsynthException(e);
       }
     };
   }

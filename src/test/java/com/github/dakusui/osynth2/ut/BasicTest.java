@@ -10,7 +10,7 @@ import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
-public class ObjectSynthesizerTest extends UtBase {
+public class BasicTest extends UtBase {
   public interface A {
     String aMethod(String message);
   }

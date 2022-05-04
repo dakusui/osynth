@@ -58,4 +58,8 @@ public enum AssertionUtils {
         .forEach(duplication::add);
     return new ArrayList<>(duplication);
   }
+
+  public static  <T> Predicate<Class<T>> classIsInterface() {
+    return Printables.predicate("isInterface", Class::isInterface);
+  }
 }

@@ -2,11 +2,14 @@ package com.github.dakusui.osynth2.core;
 
 import com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth2.annotations.ReservedByOSynth;
+import com.github.dakusui.osynth2.core.utils.AssertionUtils;
 
 import java.util.*;
 
 import static com.github.dakusui.osynth2.core.SynthesizedObject.InternalUtils.reservedMethodSignatures;
-import static com.github.dakusui.pcond.Preconditions.requireNonNull;
+import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForAttemptToCastToUnavailableInterface;
+import static com.github.dakusui.pcond.Preconditions.require;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
@@ -19,13 +22,15 @@ public interface SynthesizedObject {
   Descriptor descriptor();
 
   @ReservedByOSynth
-  default <T> T castTo(Class<T> interfaceClass) {
-    requireNonNull(interfaceClass);
+  default <T> T castTo(Class<T> classInUse) {
+    require(classInUse, and(
+        isNotNull(),
+        or(AssertionUtils.classIsInterface(), isEqualTo(Object.class))));
     return descriptor().interfaces().stream()
-        .filter(interfaceClass::isAssignableFrom)
+        .filter(classInUse::isAssignableFrom)
         .findFirst()
-        .map(each -> interfaceClass.cast(this))
-        .orElseThrow(NoSuchElementException::new);
+        .map(each -> classInUse.cast(this))
+        .orElseThrow(() -> new ClassCastException(messageForAttemptToCastToUnavailableInterface(classInUse, descriptor().interfaces())));
   }
 
   @BuiltInHandlerFactory(BuiltInHandlerFactory.ForEquals.class)

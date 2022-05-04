@@ -4,6 +4,7 @@ import com.github.dakusui.osynth2.core.MethodHandler;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 
 import java.lang.annotation.Retention;
+import java.util.function.Supplier;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -12,12 +13,12 @@ public @interface BuiltInHandlerFactory {
   Class<? extends MethodHandlerFactory> value();
 
   interface MethodHandlerFactory {
-    MethodHandler create(SynthesizedObject.Descriptor descriptor);
+    MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier);
   }
 
   class ForToString implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(SynthesizedObject.Descriptor descriptor) {
+    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       return (synthesizedObject, objects) -> composeFormattedString(synthesizedObject);
     }
 
@@ -28,22 +29,22 @@ public @interface BuiltInHandlerFactory {
 
   class ForHashCode implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(SynthesizedObject.Descriptor descriptor) {
+    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       return (synthesizedObject, objects) -> synthesizedObject.descriptor().fallbackObject().hashCode();
     }
   }
 
   class ForEquals implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(SynthesizedObject.Descriptor descriptor) {
+    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       return (synthesizedObject, objects) -> synthesizedObject == objects[0];
     }
   }
 
   class ForDescriptor implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(SynthesizedObject.Descriptor descriptor) {
-      return (synthesizedObject, objects) -> descriptor;
+    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
+      return (synthesizedObject, objects) -> descriptorSupplier.get();
     }
   }
 }
