@@ -3,17 +3,10 @@ package com.github.dakusui.osynth2.core;
 import com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth2.annotations.ReservedByOSynth;
 
-import java.lang.reflect.Method;
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 
-import static com.github.dakusui.osynth2.core.SynthesizedObject.PrivateUtils.reservedMethodSignatures;
-import static com.github.dakusui.osynth.utils.AssertionUtils.methodIsAnnotationPresent;
-import static com.github.dakusui.pcond.Assertions.that;
+import static com.github.dakusui.osynth2.core.SynthesizedObject.InternalUtils.reservedMethodSignatures;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
-import static com.github.dakusui.pcond.functions.Predicates.and;
-import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
@@ -62,35 +55,16 @@ public interface SynthesizedObject {
   @Override
   String toString();
 
-  enum PrivateUtils {
+  enum InternalUtils {
     ;
 
-    public static Set<MethodSignature> reservedMethodSignatures() {
+    static Set<MethodSignature> reservedMethodSignatures() {
       return Arrays.stream(SynthesizedObject.class.getMethods())
           .filter(each -> each.isAnnotationPresent(ReservedByOSynth.class))
           .map(MethodSignature::create)
           .collect(toSet());
     }
 
-    public static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Descriptor descriptor, BiConsumer<MethodSignature, MethodHandler> updater) {
-      return Arrays.stream(SynthesizedObject.class.getMethods())
-          .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
-          .map((Method eachMethod) -> MethodHandlerEntry.create(
-              MethodSignature.create(eachMethod),
-              createBuiltInMethodHandlerFor(eachMethod, descriptor)));
-    }
-
-    static MethodHandler createBuiltInMethodHandlerFor(Method method, Descriptor descriptor) {
-      assert that(method, and(
-          isNotNull(),
-          methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
-      BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);
-      try {
-        return annotation.value().newInstance().create(descriptor);
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
   }
 
   final class Descriptor {

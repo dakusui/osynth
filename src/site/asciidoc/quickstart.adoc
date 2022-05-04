@@ -8,12 +8,25 @@ Please describe your stuff.
 
 == Build Instructions
 
-The JCUnit requires Java SE 8 to build.
+=== Build Dependencies
+
+This project requires Java SE 8 to build.
 Please don't forget installing and using it for building.
 This is intentional decision to make the testing compatible for as many product as possible.
 
 - https://docs.oracle.com/javase/8/[Java Platform, Standard Edition (Java SE) 8]
 - https://adoptopenjdk.net/?variant=openjdk8&jvmVariant=hotspot[AdoptOpenJDK]
+
+Also, you need to install `mvn` and `graphviz`.
+To install them, please refer to the following URLs.
+
+- https://maven.apache.org/install.html[Installing Apache Maven]
+- https://graphviz.org/download/[Download - graphviz]
+
+Or you can perhaps just do `{brew,sudo apt,sudo yum} install {maven,graphviz}`.
+
+==== Build Steps
+
 
 .Build
 [source, bash]
@@ -38,10 +51,13 @@ Generates the site under `target/site` in the following structure.
 ----
 target/
   site/
+    index.html   - The top page.
     apidocs/     - JavaDoc
     jacoco/      - JaCoCo report (code coverage)
     pit-reports/ - PIT report (mutation coverage)
 ----
+
+Note that `.adoc` files under the `src/site/asciidoc` are rendered into `.html` files and placed in this directory.
 
 The mutation testing is configured to cover only small amount of classes to save build time.
 To configure the coverage, refer to <<mutationTesting>>.
@@ -73,7 +89,7 @@ Under the plugin configuration for `org.pitest:pitest-maven`, you can find a fol
 ----
 [[pitest-maven-config]]
 
-To cover all the JCUnit classes, you can modify it like following.
+To cover all the classes, you can modify it like following.
 
 .`pom.xml` configuration for `org.pitest:pitest-maven` plugin
 [source, xml]

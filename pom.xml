@@ -9,6 +9,14 @@
     <name>${project.artifactId}</name>
     <url>http://dakusui.github.io/${project.name}</url>
 
+    <scm>
+        <connection>scm:git:git@github.com/dakusui/${project.name}.git</connection>
+        <developerConnection>scm:git:git@github.com:dakusui/${project.name}.git
+        </developerConnection>
+        <url>http://dakusui.github.io/${project.name}</url>
+        <tag>${project.name}-${project.version}</tag>
+    </scm>
+
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -17,13 +25,10 @@
         </license>
     </licenses>
 
-    <scm>
-        <connection>scm:git:git@github.com/dakusui/${project.name}.git</connection>
-        <developerConnection>scm:git:git@github.com:dakusui/${project.name}.git
-        </developerConnection>
-        <url>http://dakusui.github.io/${project.name}</url>
-        <tag>${project.name}-${project.version}</tag>
-    </scm>
+    <organization>
+        <name>Hiroshi Ukai</name>
+        <url>http://dakusui.github.io/</url>
+    </organization>
 
     <developers>
         <developer>
@@ -277,6 +282,21 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
+                    <execution><!-- Remove diagram caches -->
+                        <id>remove diag-*.png files</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <arguments>
+                                <argument>
+                                    ${basedir}/src/main/build_tools/remove-adoc-diags.sh
+                                </argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                     <execution><!-- Run our version calculation script -->
                         <id>package-info.java generation</id>
                         <phase>generate-sources</phase>

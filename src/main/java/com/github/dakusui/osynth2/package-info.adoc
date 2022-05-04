@@ -3,6 +3,10 @@
 == The structure of a "synthesized object"
 
 The Figure <<synthesizedObjectStructure>> shows how each synthesized object is structured.
+[plantuml]
+----
+testdot
+----
 
 [plantuml]
 [[synthesizedObjectStructure]]

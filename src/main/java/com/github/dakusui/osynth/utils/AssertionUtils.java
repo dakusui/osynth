@@ -4,12 +4,11 @@ import com.github.dakusui.osynth2.core.MethodHandler;
 import com.github.dakusui.osynth2.core.MethodSignature;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.pcond.core.refl.MethodQuery;
+import com.github.dakusui.pcond.functions.Printables;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -59,5 +58,17 @@ public enum AssertionUtils {
 
   public static Predicate<Method> methodIsAnnotationPresent(Class<? extends Annotation> annotation) {
     return callp(instanceMethod(parameter(), "isAnnotationPresent", annotation));
+  }
+
+  public static  <E> Function<Collection<E>, List<E>> collectionDuplicatedElements() {
+    return Printables.function("duplicatedElements", AssertionUtils::duplicatedElementsIn);
+  }
+
+  public static <E> List<E> duplicatedElementsIn(Collection<E> collection) {
+    LinkedHashSet<E> duplication = new LinkedHashSet<>();
+    collection.stream()
+        .filter(each -> !duplication.contains(each))
+        .forEach(duplication::add);
+    return new ArrayList<>(duplication);
   }
 }
