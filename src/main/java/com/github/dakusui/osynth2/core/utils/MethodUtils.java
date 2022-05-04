@@ -1,4 +1,8 @@
-package com.github.dakusui.osynth2.core;
+package com.github.dakusui.osynth2.core.utils;
+
+import com.github.dakusui.osynth2.core.MethodHandler;
+import com.github.dakusui.osynth2.core.MethodSignature;
+import com.github.dakusui.osynth2.core.SynthesizedObject;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -8,9 +12,8 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.github.dakusui.osynth.utils.AssertionUtils.*;
-import static com.github.dakusui.osynth.utils.Messages.failedToInstantiate;
-import static com.github.dakusui.osynth.utils.Messages.formatMessageForMissingMethodHandler;
+import static com.github.dakusui.osynth2.core.utils.MessageUtils.failedToInstantiate;
+import static com.github.dakusui.osynth2.core.utils.MessageUtils.formatMessageForMissingMethodHandler;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.functions.Predicates.*;
 import static java.util.Arrays.asList;
@@ -19,7 +22,7 @@ import static java.util.Collections.emptyList;
 public enum MethodUtils {
   ;
 
-  static MethodHandler createMethodHandlerFromFallbackObject(final Object fallbackObject, MethodSignature methodSignature) {
+  public static MethodHandler createMethodHandlerFromFallbackObject(final Object fallbackObject, MethodSignature methodSignature) {
     Objects.requireNonNull(fallbackObject);
     return (synthesizedObject, args) -> {
       try {
@@ -65,7 +68,7 @@ public enum MethodUtils {
   }
 
   private static MethodHandle methodHandleFor(Method m, Class<?> fromClass) {
-    assert that(fromClass, transform(classGetMethod(m.getName(), m.getParameterTypes())).check(isNotNull()));
+    assert that(fromClass, transform(AssertionUtils.classGetMethod(m.getName(), m.getParameterTypes())).check(isNotNull()));
     try {
       return createMethodHandlesLookupFor(fromClass)
           .in(fromClass)

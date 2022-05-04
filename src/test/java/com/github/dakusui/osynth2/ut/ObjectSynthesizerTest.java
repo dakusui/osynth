@@ -3,12 +3,13 @@ package com.github.dakusui.osynth2.ut;
 import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.osynth.utils.UtBase;
+import com.github.dakusui.thincrest_pcond.functions.Predicates;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.functions.Predicates.allOf;
-import static com.github.dakusui.pcond.functions.Predicates.containsString;
+import static com.github.dakusui.pcond.functions.Predicates.*;
+import static com.github.dakusui.thincrest_pcond.functions.Predicates.startsWith;
 
 public class ObjectSynthesizerTest extends UtBase {
   public interface A {
@@ -28,6 +29,24 @@ public class ObjectSynthesizerTest extends UtBase {
     assertThat(output, allOf(
         containsString("customMethodHandler"),
         containsString("Hello!")
+    ));
+  }
+
+  @Test
+  public void whenCallToString$descriptorToStringIsCalled() {
+    Object fallbackObject = new Object();
+    SynthesizedObject object =
+        new ObjectSynthesizer()
+            .addInterface(A.class)
+            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+            .fallbackObject(fallbackObject)
+            .synthesize();
+    String output = object.castTo(A.class).toString();
+    System.out.println(output);
+    assertThat(output, allOf(
+        startsWith("osynth:"),
+        Predicates.containsString("fallback:"),
+        containsString(fallbackObject.toString())
     ));
   }
 

@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.utils.InternalUtils.rethrow;
-import static com.github.dakusui.osynth.utils.Messages.failedToInstantiate;
+import static com.github.dakusui.osynth2.core.utils.MessageUtils.failedToInstantiate;
 
 public class ProxyFactory {
   public static final Method                                            DESCRIPTOR_METHOD = retrieveDescriptorMethod();

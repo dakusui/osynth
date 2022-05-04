@@ -1,27 +1,25 @@
 package com.github.dakusui.osynth2.core;
 
+import com.github.dakusui.osynth2.core.utils.MethodUtils;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
+import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
 import static java.util.Objects.requireNonNull;
 
 public class OsynthInvocationHandler implements InvocationHandler {
-  final         Map<MethodSignature, MethodHandler> methodHandlers;
-  final         List<Class<?>>                      interfaceClasses;
-  private final Object                              fallbackObject;
+  final SynthesizedObject.Descriptor descriptor;
 
-  public OsynthInvocationHandler(Map<MethodSignature, MethodHandler> methodHandlers, List<Class<?>> interfaceClasses, Object fallbackObject) {
-    this.methodHandlers = requireNonNull(methodHandlers);
-    this.interfaceClasses = requireNonNull(interfaceClasses);
-    this.fallbackObject = requireNonNull(fallbackObject);
+  public OsynthInvocationHandler(SynthesizedObject.Descriptor descriptor) {
+    this.descriptor = descriptor;
   }
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) {
     //assert that(proxy, and(isNotNull(), isInstanceOf(SynthesizedObject.class)));
+    assert proxy instanceof SynthesizedObject;
     MethodHandler methodHandler = figureOutMethodHandlerFor(method);
     return methodHandler.apply((SynthesizedObject) proxy, args);
   }
@@ -29,15 +27,15 @@ public class OsynthInvocationHandler implements InvocationHandler {
   protected MethodHandler figureOutMethodHandlerFor(Method method) {
     MethodHandler methodHandler;
     MethodSignature methodSignature = MethodSignature.create(method);
-    if (methodHandlers.containsKey(methodSignature))
-      methodHandler = methodHandlers.get(methodSignature);
+    if (descriptor.methodHandlers().containsKey(methodSignature))
+      methodHandler = descriptor.methodHandlers().get(methodSignature);
     else
-      methodHandler = interfaceClasses.stream()
+      methodHandler = descriptor.interfaces().stream()
           .map((Class<?> eachInterfaceClass) -> MethodUtils.createMethodHandlerFromInterfaceClass(eachInterfaceClass, methodSignature))
           .filter(Optional::isPresent)
           .map(Optional::get)
           .findFirst()
-          .orElseGet(() -> MethodUtils.createMethodHandlerFromFallbackObject(fallbackObject, methodSignature));
+          .orElseGet(() -> createMethodHandlerFromFallbackObject(descriptor.fallbackObject(), methodSignature));
     return methodHandler;
   }
 }

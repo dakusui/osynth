@@ -22,10 +22,7 @@ public @interface BuiltInHandlerFactory {
     }
 
     private static String composeFormattedString(SynthesizedObject synthesizedObject) {
-      return String.format("osynth:{methodHandlers=%s,interfaces=%s,fallback:%s}",
-          synthesizedObject.descriptor().methodHandlers(),
-          synthesizedObject.descriptor().interfaces(),
-          synthesizedObject.descriptor().fallbackObject().toString());
+      return String.format("osynth:%s", synthesizedObject.descriptor());
     }
   }
 

@@ -2,6 +2,9 @@ package com.github.dakusui.osynth2;
 
 import com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth2.core.*;
+import com.github.dakusui.osynth2.core.utils.AssertionUtils;
+import com.github.dakusui.osynth2.exceptions.ValidationException;
+import com.github.dakusui.pcond.Validations;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -9,15 +12,15 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.osynth.utils.AssertionUtils.*;
+import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.Messages.messageForReservedMethodOverridingValidationFailure;
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.createMethodHandlersForBuiltInMethods;
-import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.reservedMethodMisOverridings;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Postconditions.ensure;
 import static com.github.dakusui.pcond.Preconditions.*;
 import static com.github.dakusui.pcond.functions.Functions.parameter;
 import static com.github.dakusui.pcond.functions.Functions.stream;
 import static com.github.dakusui.pcond.functions.Predicates.*;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -26,23 +29,24 @@ public class ObjectSynthesizer {
     Validator DEFAULT                = toNamedValidator("defaultValidator", (objectSynthesizer, descriptor) -> {
       assert that(objectSynthesizer, isNotNull());
       assert that(descriptor, isNotNull());
-      require(
+      Validations.validate(
           descriptor,
-          withMessage(() -> String.format("You tried to override reserved methods.: %n%s",
-                  reservedMethodMisOverridings(descriptor.methodHandlers().keySet())
-                      .stream()
-                      .map(MethodSignature::toString)
-                      .collect(joining("%n  ", "  ", ""))),
-              transform(descriptorMethodHandlers()
-                  .andThen(mapKeySet(parameter()))
+          withMessage(() -> messageForReservedMethodOverridingValidationFailure(descriptor),
+              transform(AssertionUtils.descriptorMethodHandlers()
+                  .andThen(AssertionUtils.mapKeySet(parameter()))
                   .andThen(stream()))
-                  .check(noneMatch(collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
+                  .check(noneMatch(AssertionUtils.collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))),
+          s -> {
+            throw new ValidationException(s);
+          }
+      );
       return descriptor;
     });
+
     Validator ENFORCE_NO_DUPLICATION = toNamedValidator("noDuplicationEnforcingValidator", (objectSynthesizer, descriptor) -> {
       assert that(objectSynthesizer, isNotNull());
       assert that(descriptor, isNotNull());
-      require(descriptor, transform(descriptorInterfaces().andThen(collectionDuplicatedElements())).check(isEmpty()));
+      require(descriptor, transform(AssertionUtils.descriptorInterfaces().andThen(AssertionUtils.collectionDuplicatedElements())).check(isEmpty()));
       return descriptor;
     });
 
@@ -54,9 +58,9 @@ public class ObjectSynthesizer {
         for (Validator each : validators) {
           ret = requireNonNull(each).validate(objectSynthesizer, descriptor);
           ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
-              transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
-              transform(descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
-              transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
+              transform(AssertionUtils.descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
+              transform(AssertionUtils.descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
+              transform(AssertionUtils.descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
         }
         return ret;
       });
@@ -227,9 +231,9 @@ public class ObjectSynthesizer {
     requireState(this.validator, isNotNull());
     SynthesizedObject.Descriptor ret = this.validator.validate(this, descriptor);
     ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
-        transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
-        transform(descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
-        transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
+        transform(AssertionUtils.descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
+        transform(AssertionUtils.descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
+        transform(AssertionUtils.descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
     return ret;
   }
 
@@ -245,10 +249,7 @@ public class ObjectSynthesizer {
       return Proxy.newProxyInstance(
           classLoader,
           descriptor.interfaces().toArray(new Class[0]),
-          new OsynthInvocationHandler(
-              descriptor.methodHandlers(),
-              descriptor.interfaces(),
-              descriptor.fallbackObject()));
+          new OsynthInvocationHandler(descriptor));
     }
 
     static List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {
@@ -268,12 +269,23 @@ public class ObjectSynthesizer {
     static MethodHandler createBuiltInMethodHandlerFor(Method method, SynthesizedObject.Descriptor descriptor) {
       assert that(method, and(
           isNotNull(),
-          methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
+          AssertionUtils.methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
       BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);
       try {
         return annotation.value().newInstance().create(descriptor);
       } catch (InstantiationException | IllegalAccessException e) {
         throw new RuntimeException(e);
+      }
+    }
+    enum Messages {
+      ;
+
+      public static String messageForReservedMethodOverridingValidationFailure(SynthesizedObject.Descriptor descriptor) {
+        return format("Reserved methods cannot be overridden. : %n%s",
+            reservedMethodMisOverridings(descriptor.methodHandlers().keySet())
+                .stream()
+                .map(MethodSignature::toString)
+                .collect(joining(format("%n- "), "- ", format("%n"))));
       }
     }
   }

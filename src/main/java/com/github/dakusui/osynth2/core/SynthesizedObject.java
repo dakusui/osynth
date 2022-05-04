@@ -58,7 +58,7 @@ public interface SynthesizedObject {
     final HashMap<MethodSignature, MethodHandler> methodHandlers;
 
     public Descriptor(List<Class<?>> interfaces, Map<MethodSignature, MethodHandler> methodHandlers, Object fallbackObject) {
-      this.methodHandlers = new HashMap<>(Objects.requireNonNull(methodHandlers));
+      this.methodHandlers = new HashMap<>(Objects.requireNonNull(unmodifiableMap(methodHandlers)));
       this.interfaces = new LinkedList<>(Objects.requireNonNull(interfaces));
       this.fallbackObject = Objects.requireNonNull(fallbackObject);
     }
@@ -75,10 +75,19 @@ public interface SynthesizedObject {
       return unmodifiableMap(this.methodHandlers);
     }
 
+    @Override
+    public String toString() {
+      return String.format("{methodHandlers=%s,interfaces=%s,fallback:%s}",
+          this.methodHandlers(),
+          this.interfaces(),
+          this.fallbackObject());
+    }
+
     public static class Builder {
       final List<Class<?>>                          interfaces;
       final HashMap<MethodSignature, MethodHandler> methodHandlers;
       Object fallbackObject;
+
       public Builder() {
         interfaces = new LinkedList<>();
         methodHandlers = new HashMap<>();
