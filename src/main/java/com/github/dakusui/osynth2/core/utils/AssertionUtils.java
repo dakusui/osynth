@@ -1,8 +1,6 @@
 package com.github.dakusui.osynth2.core.utils;
 
-import com.github.dakusui.osynth2.core.MethodHandler;
-import com.github.dakusui.osynth2.core.MethodSignature;
-import com.github.dakusui.osynth2.core.SynthesizedObject;
+import com.github.dakusui.osynth2.core.*;
 import com.github.dakusui.pcond.forms.Printables;
 
 import java.lang.annotation.Annotation;
@@ -15,6 +13,7 @@ import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
 import static com.github.dakusui.pcond.forms.Functions.call;
 import static com.github.dakusui.pcond.forms.Functions.parameter;
 import static com.github.dakusui.pcond.forms.Predicates.callp;
+import static java.util.stream.Collectors.toList;
 
 public enum AssertionUtils {
   ;
@@ -24,19 +23,26 @@ public enum AssertionUtils {
   }
 
   public static Function<SynthesizedObject.Descriptor, Object> descriptorFallbackObject() {
-   return call(instanceMethod(parameter(), "fallbackObject"));
- }
+    return call(instanceMethod(parameter(), "fallbackObject"));
+  }
 
-  public static Function<SynthesizedObject.Descriptor, Map<MethodSignature, MethodHandler>> descriptorMethodHandlers() {
-  return call(instanceMethod(parameter(), "methodHandlers"));
-}
+  public static Function<SynthesizedObject.Descriptor, List<MethodHandlerEntry>> descriptorMethodHandlers() {
+    return call(instanceMethod(parameter(), "methodHandlers"));
+  }
 
   public static Function<SynthesizedObject.Descriptor, List<Class<?>>> descriptorInterfaces() {
- return call(instanceMethod(parameter(), "interfaces"));
-}
+    return call(instanceMethod(parameter(), "interfaces"));
+  }
 
-  public static Function<Map<?, ?>, Collection<?>> mapKeySet(Object value) {
-    return call(instanceMethod(value, "keySet"));
+  public static Function<List<MethodHandlerEntry>, Collection<MethodMatcher>> methodHandlerEntryListToMethodMatcherCollection(Object value) {
+    return convertList(Printables.function("methodHandlerEntryToMethodMatcher", MethodHandlerEntry::matcher));
+  }
+
+  private static <I, O> Function<List<I>, Collection<O>> convertList(Function<I, O> conversionFunction) {
+    return Printables.function("convertToMethodMatcherList",
+        methodHandlerEntries -> methodHandlerEntries.stream()
+            .map(conversionFunction)
+            .collect(toList()));
   }
 
   public static Predicate<Object> collectionContainsValue(Collection<?> targetSet, Object value) {
@@ -47,7 +53,7 @@ public enum AssertionUtils {
     return callp(instanceMethod(parameter(), "isAnnotationPresent", annotation));
   }
 
-  public static  <E> Function<Collection<E>, List<E>> collectionDuplicatedElements() {
+  public static <E> Function<Collection<E>, List<E>> collectionDuplicatedElements() {
     return Printables.function("duplicatedElements", AssertionUtils::duplicatedElementsIn);
   }
 
@@ -59,7 +65,7 @@ public enum AssertionUtils {
     return new ArrayList<>(duplication);
   }
 
-  public static  <T> Predicate<Class<T>> classIsInterface() {
+  public static <T> Predicate<Class<T>> classIsInterface() {
     return Printables.predicate("isInterface", Class::isInterface);
   }
 }

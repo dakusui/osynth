@@ -5,7 +5,7 @@ import static com.github.dakusui.pcond.Preconditions.requireState;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 
 public interface MethodHandlerEntry {
-  MethodSignature signature();
+  <M extends MethodMatcher> M matcher();
 
   MethodHandler handler();
 
@@ -14,13 +14,18 @@ public interface MethodHandlerEntry {
     requireNonNull(handler);
     return new MethodHandlerEntry() {
       @Override
-      public MethodSignature signature() {
+      public MethodSignature matcher() {
         return signature;
       }
 
       @Override
       public MethodHandler handler() {
         return handler;
+      }
+
+      @Override
+      public String toString() {
+        return String.format("(%s,%s)", signature, handler);
       }
     };
   }
@@ -53,7 +58,7 @@ public interface MethodHandlerEntry {
         final MethodHandler handler = requireState(Builder.this.handler, isNotNull());
 
         @Override
-        public MethodSignature signature() {
+        public MethodSignature matcher() {
           return this.signature;
         }
 

@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 
-public final class MethodSignature {
+public final class MethodSignature implements MethodMatcher {
   final String     name;
   final Class<?>[] parameterClasses;
 
@@ -39,6 +39,12 @@ public final class MethodSignature {
 
   public Class<?>[] parameterClasses() {
     return Arrays.copyOf(parameterClasses, parameterClasses.length);
+  }
+
+  @Override
+  public boolean matches(Method m) {
+    Objects.requireNonNull(m);
+    return Arrays.equals(this.parameterClasses, m.getParameterTypes());
   }
 
   public static MethodSignature create(String name, Class<?>... parameterClasses) {

@@ -1,20 +1,26 @@
 package com.github.dakusui.osynth2.core;
 
-import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.osynth2.core.utils.MethodUtils;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
-import static java.util.Objects.requireNonNull;
 
 public class OsynthInvocationHandler implements InvocationHandler {
-  final SynthesizedObject.Descriptor descriptor;
+  final         SynthesizedObject.Descriptor        descriptor;
+  private final Map<MethodSignature, MethodHandler> methodHandlerMap;
 
   public OsynthInvocationHandler(SynthesizedObject.Descriptor descriptor) {
     this.descriptor = descriptor;
+    this.methodHandlerMap = new HashMap<>();
+    this.descriptor.methodHandlers()
+        .forEach(eachEntry -> methodHandlerMap.put(
+            eachEntry.matcher(),
+            eachEntry.handler()));
   }
 
   @Override
@@ -28,8 +34,8 @@ public class OsynthInvocationHandler implements InvocationHandler {
   protected MethodHandler figureOutMethodHandlerFor(Method method) {
     MethodHandler methodHandler;
     MethodSignature methodSignature = MethodSignature.create(method);
-    if (descriptor.methodHandlers().containsKey(methodSignature))
-      methodHandler = descriptor.methodHandlers().get(methodSignature);
+    if (this.methodHandlerMap.containsKey(methodSignature))
+      methodHandler = this.methodHandlerMap.get(methodSignature);
     else
       methodHandler = descriptor.interfaces().stream()
           .map((Class<?> eachInterfaceClass) -> MethodUtils.createMethodHandlerFromInterfaceClass(eachInterfaceClass, methodSignature))

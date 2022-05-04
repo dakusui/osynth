@@ -62,7 +62,7 @@ public class ValidationTest extends UtBase {
     }
   }
 
-  @Test
+  @Test(expected = ValidationException.class)
   public void givenDuplicationCheckEnabled$whenSameIFRegisteredTwice$thenExceptionThrown() {
     try {
       SynthesizedObject synthesizedObject = new ObjectSynthesizer()
@@ -82,7 +82,6 @@ public class ValidationTest extends UtBase {
       ));
       throw e;
     }
-
   }
 
   private static MethodHandler createNewDescriptorReturningHandler() {

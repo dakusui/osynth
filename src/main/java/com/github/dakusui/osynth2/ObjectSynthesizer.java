@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.reservedMethodMisOverridings;
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.validateValue;
@@ -33,11 +34,18 @@ public class ObjectSynthesizer {
     Validator DEFAULT = toNamed("defaultValidator", (objectSynthesizer, descriptor) -> {
       assert that(objectSynthesizer, isNotNull());
       assert that(descriptor, isNotNull());
-      InternalUtils.validateValue(descriptor, withMessage(() -> messageForReservedMethodOverridingValidationFailure(reservedMethodMisOverridings(descriptor.methodHandlers().keySet())),
-          transform(descriptorMethodHandlers()
-              .andThen(AssertionUtils.mapKeySet(parameter()))
-              .andThen(stream()))
-              .check(noneMatch(AssertionUtils.collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
+      validateValue(
+          descriptor,
+          withMessage(
+              () -> messageForReservedMethodOverridingValidationFailure(reservedMethodMisOverridings(
+                  descriptor.methodHandlers().stream()
+                      .map(MethodHandlerEntry::matcher)
+                      .map(each -> (MethodSignature) each)
+                      .collect(Collectors.toSet()))),
+              transform(descriptorMethodHandlers()
+                  .andThen(AssertionUtils.methodHandlerEntryListToMethodMatcherCollection(parameter()))
+                  .andThen(stream()))
+                  .check(noneMatch(AssertionUtils.collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
       return descriptor;
     });
 
@@ -93,7 +101,7 @@ public class ObjectSynthesizer {
     Preprocessor INCLUDE_BUILTIN_METHOD_HANDLERS = toNamed("builtInMethodHandlers", ((objectSynthesizer, descriptor) -> {
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
       createMethodHandlersForBuiltInMethods(() -> objectSynthesizer.finalizedDescriptor().orElseThrow(IllegalStateException::new))
-          .forEach(each -> builder.addMethodHandler(each.signature(), each.handler()));
+          .forEach(each -> builder.addMethodHandler(each.matcher(), each.handler()));
       return builder.build();
     }));
     Preprocessor INCLUDE_BUILTIN_INTERFACES      = toNamed("builtInInterfaces", ((objectSynthesizer, descriptor) -> {
@@ -190,7 +198,7 @@ public class ObjectSynthesizer {
 
   public ObjectSynthesizer handle(MethodHandlerEntry handlerEntry) {
     requireNonNull(handlerEntry);
-    this.descriptorBuilder.addMethodHandler(handlerEntry.signature(), handlerEntry.handler());
+    this.descriptorBuilder.addMethodHandler(handlerEntry.matcher(), handlerEntry.handler());
     return this;
   }
 

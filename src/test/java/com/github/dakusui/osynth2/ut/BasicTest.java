@@ -195,7 +195,7 @@ public class BasicTest extends UtBase {
           containsString("bMethod(String)"),
           containsString("was not found in"),
           containsString("'osynth:"),
-          containsString("methodHandlers={}"),
+          containsString("methodHandlers=["),
           containsString(BB.class.getName())
       ));
       throw e;

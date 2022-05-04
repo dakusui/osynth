@@ -11,18 +11,21 @@ import static com.github.dakusui.pcond.forms.Predicates.containsString;
 
 public class InterfaceInclusionTest extends UtBase {
   interface F {
-    String fMethod(String method);
+    String fMethod(String value);
   }
 
   @Test(expected = ClassCastException.class)
   public void givenInterfaceInclusionIsNotRequested$whenObjectIsCastToTestIF$thenExceptionThrown() {
     try {
       String out = new ObjectSynthesizer()
-          .synthesize((F) method -> "anon:F:<" + ">")
+          .synthesize((F) value -> "anon:F:<" + value + ">")
           .castTo(F.class)
           .fMethod("Hello");
       System.out.println(out);
     } catch (Exception e) {
+      // F is neither added to the synthesizer nor inclusion isn't specified.
+      // Thus, the osynth considers, the cast isn't allowed.
+      e.printStackTrace();
       assertThat(e.getMessage(), allOf(
           containsString("Tried to cast"),
           containsString(F.class.getName()),
@@ -33,13 +36,16 @@ public class InterfaceInclusionTest extends UtBase {
   }
 
   @Test
-  public void givenInterfaceInclusionIsRequested$whenObjectIsCastToTesetIF$thenSuccessfullyCast() {
+  public void givenInterfaceInclusionIsRequested$whenObjectIsCastToTestIF$thenSuccessfullyCast() {
     String out = new ObjectSynthesizer()
         .includeInterfacesFrom()
-        .synthesize((F) method -> "anon:F:<" + ">")
+        .synthesize((F) method -> "anon:F:<" + method + ">")
         .castTo(F.class)
         .fMethod("Hello");
     System.out.println(out);
-    assertThat(out, allOf(containsString("anon:F:"), containsString(F.class.getName())));
+    assertThat(out, allOf(
+        containsString("anon:F:<"),
+        containsString("Hello"),
+        containsString(">")));
   }
 }

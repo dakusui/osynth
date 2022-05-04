@@ -30,7 +30,7 @@ public @interface BuiltInHandlerFactory {
           methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
       BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);
       try {
-        return annotation.value().newInstance().create(descriptorSupplier);
+        return withName("builtIn-" + method.getName(), annotation.value().newInstance().create(descriptorSupplier));
       } catch (InstantiationException | IllegalAccessException e) {
         throw new RuntimeException(e);
       }
@@ -42,6 +42,20 @@ public @interface BuiltInHandlerFactory {
           .map((Method eachMethod) -> MethodHandlerEntry.create(
               MethodSignature.create(eachMethod),
               createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier)));
+    }
+
+    static MethodHandler withName(String name, MethodHandler methodHandler) {
+      return new MethodHandler() {
+        @Override
+        public Object apply(SynthesizedObject synthesizedObject, Object[] objects) {
+          return methodHandler.apply(synthesizedObject, objects);
+        }
+
+        @Override
+        public String toString() {
+          return name;
+        }
+      };
     }
   }
 
@@ -77,3 +91,4 @@ public @interface BuiltInHandlerFactory {
     }
   }
 }
+

@@ -58,12 +58,13 @@ public interface SynthesizedObject {
   }
 
   final class Descriptor {
-    final List<Class<?>>                          interfaces;
-    final Object                                  fallbackObject;
-    final HashMap<MethodSignature, MethodHandler> methodHandlers;
+    final List<Class<?>>           interfaces;
+    final Object                   fallbackObject;
+    final List<MethodHandlerEntry> methodHandlers;
 
-    public Descriptor(List<Class<?>> interfaces, Map<MethodSignature, MethodHandler> methodHandlers, Object fallbackObject) {
-      this.methodHandlers = new HashMap<>(Objects.requireNonNull(unmodifiableMap(methodHandlers)));
+    public Descriptor(List<Class<?>> interfaces, List<MethodHandlerEntry> methodHandlers, Object fallbackObject) {
+      // Not using pcond library to avoid unintentional `toString` call back on failure.
+      this.methodHandlers = new LinkedList<>(Objects.requireNonNull(unmodifiableList(methodHandlers)));
       this.interfaces = new LinkedList<>(Objects.requireNonNull(interfaces));
       this.fallbackObject = Objects.requireNonNull(fallbackObject);
     }
@@ -76,8 +77,8 @@ public interface SynthesizedObject {
       return this.fallbackObject;
     }
 
-    public Map<MethodSignature, MethodHandler> methodHandlers() {
-      return unmodifiableMap(this.methodHandlers);
+    public List<MethodHandlerEntry> methodHandlers() {
+      return this.methodHandlers;
     }
 
     @Override
@@ -89,19 +90,19 @@ public interface SynthesizedObject {
     }
 
     public static class Builder {
-      final List<Class<?>>                          interfaces;
-      final HashMap<MethodSignature, MethodHandler> methodHandlers;
+      final List<Class<?>>           interfaces;
+      final List<MethodHandlerEntry> methodHandlers;
       Object fallbackObject;
 
       public Builder() {
         interfaces = new LinkedList<>();
-        methodHandlers = new HashMap<>();
+        methodHandlers = new LinkedList<>();
       }
 
       public Builder(Descriptor descriptor) {
         this();
         this.interfaces.addAll(descriptor.interfaces());
-        this.methodHandlers.putAll(descriptor.methodHandlers());
+        this.methodHandlers.addAll(descriptor.methodHandlers());
         this.fallbackObject = descriptor.fallbackObject;
       }
 
@@ -115,9 +116,8 @@ public interface SynthesizedObject {
         return this;
       }
 
-      public Builder addMethodHandler(MethodSignature forMethod, MethodHandler methodHandler) {
-        this.methodHandlers.put(forMethod, methodHandler);
-        return this;
+      public void addMethodHandler(MethodSignature forMethod, MethodHandler methodHandler) {
+        this.methodHandlers.add(MethodHandlerEntry.create(forMethod, methodHandler));
       }
 
       public Descriptor build() {
