@@ -81,10 +81,6 @@ public enum MethodUtils {
     }
   }
 
-  private static MethodHandles.Lookup createLookup() {
-    return MethodHandles.lookup();
-  }
-
   private static synchronized MethodHandles.Lookup createMethodHandlesLookupFor(Class<?> anInterfaceClass) {
     Constructor<MethodHandles.Lookup> constructor;
     try {

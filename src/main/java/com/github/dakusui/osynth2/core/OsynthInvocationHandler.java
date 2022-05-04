@@ -1,5 +1,6 @@
 package com.github.dakusui.osynth2.core;
 
+import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.osynth2.core.utils.MethodUtils;
 
 import java.lang.reflect.InvocationHandler;

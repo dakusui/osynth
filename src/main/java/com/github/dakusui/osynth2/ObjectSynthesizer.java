@@ -9,6 +9,7 @@ import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.reservedMethodMisOverridings;
@@ -84,6 +85,9 @@ public class ObjectSynthesizer {
         SynthesizedObject.Descriptor descriptor);
   }
 
+  interface InvocationHandlerFactory extends Function<ObjectSynthesizer, OsynthInvocationHandler> {
+
+  }
 
   interface Preprocessor {
     Preprocessor INCLUDE_BUILTIN_METHOD_HANDLERS = toNamed("builtInMethodHandlers", ((objectSynthesizer, descriptor) -> {
@@ -150,6 +154,7 @@ public class ObjectSynthesizer {
   private       Validator                                     validator;
   private       Preprocessor                                  preprocessor;
   private       ClassLoader                                   classLoader;
+  private       InvocationHandlerFactory                      invocationHandlerFactory;
   private final AtomicReference<SynthesizedObject.Descriptor> finalizedDescriptor = new AtomicReference<>(null);
 
   public ObjectSynthesizer() {
@@ -160,6 +165,10 @@ public class ObjectSynthesizer {
       }
     });
     this.classLoader(this.getClass().getClassLoader())
+        .createInvocationHandlerWith(objectSynthesizer -> new OsynthInvocationHandler(
+            objectSynthesizer
+                .finalizedDescriptor()
+                .orElseThrow(IllegalStateException::new)))
         .validateWith(Validator.DEFAULT)
         .preprocessWith(Preprocessor.DEFAULT);
   }
@@ -212,20 +221,23 @@ public class ObjectSynthesizer {
     return this.preprocessWith(Preprocessor.PASS_THROUGH);
   }
 
+  public ObjectSynthesizer createInvocationHandlerWith(InvocationHandlerFactory factory) {
+    this.invocationHandlerFactory = requireNonNull(factory);
+    return this;
+  }
+
   public SynthesizedObject synthesize(Object fallbackObject) {
     return this.fallbackObject(fallbackObject).synthesize();
   }
 
   public SynthesizedObject synthesize() {
-    return (SynthesizedObject) InternalUtils.createProxy(
-        this.classLoader,
-        finalizeDescriptor(preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build()))));
+    finalizeDescriptor(preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build())));
+    return (SynthesizedObject) InternalUtils.createProxy(this);
   }
 
-  private SynthesizedObject.Descriptor finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
+  private void finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
     requireState(this.finalizedDescriptor.get(), isNull());
     this.finalizedDescriptor.set(descriptor);
-    return finalizedDescriptor().orElseThrow(IllegalStateException::new);
   }
 
   public Preprocessor preprocessor() {
@@ -259,18 +271,19 @@ public class ObjectSynthesizer {
     return ensure(this.preprocessor.apply(this, descriptor), isNotNull());
   }
 
-  private Optional<SynthesizedObject.Descriptor> finalizedDescriptor() {
+  public Optional<SynthesizedObject.Descriptor> finalizedDescriptor() {
     return Optional.ofNullable(finalizedDescriptor.get());
   }
 
   enum InternalUtils {
     ;
 
-    static Object createProxy(ClassLoader classLoader, SynthesizedObject.Descriptor descriptor) {
+    static Object createProxy(ObjectSynthesizer objectSynthesizer) {
+      SynthesizedObject.Descriptor descriptor = objectSynthesizer.finalizedDescriptor().orElseThrow(IllegalStateException::new);
       return Proxy.newProxyInstance(
-          classLoader,
+          objectSynthesizer.classLoader,
           descriptor.interfaces().toArray(new Class[0]),
-          new OsynthInvocationHandler(descriptor));
+          objectSynthesizer.invocationHandlerFactory.apply(objectSynthesizer));
     }
 
     public static List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {
