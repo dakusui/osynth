@@ -24,7 +24,7 @@ public enum MethodUtils {
     return (synthesizedObject, args) -> {
       try {
         assert synthesizedObject != null &&
-            synthesizedObject.fallbackObject() == fallbackObject;
+            synthesizedObject.descriptor().fallbackObject() == fallbackObject;
         Method method = fallbackObject.getClass().getMethod(
             methodSignature.name(),
             methodSignature.parameterClasses());

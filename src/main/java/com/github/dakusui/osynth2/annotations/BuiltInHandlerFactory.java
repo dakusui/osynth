@@ -25,14 +25,14 @@ public @interface BuiltInHandlerFactory {
       return String.format("osynth:{methodHandlers=%s,interfaces=%s,fallback:%s}",
           synthesizedObject.descriptor().methodHandlers(),
           synthesizedObject.descriptor().interfaces(),
-          synthesizedObject.fallbackObject().toString());
+          synthesizedObject.descriptor().fallbackObject().toString());
     }
   }
 
   class ForHashCode implements MethodHandlerFactory {
     @Override
     public MethodHandler create(SynthesizedObject.Descriptor descriptor) {
-      return (synthesizedObject, objects) -> synthesizedObject.fallbackObject().hashCode();
+      return (synthesizedObject, objects) -> synthesizedObject.descriptor().fallbackObject().hashCode();
     }
   }
 

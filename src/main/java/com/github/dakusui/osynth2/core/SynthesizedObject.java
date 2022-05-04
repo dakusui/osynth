@@ -19,24 +19,9 @@ public interface SynthesizedObject {
   Descriptor descriptor();
 
   @ReservedByOSynth
-  default MethodHandler methodHandlerFor(MethodSignature methodSignature) {
-    return descriptor().methodHandlers.get(methodSignature);
-  }
-
-  @ReservedByOSynth
-  default List<Class<?>> interfaces() {
-    return this.descriptor().interfaces();
-  }
-
-  @ReservedByOSynth
-  default Object fallbackObject() {
-    return descriptor().fallbackObject();
-  }
-
-  @ReservedByOSynth
   default <T> T castTo(Class<T> interfaceClass) {
     requireNonNull(interfaceClass);
-    return interfaces().stream()
+    return descriptor().interfaces().stream()
         .filter(interfaceClass::isAssignableFrom)
         .findFirst()
         .map(each -> interfaceClass.cast(this))
