@@ -22,6 +22,11 @@ public class OsynthInvocationHandler implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) {
     //assert that(proxy, and(isNotNull(), isInstanceOf(SynthesizedObject.class)));
+    MethodHandler methodHandler = figureOutMethodHandlerFor(method);
+    return methodHandler.apply((SynthesizedObject) proxy, args);
+  }
+
+  protected MethodHandler figureOutMethodHandlerFor(Method method) {
     MethodHandler methodHandler;
     MethodSignature methodSignature = MethodSignature.create(method);
     if (methodHandlers.containsKey(methodSignature))
@@ -33,6 +38,6 @@ public class OsynthInvocationHandler implements InvocationHandler {
           .map(Optional::get)
           .findFirst()
           .orElseGet(() -> MethodUtils.createMethodHandlerFromFallbackObject(fallbackObject, methodSignature));
-    return methodHandler.apply((SynthesizedObject) proxy, args);
+    return methodHandler;
   }
 }

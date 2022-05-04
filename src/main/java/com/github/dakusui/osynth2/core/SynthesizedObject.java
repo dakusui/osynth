@@ -56,13 +56,11 @@ public interface SynthesizedObject {
     final List<Class<?>>                          interfaces;
     final Object                                  fallbackObject;
     final HashMap<MethodSignature, MethodHandler> methodHandlers;
-    final ClassLoader                             classLoader;
 
-    public Descriptor(List<Class<?>> interfaces, Map<MethodSignature, MethodHandler> methodHandlers, Object fallbackObject, ClassLoader classLoader) {
+    public Descriptor(List<Class<?>> interfaces, Map<MethodSignature, MethodHandler> methodHandlers, Object fallbackObject) {
       this.methodHandlers = new HashMap<>(Objects.requireNonNull(methodHandlers));
       this.interfaces = new LinkedList<>(Objects.requireNonNull(interfaces));
       this.fallbackObject = Objects.requireNonNull(fallbackObject);
-      this.classLoader = Objects.requireNonNull(classLoader);
     }
 
     public List<Class<?>> interfaces() {
@@ -73,10 +71,6 @@ public interface SynthesizedObject {
       return this.fallbackObject;
     }
 
-    public ClassLoader classLoader() {
-      return this.classLoader;
-    }
-
     public Map<MethodSignature, MethodHandler> methodHandlers() {
       return unmodifiableMap(this.methodHandlers);
     }
@@ -85,8 +79,6 @@ public interface SynthesizedObject {
       final List<Class<?>>                          interfaces;
       final HashMap<MethodSignature, MethodHandler> methodHandlers;
       Object fallbackObject;
-      private ClassLoader classLoader;
-
       public Builder() {
         interfaces = new LinkedList<>();
         methodHandlers = new HashMap<>();
@@ -96,17 +88,11 @@ public interface SynthesizedObject {
         this();
         this.interfaces.addAll(descriptor.interfaces());
         this.methodHandlers.putAll(descriptor.methodHandlers());
-        this.classLoader = descriptor.classLoader;
         this.fallbackObject = descriptor.fallbackObject;
       }
 
       public Builder fallbackObject(Object fallbackObject) {
         this.fallbackObject = fallbackObject;
-        return this;
-      }
-
-      public Builder classLoader(ClassLoader classLoader) {
-        this.classLoader = classLoader;
         return this;
       }
 
@@ -121,7 +107,7 @@ public interface SynthesizedObject {
       }
 
       public Descriptor build() {
-        return new Descriptor(this.interfaces, this.methodHandlers, this.fallbackObject, this.classLoader);
+        return new Descriptor(this.interfaces, this.methodHandlers, this.fallbackObject);
       }
 
       public List<Class<?>> interfaces() {

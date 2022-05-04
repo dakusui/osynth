@@ -1,6 +1,5 @@
 package com.github.dakusui.osynth2;
 
-import com.github.dakusui.osynth.Synthesized;
 import com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth2.core.*;
 
@@ -10,12 +9,14 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.*;
 import static com.github.dakusui.osynth.utils.AssertionUtils.*;
+import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.createMethodHandlersForBuiltInMethods;
+import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.reservedMethodMisOverridings;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Postconditions.ensure;
 import static com.github.dakusui.pcond.Preconditions.*;
-import static com.github.dakusui.pcond.functions.Functions.*;
+import static com.github.dakusui.pcond.functions.Functions.parameter;
+import static com.github.dakusui.pcond.functions.Functions.stream;
 import static com.github.dakusui.pcond.functions.Predicates.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -45,12 +46,7 @@ public class ObjectSynthesizer {
       return descriptor;
     });
 
-    Validator PASS_THROUGH = toNamedValidator("passThroughValidator", new Validator() {
-      @Override
-      public SynthesizedObject.Descriptor validate(ObjectSynthesizer objectSynthesizer, SynthesizedObject.Descriptor descriptor) {
-        return descriptor;
-      }
-    });
+    Validator PASS_THROUGH = toNamedValidator("passThroughValidator", (objectSynthesizer, descriptor) -> descriptor);
 
     static Validator sequence(Validator... validators) {
       return toNamedValidator("validatorSequence:" + Arrays.toString(validators), (objectSynthesizer, descriptor) -> {
@@ -59,7 +55,6 @@ public class ObjectSynthesizer {
           ret = requireNonNull(each).validate(objectSynthesizer, descriptor);
           ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
               transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
-              transform(descriptorClassLoader()).check(isEqualTo(descriptor.classLoader())),
               transform(descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
               transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
         }
@@ -94,11 +89,8 @@ public class ObjectSynthesizer {
       assert that(objectSynthesizer, isNotNull());
       assert that(descriptor, isNotNull());
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
-      SynthesizedObject.Descriptor.Builder b = builder;
       createMethodHandlersForBuiltInMethods(descriptor, builder::addMethodHandler)
-          .forEach(each -> b.addMethodHandler(each.signature(), each.handler()));
-      if (descriptor.classLoader() == null)
-        builder = builder.classLoader(SynthesizedObject.class.getClassLoader());
+          .forEach(each -> builder.addMethodHandler(each.signature(), each.handler()));
       if (!builder.interfaces().contains(SynthesizedObject.class))
         builder.addInterface(SynthesizedObject.class);
       return builder.build();
@@ -107,7 +99,6 @@ public class ObjectSynthesizer {
     Preprocessor INCLUDE_INTERFACES_FROM_FALLBACK = toNamedPreprocessor("interfacesFromFallbackIncludingPreprocessor", (objectSynthesizer, descriptor) -> {
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
       Set<Class<?>> interfacesInOriginalDescriptor = new HashSet<>(descriptor.interfaces());
-      List<Class<?>> interfacesNotInOriginalDescriptor = new LinkedList<>();
       Arrays.stream(descriptor.fallbackObject().getClass().getInterfaces())
           .filter(eachInterfaceInFallback -> !interfacesInOriginalDescriptor.contains(eachInterfaceInFallback))
           .forEach(builder::addInterface);
@@ -151,6 +142,7 @@ public class ObjectSynthesizer {
   private final SynthesizedObject.Descriptor.Builder descriptorBuilder;
   private       Validator                            validator;
   private       Preprocessor                         preprocessor;
+  private       ClassLoader                          classLoader;
 
   public ObjectSynthesizer() {
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder();
@@ -165,7 +157,7 @@ public class ObjectSynthesizer {
   }
 
   public ObjectSynthesizer classLoader(ClassLoader classLoader) {
-    descriptorBuilder.classLoader(requireNonNull(classLoader));
+    this.classLoader = classLoader;
     return this;
   }
 
@@ -212,7 +204,7 @@ public class ObjectSynthesizer {
   }
 
   public SynthesizedObject synthesize() {
-    return (SynthesizedObject) InternalUtils.createProxy(preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build())));
+    return (SynthesizedObject) InternalUtils.createProxy(this.classLoader, preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build())));
   }
 
   public Preprocessor preprocessor() {
@@ -236,7 +228,6 @@ public class ObjectSynthesizer {
     SynthesizedObject.Descriptor ret = this.validator.validate(this, descriptor);
     ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
         transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
-        transform(descriptorClassLoader()).check(isEqualTo(descriptor.classLoader())),
         transform(descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
         transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
     return ret;
@@ -250,9 +241,9 @@ public class ObjectSynthesizer {
   enum InternalUtils {
     ;
 
-    static Object createProxy(SynthesizedObject.Descriptor descriptor) {
+    static Object createProxy(ClassLoader classLoader, SynthesizedObject.Descriptor descriptor) {
       return Proxy.newProxyInstance(
-          descriptor.classLoader(),
+          classLoader,
           descriptor.interfaces().toArray(new Class[0]),
           new OsynthInvocationHandler(
               descriptor.methodHandlers(),
