@@ -1,11 +1,20 @@
 package com.github.dakusui.osynth2.annotations;
 
 import com.github.dakusui.osynth2.core.MethodHandler;
+import com.github.dakusui.osynth2.core.MethodHandlerEntry;
+import com.github.dakusui.osynth2.core.MethodSignature;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 
 import java.lang.annotation.Retention;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
+import static com.github.dakusui.osynth2.core.utils.AssertionUtils.methodIsAnnotationPresent;
+import static com.github.dakusui.pcond.Assertions.that;
+import static com.github.dakusui.pcond.forms.Predicates.and;
+import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Retention(RUNTIME)
@@ -14,6 +23,26 @@ public @interface BuiltInHandlerFactory {
 
   interface MethodHandlerFactory {
     MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier);
+
+    static MethodHandler createBuiltInMethodHandlerFor(Method method, Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
+      assert that(method, and(
+          isNotNull(),
+          methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
+      BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);
+      try {
+        return annotation.value().newInstance().create(descriptorSupplier);
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
+      return Arrays.stream(SynthesizedObject.class.getMethods())
+          .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
+          .map((Method eachMethod) -> MethodHandlerEntry.create(
+              MethodSignature.create(eachMethod),
+              createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier)));
+    }
   }
 
   class ForToString implements MethodHandlerFactory {

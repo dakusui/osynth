@@ -7,10 +7,13 @@ import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.osynth2.exceptions.ValidationException;
 import org.junit.Test;
 
+import java.io.Serializable;
+
 import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
+import static java.lang.String.format;
 
 public class ValidationTest extends UtBase {
   @Test
@@ -59,6 +62,29 @@ public class ValidationTest extends UtBase {
     }
   }
 
+  @Test
+  public void givenDuplicationCheckEnabled$whenSameIFRegisteredTwice$thenExceptionThrown() {
+    try {
+      SynthesizedObject synthesizedObject = new ObjectSynthesizer()
+          .fallbackObject(new Object())
+          .enableDuplicatedInterfaceCheck()
+          .addInterface(Serializable.class)
+          .addInterface(Serializable.class)
+          .synthesize();
+      System.out.println(synthesizedObject);
+    } catch (RuntimeException e) {
+      e.printStackTrace();
+      assertThat(e.getMessage(), allOf(
+          containsString("violated"),
+          containsString("duplicatedElements isEmpty"),
+          containsString(format("[%s,%s]", Serializable.class, Serializable.class)),
+          containsString(format("[%s]", Serializable.class))
+      ));
+      throw e;
+    }
+
+  }
+
   private static MethodHandler createNewDescriptorReturningHandler() {
     return (sobj, objects) -> new SynthesizedObject.Descriptor.Builder()
         .fallbackObject(new Object())
@@ -66,6 +92,6 @@ public class ValidationTest extends UtBase {
   }
 
   private static MethodHandler createCastingWithoutCheckHandler() {
-    return (sobj, objects) -> ((Class<?>)objects[0]).cast(sobj);
+    return (sobj, objects) -> ((Class<?>) objects[0]).cast(sobj);
   }
 }

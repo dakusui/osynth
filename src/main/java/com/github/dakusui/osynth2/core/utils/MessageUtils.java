@@ -6,6 +6,7 @@ import com.github.dakusui.osynth2.core.SynthesizedObject;
 import java.util.List;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 
 public enum MessageUtils {
   ;
@@ -20,7 +21,14 @@ public enum MessageUtils {
     return format("An appropriate method handler/implementation for '%s' was not found in '%s': %s", methodSignature, synthesizedObject, e.getMessage());
   }
 
-  public static   <T> String messageForAttemptToCastToUnavailableInterface(Class<T> classInUse, List<Class<?>> interfaces) {
+  public static <T> String messageForAttemptToCastToUnavailableInterface(Class<T> classInUse, List<Class<?>> interfaces) {
     return format("Tried to cast to '%s' but available interfaces are only: %s", classInUse, interfaces);
+  }
+
+  public static String messageForReservedMethodOverridingValidationFailure(List<MethodSignature> methodSignatures) {
+    return String.format("Reserved methods cannot be overridden. : %n%s",
+        methodSignatures.stream()
+            .map(MethodSignature::toString)
+            .collect(joining(format("%n- "), "- ", format("%n"))));
   }
 }
