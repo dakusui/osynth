@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import static com.github.dakusui.pcond.functions.Printables.function;
+import static com.github.dakusui.pcond.forms.Printables.function;
 import static java.util.Arrays.asList;
 
 public enum InternalFunctions {

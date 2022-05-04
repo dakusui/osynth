@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 import static com.github.dakusui.osynth.sandbox.Sandbox.createProxy;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.functions.Predicates.*;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 
 @SuppressWarnings("NewClassNamingConvention")
 public class Sandbox2 {

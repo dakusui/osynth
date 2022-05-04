@@ -15,7 +15,7 @@ import java.util.Optional;
 import static com.github.dakusui.osynth2.core.utils.MessageUtils.failedToInstantiate;
 import static com.github.dakusui.osynth2.core.utils.MessageUtils.formatMessageForMissingMethodHandler;
 import static com.github.dakusui.pcond.Assertions.that;
-import static com.github.dakusui.pcond.functions.Predicates.*;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 

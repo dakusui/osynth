@@ -17,9 +17,9 @@ import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.createM
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Postconditions.ensure;
 import static com.github.dakusui.pcond.Preconditions.*;
-import static com.github.dakusui.pcond.functions.Functions.parameter;
-import static com.github.dakusui.pcond.functions.Functions.stream;
-import static com.github.dakusui.pcond.functions.Predicates.*;
+import static com.github.dakusui.pcond.forms.Functions.parameter;
+import static com.github.dakusui.pcond.forms.Functions.stream;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;

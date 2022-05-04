@@ -3,7 +3,7 @@ package com.github.dakusui.osynth2.core.utils;
 import com.github.dakusui.osynth2.core.MethodHandler;
 import com.github.dakusui.osynth2.core.MethodSignature;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
-import com.github.dakusui.pcond.functions.Printables;
+import com.github.dakusui.pcond.forms.Printables;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -12,9 +12,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
-import static com.github.dakusui.pcond.functions.Functions.call;
-import static com.github.dakusui.pcond.functions.Functions.parameter;
-import static com.github.dakusui.pcond.functions.Predicates.callp;
+import static com.github.dakusui.pcond.forms.Functions.call;
+import static com.github.dakusui.pcond.forms.Functions.parameter;
+import static com.github.dakusui.pcond.forms.Predicates.callp;
 
 public enum AssertionUtils {
   ;

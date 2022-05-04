@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.functions.Predicates.allOf;
-import static com.github.dakusui.pcond.functions.Predicates.containsString;
+import static com.github.dakusui.pcond.forms.Predicates.allOf;
+import static com.github.dakusui.pcond.forms.Predicates.containsString;
 
 public class ValidationTest extends UtBase {
   @Test

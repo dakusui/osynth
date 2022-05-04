@@ -25,7 +25,7 @@ import java.util.List;
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.utils.UtUtils.rootCause;
 import static com.github.dakusui.pcond.Assertions.precondition;
-import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
+import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 

@@ -2,7 +2,7 @@ package com.github.dakusui.osynth2.core;
 
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 import static com.github.dakusui.pcond.Preconditions.requireState;
-import static com.github.dakusui.pcond.functions.Predicates.isNotNull;
+import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 
 public interface MethodHandlerEntry {
   MethodSignature signature();

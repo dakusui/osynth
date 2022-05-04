@@ -3,13 +3,12 @@ package com.github.dakusui.osynth2.ut;
 import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.osynth.utils.UtBase;
-import com.github.dakusui.thincrest_pcond.functions.Predicates;
+import com.github.dakusui.pcond.forms.Predicates;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.functions.Predicates.*;
-import static com.github.dakusui.thincrest_pcond.functions.Predicates.startsWith;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class ObjectSynthesizerTest extends UtBase {
   public interface A {
