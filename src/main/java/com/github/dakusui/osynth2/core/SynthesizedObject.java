@@ -11,7 +11,6 @@ import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForAttem
 import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
 
 public interface SynthesizedObject {
@@ -116,8 +115,8 @@ public interface SynthesizedObject {
         return this;
       }
 
-      public void addMethodHandler(MethodSignature forMethod, MethodHandler methodHandler) {
-        this.methodHandlers.add(MethodHandlerEntry.create(forMethod, methodHandler));
+      public void addMethodHandler(MethodHandlerEntry methodHandlerEntry) {
+        this.methodHandlers.add(methodHandlerEntry);
       }
 
       public Descriptor build() {

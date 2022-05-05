@@ -100,8 +100,8 @@ public class ObjectSynthesizer {
   interface Preprocessor {
     Preprocessor INCLUDE_BUILTIN_METHOD_HANDLERS = toNamed("builtInMethodHandlers", ((objectSynthesizer, descriptor) -> {
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
-      createMethodHandlersForBuiltInMethods(() -> objectSynthesizer.finalizedDescriptor().orElseThrow(IllegalStateException::new))
-          .forEach(each -> builder.addMethodHandler(each.matcher(), each.handler()));
+      createMethodHandlersForBuiltInMethods(() -> objectSynthesizer.finalizedDescriptor())
+          .forEach(builder::addMethodHandler);
       return builder.build();
     }));
     Preprocessor INCLUDE_BUILTIN_INTERFACES      = toNamed("builtInInterfaces", ((objectSynthesizer, descriptor) -> {
@@ -175,8 +175,7 @@ public class ObjectSynthesizer {
     this.classLoader(this.getClass().getClassLoader())
         .createInvocationHandlerWith(objectSynthesizer -> new OsynthInvocationHandler(
             objectSynthesizer
-                .finalizedDescriptor()
-                .orElseThrow(IllegalStateException::new)))
+                .finalizedDescriptor()))
         .validateWith(Validator.DEFAULT)
         .preprocessWith(Preprocessor.DEFAULT);
   }
@@ -198,7 +197,7 @@ public class ObjectSynthesizer {
 
   public ObjectSynthesizer handle(MethodHandlerEntry handlerEntry) {
     requireNonNull(handlerEntry);
-    this.descriptorBuilder.addMethodHandler(handlerEntry.matcher(), handlerEntry.handler());
+    this.descriptorBuilder.addMethodHandler(handlerEntry);
     return this;
   }
 
@@ -244,7 +243,7 @@ public class ObjectSynthesizer {
   }
 
   private void finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
-    requireState(this.finalizedDescriptor.get(), isNull());
+    requireState(this.isDescriptorFinalized(), isFalse());
     this.finalizedDescriptor.set(descriptor);
   }
 
@@ -256,12 +255,21 @@ public class ObjectSynthesizer {
     return this.validator;
   }
 
+  public SynthesizedObject.Descriptor finalizedDescriptor() {
+    return Optional.ofNullable(finalizedDescriptor.get())
+        .orElseThrow(IllegalAccessError::new);
+  }
+
+  public boolean isDescriptorFinalized() {
+    return finalizedDescriptor.get() != null;
+  }
+
   public static MethodHandlerEntry.Builder method(String methodName, Class<?>... parameterTypes) {
     return method(MethodSignature.create(methodName, parameterTypes));
   }
 
-  public static MethodHandlerEntry.Builder method(MethodSignature signature) {
-    return new MethodHandlerEntry.Builder().signature(signature);
+  public static MethodHandlerEntry.Builder method(MethodMatcher signature) {
+    return new MethodHandlerEntry.Builder().matcher(signature);
   }
 
   private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
@@ -279,15 +287,11 @@ public class ObjectSynthesizer {
     return ensure(this.preprocessor.apply(this, descriptor), isNotNull());
   }
 
-  public Optional<SynthesizedObject.Descriptor> finalizedDescriptor() {
-    return Optional.ofNullable(finalizedDescriptor.get());
-  }
-
   enum InternalUtils {
     ;
 
     static Object createProxy(ObjectSynthesizer objectSynthesizer) {
-      SynthesizedObject.Descriptor descriptor = objectSynthesizer.finalizedDescriptor().orElseThrow(IllegalStateException::new);
+      SynthesizedObject.Descriptor descriptor = objectSynthesizer.finalizedDescriptor();
       return Proxy.newProxyInstance(
           objectSynthesizer.classLoader,
           descriptor.interfaces().toArray(new Class[0]),

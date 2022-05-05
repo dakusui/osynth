@@ -11,8 +11,8 @@ import java.util.Optional;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
 
 public class OsynthInvocationHandler implements InvocationHandler {
-  final         SynthesizedObject.Descriptor        descriptor;
-  private final Map<MethodSignature, MethodHandler> methodHandlerMap;
+  final         SynthesizedObject.Descriptor      descriptor;
+  private final Map<MethodMatcher, MethodHandler> methodHandlerMap;
 
   public OsynthInvocationHandler(SynthesizedObject.Descriptor descriptor) {
     this.descriptor = descriptor;

@@ -5,17 +5,17 @@ import static com.github.dakusui.pcond.Preconditions.requireState;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 
 public interface MethodHandlerEntry {
-  <M extends MethodMatcher> M matcher();
+  MethodMatcher matcher();
 
   MethodHandler handler();
 
-  static MethodHandlerEntry create(MethodSignature signature, MethodHandler handler) {
-    requireNonNull(signature);
+  static MethodHandlerEntry create(MethodSignature matcher, MethodHandler handler) {
+    requireNonNull(matcher);
     requireNonNull(handler);
     return new MethodHandlerEntry() {
       @Override
-      public MethodSignature matcher() {
-        return signature;
+      public MethodMatcher matcher() {
+        return matcher;
       }
 
       @Override
@@ -25,20 +25,20 @@ public interface MethodHandlerEntry {
 
       @Override
       public String toString() {
-        return String.format("(%s,%s)", signature, handler);
+        return String.format("(%s,%s)", matcher, handler);
       }
     };
   }
 
   class Builder {
-    MethodSignature signature;
-    MethodHandler   handler;
+    MethodMatcher matcher;
+    MethodHandler handler;
 
     public Builder() {
     }
 
-    public Builder signature(MethodSignature signature) {
-      this.signature = requireNonNull(signature);
+    public Builder matcher(MethodMatcher signature) {
+      this.matcher = requireNonNull(signature);
       return this;
     }
 
@@ -54,12 +54,12 @@ public interface MethodHandlerEntry {
     public MethodHandlerEntry build() {
 
       return new MethodHandlerEntry() {
-        final MethodSignature signature = requireState(Builder.this.signature, isNotNull());
+        final MethodMatcher matcher = requireState(Builder.this.matcher, isNotNull());
         final MethodHandler handler = requireState(Builder.this.handler, isNotNull());
 
         @Override
-        public MethodSignature matcher() {
-          return this.signature;
+        public MethodMatcher matcher() {
+          return this.matcher;
         }
 
         @Override

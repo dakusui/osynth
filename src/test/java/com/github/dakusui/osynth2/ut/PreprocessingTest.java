@@ -1,5 +1,6 @@
 package com.github.dakusui.osynth2.ut;
 
+import com.github.dakusui.osynth.utils.UtBase;
 import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 import org.junit.Test;
@@ -8,7 +9,7 @@ import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.thincrest_pcond.functions.Predicates.containsString;
 
-public class PreprocessingTest {
+public class PreprocessingTest extends UtBase {
   @Test(expected = ClassCastException.class)
   public void givenValidationLeftDefault$whenTwoReservedMethodsTriedOverridden$thenExceptionThrown() {
     try {
