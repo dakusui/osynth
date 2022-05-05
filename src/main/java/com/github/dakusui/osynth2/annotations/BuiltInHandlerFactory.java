@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth2.core.utils.AssertionUtils.methodIsAnnotationPresent;
+import static com.github.dakusui.osynth2.core.utils.MethodUtils.execute;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.withName;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.and;
@@ -29,11 +30,7 @@ public @interface BuiltInHandlerFactory {
           isNotNull(),
           methodIsAnnotationPresent(BuiltInHandlerFactory.class)));
       BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);
-      try {
-        return withName("builtIn-" + method.getName(), annotation.value().newInstance().create(descriptorSupplier));
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new OsynthException(e);
-      }
+      return execute(() -> withName("builtIn-" + method.getName(), annotation.value().newInstance().create(descriptorSupplier)));
     }
 
     static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {

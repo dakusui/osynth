@@ -86,14 +86,14 @@ public class ObjectSynthesizer {
         SynthesizedObject.Descriptor descriptor);
   }
 
-  interface InvocationHandlerFactory extends Function<ObjectSynthesizer, StandardInvocationHandler> {
+  interface InvocationHandlerFactory extends Function<ObjectSynthesizer, OsynthInvocationHandler> {
 
   }
 
   interface Preprocessor {
     Preprocessor INCLUDE_BUILTIN_METHOD_HANDLERS = toNamed("builtInMethodHandlers", ((objectSynthesizer, descriptor) -> {
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
-      createMethodHandlersForBuiltInMethods(() -> objectSynthesizer.finalizedDescriptor())
+      createMethodHandlersForBuiltInMethods(objectSynthesizer::finalizedDescriptor)
           .forEach(builder::addMethodHandler);
       return builder.build();
     }));
@@ -166,9 +166,7 @@ public class ObjectSynthesizer {
       }
     });
     this.classLoader(this.getClass().getClassLoader())
-        .createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationHandler(
-            objectSynthesizer
-                .finalizedDescriptor()))
+        .createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationHandler(objectSynthesizer.finalizedDescriptor()))
         .validateWith(Validator.DEFAULT)
         .preprocessWith(Preprocessor.DEFAULT);
   }
