@@ -76,11 +76,11 @@ public class ObjectSynthesizer {
    * In a situation, where a method in the {@code handlerObject} calls another method in the interface directly or indirectly
    * and you intend to override the callee method's behavior by the {@link ObjectSynthesizer}, it results in a counter-intuitive
    * behavior.
-   * <p>
+   *
    * Since implementation of a default method is "synthesized" in an implementation class when the implementing class is compiled,
    * call on the callee method from the caller is invoked directly on "this", not through the dynamic proxy.
    * Hence the method handler is ignored even if it is given to the object synthesize for the callee method.
-   * <p>
+   *
    * Best practice to avoid this is not to add a handler object that implements an interface that has default methods.
    * That is,
    * 1. Create a separated interface S that contains only no default methods and extend it by your original interface.

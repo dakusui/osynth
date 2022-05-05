@@ -63,6 +63,6 @@ public class Sandbox2 {
   }
 
   private Object applyMethodHandler(SynthesizedObject synthesizedObject, MethodHandler methodHandler, Object... args) throws Throwable {
-    return methodHandler.apply(synthesizedObject, args);
+    return methodHandler.handle(synthesizedObject, args);
   }
 }

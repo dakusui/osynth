@@ -2,14 +2,15 @@ package com.github.dakusui.osynth2.core.utils;
 
 import com.github.dakusui.osynth2.core.MethodHandler;
 import com.github.dakusui.osynth2.core.MethodSignature;
+import com.github.dakusui.osynth2.core.OsynthInvocationHandler;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.osynth2.exceptions.OsynthException;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -45,7 +46,8 @@ public enum MethodUtils {
   }
 
   static MethodHandler toMethodHandler(MethodHandle methodHandle) {
-    return (SynthesizedObject synthesizedObject, Object[] arguments) -> execute(() -> methodHandle.bindTo(synthesizedObject).invokeWithArguments(arguments == null ? emptyList() : asList(arguments)));
+    return (SynthesizedObject synthesizedObject, Object[] arguments) -> execute(
+        () -> methodHandle.bindTo(synthesizedObject).invokeWithArguments(arguments));
   }
 
   static Optional<MethodHandle> findMethodHandleFor(MethodSignature methodSignature, Class<?> fromClass) {
@@ -88,6 +90,12 @@ public enum MethodUtils {
     }
   }
 
+  public static Object[] toEmptyArrayIfNull(Object[] args) {
+    if (args == null)
+      return OsynthInvocationHandler.EMPTY_ARGS;
+    return args;
+  }
+
   /**
    * An interface to define a block which possibly throws an exception.
    * Intended to be used with {@link MethodUtils#execute} method.
@@ -109,8 +117,8 @@ public enum MethodUtils {
   public static MethodHandler withName(String name, MethodHandler methodHandler) {
     return new MethodHandler() {
       @Override
-      public Object apply(SynthesizedObject synthesizedObject, Object[] objects) throws Throwable {
-        return methodHandler.apply(synthesizedObject, objects);
+      public Object handle(SynthesizedObject synthesizedObject, Object[] objects) throws Throwable {
+        return methodHandler.handle(synthesizedObject, objects);
       }
 
       @Override
