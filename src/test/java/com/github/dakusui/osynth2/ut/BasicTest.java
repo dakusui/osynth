@@ -17,12 +17,11 @@ public class BasicTest extends UtBase {
 
   @Test
   public void testIfCustomMethodHandlerOverridesAbstractMethod() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+        .fallbackObject(new Object())
+        .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);
     assertThat(output, allOf(
@@ -33,12 +32,11 @@ public class BasicTest extends UtBase {
 
   @Test
   public void testIfCustomMethodHandlerOverridesAbstractMethodTwice() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+        .fallbackObject(new Object())
+        .synthesize();
     String output1 = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output1);
     String output2 = object.castTo(A.class).aMethod("Hello!");
@@ -63,15 +61,14 @@ public class BasicTest extends UtBase {
 
   @Test(expected = TestRuntimeException.class)
   public void whenCustomMethodHandlerOverridesAbstractMethodThrowsException$theExceptionThrown() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
-              throw new TestRuntimeException(
-                  "customMethodHandler:<" + args[0] + ">");
-            }))
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
+          throw new TestRuntimeException(
+              "customMethodHandler:<" + args[0] + ">");
+        }))
+        .fallbackObject(new Object())
+        .synthesize();
     try {
       String output = object.castTo(A.class).aMethod("Hello!");
       System.out.println(output);
@@ -92,15 +89,14 @@ public class BasicTest extends UtBase {
 
   @Test(expected = TestCheckedException.class)
   public void whenCustomMethodHandlerOverridesAbstractMethodThrowsCheckedException$theExceptionThrownAsOsynthInvocationTargetException() throws Throwable {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
-              throw new TestCheckedException(
-                  "customMethodHandler:<" + args[0] + ">");
-            }))
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
+          throw new TestCheckedException(
+              "customMethodHandler:<" + args[0] + ">");
+        }))
+        .fallbackObject(new Object())
+        .synthesize();
     try {
       String output = object.castTo(A.class).aMethod("Hello!");
       System.out.println(output);
@@ -116,12 +112,11 @@ public class BasicTest extends UtBase {
   @Test
   public void whenCallToString$descriptorToStringIsCalled() {
     Object fallbackObject = new Object();
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
-            .fallbackObject(fallbackObject)
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+        .fallbackObject(fallbackObject)
+        .synthesize();
     String output = object.castTo(A.class).toString();
     System.out.println(output);
     assertThat(output, allOf(
@@ -139,12 +134,11 @@ public class BasicTest extends UtBase {
 
   @Test
   public void testDefaultMethodIsOverridden() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(B.class)
-            .handle(method("bMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for bMethod:<" + args[0] + ">"))
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(B.class)
+        .handle(method("bMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for bMethod:<" + args[0] + ">"))
+        .fallbackObject(new Object())
+        .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
     System.out.println(output);
     assertThat(output, allOf(
@@ -156,12 +150,11 @@ public class BasicTest extends UtBase {
 
   @Test
   public void testDefaultMethodIsUsed() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(B.class)
-            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for aMethod:<" + args[0] + ">"))
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(B.class)
+        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for aMethod:<" + args[0] + ">"))
+        .fallbackObject(new Object())
+        .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
     System.out.println(output);
     assertThat(output, allOf(
@@ -184,12 +177,11 @@ public class BasicTest extends UtBase {
 
   @Test
   public void testFallbackObject$defaultMethodIsPickedUp() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .addInterface(B.class)
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .addInterface(B.class)
+        .fallbackObject(new Object())
+        .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
     System.out.println(output);
     assertThat(output, allOf(
@@ -201,12 +193,11 @@ public class BasicTest extends UtBase {
 
   @Test
   public void testFallbackObject$methodInFallbackIsPickedUp() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .addInterface(B.class)
-            .fallbackObject(new C())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .addInterface(B.class)
+        .fallbackObject(new C())
+        .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);
 
@@ -219,13 +210,12 @@ public class BasicTest extends UtBase {
 
   @Test(expected = UnsupportedOperationException.class)
   public void testFallbackObject$whenImplementationIsMissing$methodInFallbackIsPickedUpAndUnsupportedOperationThrown() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(A.class)
-            .addInterface(B.class)
-            .fallbackObject(new B() {
-            })
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(A.class)
+        .addInterface(B.class)
+        .fallbackObject(new B() {
+        })
+        .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);
     assertThat(output, allOf(
@@ -242,16 +232,15 @@ public class BasicTest extends UtBase {
 
   @Test
   public void testFallbackObject$whenMethodWithDefaultImplementationIsOverriddenWithoutDefaultImplementation$methodInFallbackIsPickedUp() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(BB.class)
-            .fallbackObject(new B() {
-              @Override
-              public String bMethod(String message) {
-                return "fallback bMethod: <" + message + ">";
-              }
-            })
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(BB.class)
+        .fallbackObject(new B() {
+          @Override
+          public String bMethod(String message) {
+            return "fallback bMethod: <" + message + ">";
+          }
+        })
+        .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
     System.out.println(output);
     assertThat(output, allOf(
@@ -263,11 +252,10 @@ public class BasicTest extends UtBase {
 
   @Test(expected = UnsupportedOperationException.class)
   public void testFallbackObject$whenImplementationIsOverriddenWithoutDefaultImplementation$methodInFallbackIsPickedUpAndUnsupportedOperationThrown() {
-    SynthesizedObject object =
-        new ObjectSynthesizer()
-            .addInterface(BB.class)
-            .fallbackObject(new Object())
-            .synthesize();
+    SynthesizedObject object = new ObjectSynthesizer()
+        .addInterface(BB.class)
+        .fallbackObject(new Object())
+        .synthesize();
     try {
       object.castTo(B.class).bMethod("Hello!");
     } catch (UnsupportedOperationException e) {
