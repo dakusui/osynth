@@ -27,7 +27,7 @@ public class Sandbox2 {
   }
 
   @Test
-  public void tryFindMethodHandleFor() {
+  public void tryFindMethodHandleFor() throws Throwable {
     Class<?> targetInterfaceClass = InterfaceWithDefaultMethod.class;
     String targetMethodName = "defaultMethod";
     MethodHandler methodHandler = MethodUtils.createMethodHandlerFromInterfaceClass(
@@ -62,7 +62,7 @@ public class Sandbox2 {
         classes);
   }
 
-  private Object applyMethodHandler(SynthesizedObject synthesizedObject, MethodHandler methodHandler, Object... args) {
+  private Object applyMethodHandler(SynthesizedObject synthesizedObject, MethodHandler methodHandler, Object... args) throws Throwable {
     return methodHandler.apply(synthesizedObject, args);
   }
 }

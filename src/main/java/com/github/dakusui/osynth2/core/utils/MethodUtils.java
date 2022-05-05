@@ -4,7 +4,6 @@ import com.github.dakusui.osynth2.core.MethodHandler;
 import com.github.dakusui.osynth2.core.MethodSignature;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.osynth2.exceptions.OsynthException;
-import com.github.dakusui.osynth2.exceptions.OsynthInvocationTargetException;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -82,21 +81,10 @@ public enum MethodUtils {
   public static <T> T execute(FailableSupplier<T> block, Function<Throwable, String> messageComposerOnFailure) {
     try {
       return block.get();
-    } catch (Error | RuntimeException e) {
+    } catch (Error e) {
       throw e;
-    } catch (InvocationTargetException e) {
-      try {
-        throw e.getTargetException();
-      } catch (Error | RuntimeException ee) {
-        throw ee;
-      } catch (Throwable ee) {
-        ////
-        // Intentionally passing e, not ee, to make OsynthInvocationTargetException
-        // accept an InvocationTargetException.
-        throw new OsynthInvocationTargetException(e);
-      }
     } catch (Throwable e) {
-      throw new OsynthException(messageComposerOnFailure.apply(e), e);
+      throw OsynthException.from(messageComposerOnFailure.apply(e), e);
     }
   }
 
@@ -121,7 +109,7 @@ public enum MethodUtils {
   public static MethodHandler withName(String name, MethodHandler methodHandler) {
     return new MethodHandler() {
       @Override
-      public Object apply(SynthesizedObject synthesizedObject, Object[] objects) {
+      public Object apply(SynthesizedObject synthesizedObject, Object[] objects) throws Throwable {
         return methodHandler.apply(synthesizedObject, objects);
       }
 

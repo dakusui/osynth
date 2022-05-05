@@ -1,9 +1,9 @@
 package com.github.dakusui.osynth2.ut;
 
+import com.github.dakusui.osynth.utils.UtBase;
 import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
-import com.github.dakusui.osynth.utils.UtBase;
-import com.github.dakusui.pcond.forms.Predicates;
+import com.github.dakusui.osynth2.exceptions.OsynthException;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
@@ -31,6 +31,65 @@ public class BasicTest extends UtBase {
     ));
   }
 
+
+  static class TestRuntimeException extends RuntimeException {
+    TestRuntimeException(String message) {
+      super(message);
+    }
+  }
+
+  @Test(expected = TestRuntimeException.class)
+  public void whenCustomMethodHandlerOverridesAbstractMethodThrowsException$theExceptionThrown() {
+    SynthesizedObject object =
+        new ObjectSynthesizer()
+            .addInterface(A.class)
+            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
+              throw new TestRuntimeException(
+                  "customMethodHandler:<" + args[0] + ">");
+            }))
+            .fallbackObject(new Object())
+            .synthesize();
+    try {
+      String output = object.castTo(A.class).aMethod("Hello!");
+      System.out.println(output);
+    } catch (TestRuntimeException e) {
+      assertThat(e.getMessage(), allOf(
+          containsString("customMethodHandler"),
+          containsString("Hello!")
+      ));
+      throw e;
+    }
+  }
+
+  static class TestCheckedException extends Exception {
+    TestCheckedException(String message) {
+      super(message);
+    }
+  }
+
+  @Test(expected = TestCheckedException.class)
+  public void whenCustomMethodHandlerOverridesAbstractMethodThrowsCheckedException$theExceptionThrownAsOsynthInvocationTargetException() throws Throwable {
+    SynthesizedObject object =
+        new ObjectSynthesizer()
+            .addInterface(A.class)
+            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
+              throw new TestCheckedException(
+                  "customMethodHandler:<" + args[0] + ">");
+            }))
+            .fallbackObject(new Object())
+            .synthesize();
+    try {
+      String output = object.castTo(A.class).aMethod("Hello!");
+      System.out.println(output);
+    } catch (OsynthException e) {
+      assertThat(e.getMessage(), allOf(
+          containsString("customMethodHandler"),
+          containsString("Hello!")
+      ));
+      throw e.getCause();
+    }
+  }
+
   @Test
   public void whenCallToString$descriptorToStringIsCalled() {
     Object fallbackObject = new Object();
@@ -44,7 +103,7 @@ public class BasicTest extends UtBase {
     System.out.println(output);
     assertThat(output, allOf(
         startsWith("osynth:"),
-        Predicates.containsString("fallback:"),
+        containsString("fallback:"),
         containsString(fallbackObject.toString())
     ));
   }
