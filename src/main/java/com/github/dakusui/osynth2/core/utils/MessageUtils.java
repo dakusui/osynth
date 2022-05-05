@@ -26,10 +26,10 @@ public enum MessageUtils {
     return format("Tried to cast to '%s' but available interfaces are only: %s", classInUse, interfaces);
   }
 
-  public static String messageForReservedMethodOverridingValidationFailure(List<ObjectSynthesizer.Violation> methodSignatures) {
+  public static String messageForReservedMethodOverridingValidationFailure(List<Object> methodSignatures) {
     return String.format("Reserved methods cannot be overridden. : %n%s",
         methodSignatures.stream()
-            .map(ObjectSynthesizer.Violation::toString)
+            .map(Object::toString)
             .collect(joining(format("%n- "), "- ", format("%n"))));
   }
 }

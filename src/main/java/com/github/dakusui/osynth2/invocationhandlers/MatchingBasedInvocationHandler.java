@@ -13,13 +13,12 @@ import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHand
 public class MatchingBasedInvocationHandler extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
   private final Map<Method, MethodHandler> cache = new ConcurrentHashMap<>();
 
-  protected MatchingBasedInvocationHandler(SynthesizedObject.Descriptor descriptor) {
+  public MatchingBasedInvocationHandler(SynthesizedObject.Descriptor descriptor) {
     super(descriptor);
   }
 
   @Override
   public MethodHandler figureOutMethodHandlerFor(Method method) {
-    MethodHandler methodHandler;
     MethodSignature methodSignature = MethodSignature.create(method);
     return this.descriptor().methodHandlerEntries().stream()
         .filter(me -> me.matcher().matches(methodSignature))

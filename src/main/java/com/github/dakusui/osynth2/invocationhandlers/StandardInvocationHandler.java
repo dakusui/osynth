@@ -2,12 +2,10 @@ package com.github.dakusui.osynth2.invocationhandlers;
 
 import com.github.dakusui.osynth2.core.*;
 import com.github.dakusui.osynth2.core.utils.AssertionUtils;
-import com.github.dakusui.osynth2.core.utils.MethodUtils;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;

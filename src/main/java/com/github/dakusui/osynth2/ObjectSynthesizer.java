@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth2;
 
 import com.github.dakusui.osynth2.core.*;
+import com.github.dakusui.osynth2.invocationhandlers.MatchingBasedInvocationHandler;
 import com.github.dakusui.osynth2.invocationhandlers.StandardInvocationHandler;
 import com.github.dakusui.osynth2.core.utils.AssertionUtils;
 import com.github.dakusui.osynth2.exceptions.ValidationException;
@@ -10,7 +11,6 @@ import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -26,6 +26,141 @@ import static com.github.dakusui.pcond.Preconditions.*;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class ObjectSynthesizer {
+  private final SynthesizedObject.Descriptor.Builder          descriptorBuilder;
+  private       Validator                                     validator;
+  private       Preprocessor                                  preprocessor;
+  private       ClassLoader                                   classLoader;
+  private       InvocationControllerFactory                   invocationControllerFactory;
+  private final AtomicReference<SynthesizedObject.Descriptor> finalizedDescriptor = new AtomicReference<>(null);
+
+  public ObjectSynthesizer() {
+    this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(new Object() {
+      @Override
+      public String toString() {
+        return "autoCreated:" + super.toString();
+      }
+    });
+    this.classLoader(this.getClass().getClassLoader())
+        .handlingExact()
+        .validateWith(Validator.DEFAULT)
+        .preprocessWith(Preprocessor.DEFAULT);
+  }
+
+  public ObjectSynthesizer addInterface(Class<?> interfaceClass) {
+    descriptorBuilder.addInterface(interfaceClass);
+    return this;
+  }
+
+  public ObjectSynthesizer classLoader(ClassLoader classLoader) {
+    this.classLoader = classLoader;
+    return this;
+  }
+
+  public ObjectSynthesizer fallbackObject(Object fallbackObject) {
+    this.descriptorBuilder.fallbackObject(fallbackObject);
+    return this;
+  }
+
+  public ObjectSynthesizer handle(MethodHandlerEntry handlerEntry) {
+    requireNonNull(handlerEntry);
+    this.descriptorBuilder.addMethodHandler(handlerEntry);
+    return this;
+  }
+
+  public ObjectSynthesizer validateWith(Validator validator) {
+    this.validator = requireNonNull(validator);
+    return this;
+  }
+
+  public ObjectSynthesizer enableDuplicatedInterfaceCheck() {
+    return this.validateWith(Validator.sequence(this.validator(), Validator.ENFORCE_NO_DUPLICATION));
+
+  }
+
+  public ObjectSynthesizer disableValidation() {
+    return this.validateWith(Validator.PASS_THROUGH);
+  }
+
+  public ObjectSynthesizer preprocessWith(Preprocessor preprocessor) {
+    this.preprocessor = requireNonNull(preprocessor);
+    return this;
+  }
+
+  public ObjectSynthesizer includeInterfacesFrom() {
+    return this.preprocessWith(Preprocessor.sequence(this.preprocessor(), Preprocessor.INCLUDE_INTERFACES_FROM_FALLBACK));
+  }
+
+  public ObjectSynthesizer disablePreprocessing() {
+    return this.preprocessWith(Preprocessor.PASS_THROUGH);
+  }
+
+  public ObjectSynthesizer createInvocationHandlerWith(InvocationControllerFactory factory) {
+    this.invocationControllerFactory = requireNonNull(factory);
+    return this;
+  }
+
+  public ObjectSynthesizer handlingMatching() {
+    return this.createInvocationHandlerWith(objectSynthesizer -> new MatchingBasedInvocationHandler(objectSynthesizer.finalizedDescriptor()));
+  }
+
+  public ObjectSynthesizer handlingExact() {
+    return this.createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationHandler(objectSynthesizer.finalizedDescriptor()));
+  }
+
+  public SynthesizedObject synthesize(Object fallbackObject) {
+    return this.fallbackObject(fallbackObject).synthesize();
+  }
+
+  public SynthesizedObject synthesize() {
+    finalizeDescriptor(preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build())));
+    return (SynthesizedObject) InternalUtils.createProxy(this);
+  }
+
+  public Preprocessor preprocessor() {
+    return this.preprocessor;
+  }
+
+  public Validator validator() {
+    return this.validator;
+  }
+
+  public SynthesizedObject.Descriptor finalizedDescriptor() {
+    return Optional.ofNullable(finalizedDescriptor.get())
+        .orElseThrow(IllegalAccessError::new);
+  }
+
+  public boolean isDescriptorFinalized() {
+    return finalizedDescriptor.get() != null;
+  }
+
+  public static MethodHandlerEntry.Builder method(String methodName, Class<?>... parameterTypes) {
+    return method(MethodSignature.create(methodName, parameterTypes));
+  }
+
+  public static MethodHandlerEntry.Builder method(MethodMatcher matcher) {
+    return new MethodHandlerEntry.Builder().matcher(matcher);
+  }
+
+  private void finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
+    requireState(this.isDescriptorFinalized(), isFalse());
+    this.finalizedDescriptor.set(descriptor);
+  }
+
+  private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
+    requireState(this.validator, isNotNull());
+    SynthesizedObject.Descriptor ret = this.validator.apply(this, descriptor);
+    ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
+        transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
+        transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),
+        transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
+    return ret;
+  }
+
+  private SynthesizedObject.Descriptor preprocessDescriptor(SynthesizedObject.Descriptor descriptor) {
+    requireState(this.preprocessor, isNotNull());
+    return ensure(this.preprocessor.apply(this, descriptor), isNotNull());
+  }
+
   interface Stage extends BiFunction<ObjectSynthesizer, SynthesizedObject.Descriptor, SynthesizedObject.Descriptor> {
   }
 
@@ -85,10 +220,6 @@ public class ObjectSynthesizer {
     SynthesizedObject.Descriptor apply(
         ObjectSynthesizer objectSynthesizer,
         SynthesizedObject.Descriptor descriptor);
-  }
-
-  interface InvocationHandlerFactory extends Function<ObjectSynthesizer, OsynthInvocationHandler> {
-
   }
 
   interface Preprocessor {
@@ -152,133 +283,6 @@ public class ObjectSynthesizer {
     }
   }
 
-  private final SynthesizedObject.Descriptor.Builder          descriptorBuilder;
-  private       Validator                                     validator;
-  private       Preprocessor                                  preprocessor;
-  private       ClassLoader                                   classLoader;
-  private       InvocationHandlerFactory                      invocationHandlerFactory;
-  private final AtomicReference<SynthesizedObject.Descriptor> finalizedDescriptor = new AtomicReference<>(null);
-
-  public ObjectSynthesizer() {
-    this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(new Object() {
-      @Override
-      public String toString() {
-        return "autoCreated:" + super.toString();
-      }
-    });
-    this.classLoader(this.getClass().getClassLoader())
-        .createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationHandler(objectSynthesizer.finalizedDescriptor()))
-        .validateWith(Validator.DEFAULT)
-        .preprocessWith(Preprocessor.DEFAULT);
-  }
-
-  public ObjectSynthesizer addInterface(Class<?> interfaceClass) {
-    descriptorBuilder.addInterface(interfaceClass);
-    return this;
-  }
-
-  public ObjectSynthesizer classLoader(ClassLoader classLoader) {
-    this.classLoader = classLoader;
-    return this;
-  }
-
-  public ObjectSynthesizer fallbackObject(Object fallbackObject) {
-    this.descriptorBuilder.fallbackObject(fallbackObject);
-    return this;
-  }
-
-  public ObjectSynthesizer handle(MethodHandlerEntry handlerEntry) {
-    requireNonNull(handlerEntry);
-    this.descriptorBuilder.addMethodHandler(handlerEntry);
-    return this;
-  }
-
-  public ObjectSynthesizer validateWith(Validator validator) {
-    this.validator = requireNonNull(validator);
-    return this;
-  }
-
-  public ObjectSynthesizer enableDuplicatedInterfaceCheck() {
-    return this.validateWith(Validator.sequence(this.validator(), Validator.ENFORCE_NO_DUPLICATION));
-
-  }
-
-  public ObjectSynthesizer disableValidation() {
-    return this.validateWith(Validator.PASS_THROUGH);
-  }
-
-  public ObjectSynthesizer preprocessWith(Preprocessor preprocessor) {
-    this.preprocessor = requireNonNull(preprocessor);
-    return this;
-  }
-
-  public ObjectSynthesizer includeInterfacesFrom() {
-    return this.preprocessWith(Preprocessor.sequence(this.preprocessor(), Preprocessor.INCLUDE_INTERFACES_FROM_FALLBACK));
-  }
-
-  public ObjectSynthesizer disablePreprocessing() {
-    return this.preprocessWith(Preprocessor.PASS_THROUGH);
-  }
-
-  public ObjectSynthesizer createInvocationHandlerWith(InvocationHandlerFactory factory) {
-    this.invocationHandlerFactory = requireNonNull(factory);
-    return this;
-  }
-
-  public SynthesizedObject synthesize(Object fallbackObject) {
-    return this.fallbackObject(fallbackObject).synthesize();
-  }
-
-  public SynthesizedObject synthesize() {
-    finalizeDescriptor(preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build())));
-    return (SynthesizedObject) InternalUtils.createProxy(this);
-  }
-
-  private void finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
-    requireState(this.isDescriptorFinalized(), isFalse());
-    this.finalizedDescriptor.set(descriptor);
-  }
-
-  public Preprocessor preprocessor() {
-    return this.preprocessor;
-  }
-
-  public Validator validator() {
-    return this.validator;
-  }
-
-  public SynthesizedObject.Descriptor finalizedDescriptor() {
-    return Optional.ofNullable(finalizedDescriptor.get())
-        .orElseThrow(IllegalAccessError::new);
-  }
-
-  public boolean isDescriptorFinalized() {
-    return finalizedDescriptor.get() != null;
-  }
-
-  public static MethodHandlerEntry.Builder method(String methodName, Class<?>... parameterTypes) {
-    return method(MethodSignature.create(methodName, parameterTypes));
-  }
-
-  public static MethodHandlerEntry.Builder method(MethodMatcher matcher) {
-    return new MethodHandlerEntry.Builder().matcher(matcher);
-  }
-
-  private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
-    requireState(this.validator, isNotNull());
-    SynthesizedObject.Descriptor ret = this.validator.apply(this, descriptor);
-    ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
-        transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
-        transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),
-        transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
-    return ret;
-  }
-
-  private SynthesizedObject.Descriptor preprocessDescriptor(SynthesizedObject.Descriptor descriptor) {
-    requireState(this.preprocessor, isNotNull());
-    return ensure(this.preprocessor.apply(this, descriptor), isNotNull());
-  }
-
   enum InternalUtils {
     ;
 
@@ -287,19 +291,19 @@ public class ObjectSynthesizer {
       return Proxy.newProxyInstance(
           objectSynthesizer.classLoader,
           descriptor.interfaces().toArray(new Class[0]),
-          objectSynthesizer.invocationHandlerFactory.apply(objectSynthesizer));
+          objectSynthesizer.invocationControllerFactory.apply(objectSynthesizer));
     }
 
-    public static List<ObjectSynthesizer.Violation> reservedMethodMisOverridings(Collection<MethodHandlerEntry> methodHandlerEntries) {
+    public static List<Object> reservedMethodMisOverridings(Collection<MethodHandlerEntry> methodHandlerEntries) {
       return methodHandlerEntries
           .stream()
-          .map((MethodHandlerEntry methodHandlerEntry) -> new ObjectSynthesizer.Violation(
+          .map((MethodHandlerEntry methodHandlerEntry) -> new ReservedMethodViolation(
               methodHandlerEntry,
               RESERVED_METHOD_SIGNATURES
                   .stream()
                   .filter(eachReservedMethodSignature -> methodHandlerEntry.matcher().matches(eachReservedMethodSignature))
                   .collect(Collectors.toList())))
-          .filter(violation -> !violation.violatedReservedMethods.isEmpty())
+          .filter(reservedMethodViolation -> !reservedMethodViolation.violatedReservedMethods.isEmpty())
           .collect(Collectors.toList());
     }
 
@@ -312,20 +316,20 @@ public class ObjectSynthesizer {
           }
       );
     }
-  }
 
-  public static class Violation {
-    final List<MethodSignature> violatedReservedMethods;
-    final MethodHandlerEntry    violatingEntry;
+    static class ReservedMethodViolation {
+      final List<MethodSignature> violatedReservedMethods;
+      final MethodHandlerEntry    violatingEntry;
 
-    Violation(MethodHandlerEntry violatingEntry, List<MethodSignature> violatedReservedMethods) {
-      this.violatedReservedMethods = violatedReservedMethods;
-      this.violatingEntry = violatingEntry;
-    }
+      ReservedMethodViolation(MethodHandlerEntry violatingEntry, List<MethodSignature> violatedReservedMethods) {
+        this.violatedReservedMethods = violatedReservedMethods;
+        this.violatingEntry = violatingEntry;
+      }
 
-    @Override
-    public String toString() {
-      return String.format("violation:entry:%s -> %s", violatingEntry, violatedReservedMethods);
+      @Override
+      public String toString() {
+        return String.format("violation:entry:%s -> %s", violatingEntry, violatedReservedMethods);
+      }
     }
   }
 }
