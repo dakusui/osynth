@@ -31,6 +31,29 @@ public class BasicTest extends UtBase {
     ));
   }
 
+  @Test
+  public void testIfCustomMethodHandlerOverridesAbstractMethodTwice() {
+    SynthesizedObject object =
+        new ObjectSynthesizer()
+            .addInterface(A.class)
+            .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+            .fallbackObject(new Object())
+            .synthesize();
+    String output1 = object.castTo(A.class).aMethod("Hello!");
+    System.out.println(output1);
+    String output2 = object.castTo(A.class).aMethod("Hello!");
+    System.out.println(output2);
+    assertThat(output1, allOf(
+        containsString("customMethodHandler"),
+        containsString("Hello!")
+    ));
+    assertThat(output2, allOf(
+        containsString("customMethodHandler"),
+        containsString("Hello!")
+    ));
+    assertThat(output1, isEqualTo(output2));
+  }
+
 
   static class TestRuntimeException extends RuntimeException {
     TestRuntimeException(String message) {
