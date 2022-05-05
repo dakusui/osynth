@@ -13,8 +13,8 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.github.dakusui.osynth2.core.utils.MessageUtils.failedToInstantiate;
-import static com.github.dakusui.osynth2.core.utils.MessageUtils.formatMessageForMissingMethodHandler;
+import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForInstantiationFailure;
+import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForMissingMethodHandler;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static java.util.Arrays.asList;
@@ -36,7 +36,7 @@ public enum MethodUtils {
         return method
             .invoke(fallbackObject, args);
       } catch (NoSuchMethodException e) {
-        throw new UnsupportedOperationException(formatMessageForMissingMethodHandler(methodSignature, synthesizedObject, e), e);
+        throw new UnsupportedOperationException(messageForMissingMethodHandler(methodSignature, synthesizedObject, e), e);
       } catch (InvocationTargetException |
                IllegalAccessException e) {
         throw new RuntimeException(e);
@@ -92,7 +92,7 @@ public enum MethodUtils {
         throw e.getTargetException();
       }
     } catch (Throwable e) {
-      throw new RuntimeException(failedToInstantiate(anInterfaceClass), e);
+      throw new RuntimeException(messageForInstantiationFailure(anInterfaceClass), e);
     }
   }
 

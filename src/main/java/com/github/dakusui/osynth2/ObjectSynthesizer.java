@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.reservedMethodMisOverridings;
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.validateValue;
+import static com.github.dakusui.osynth2.core.SynthesizedObject.RESERVED_METHOD_SIGNATURES;
 import static com.github.dakusui.osynth2.core.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
 import static com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory.MethodHandlerFactory.createMethodHandlersForBuiltInMethods;
@@ -24,7 +25,6 @@ import static com.github.dakusui.pcond.Preconditions.*;
 import static com.github.dakusui.pcond.forms.Functions.parameter;
 import static com.github.dakusui.pcond.forms.Functions.stream;
 import static com.github.dakusui.pcond.forms.Predicates.*;
-import static java.util.stream.Collectors.toList;
 
 public class ObjectSynthesizer {
   interface Stage extends BiFunction<ObjectSynthesizer, SynthesizedObject.Descriptor, SynthesizedObject.Descriptor> {
@@ -37,15 +37,10 @@ public class ObjectSynthesizer {
       validateValue(
           descriptor,
           withMessage(
-              () -> messageForReservedMethodOverridingValidationFailure(reservedMethodMisOverridings(
-                  descriptor.methodHandlers().stream()
-                      .map(MethodHandlerEntry::matcher)
-                      .map(each -> (MethodSignature) each)
-                      .collect(Collectors.toSet()))),
+              () -> messageForReservedMethodOverridingValidationFailure(reservedMethodMisOverridings(descriptor.methodHandlers())),
               transform(descriptorMethodHandlers()
-                  .andThen(AssertionUtils.methodHandlerEntryListToMethodMatcherCollection(parameter()))
-                  .andThen(stream()))
-                  .check(noneMatch(AssertionUtils.collectionContainsValue(SynthesizedObject.RESERVED_METHOD_SIGNATURES, parameter())))));
+                  .andThen(InternalUtils::reservedMethodMisOverridings))
+                  .check(isEmpty())));
       return descriptor;
     });
 
@@ -268,8 +263,8 @@ public class ObjectSynthesizer {
     return method(MethodSignature.create(methodName, parameterTypes));
   }
 
-  public static MethodHandlerEntry.Builder method(MethodMatcher signature) {
-    return new MethodHandlerEntry.Builder().matcher(signature);
+  public static MethodHandlerEntry.Builder method(MethodMatcher matcher) {
+    return new MethodHandlerEntry.Builder().matcher(matcher);
   }
 
   private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
@@ -298,10 +293,17 @@ public class ObjectSynthesizer {
           objectSynthesizer.invocationHandlerFactory.apply(objectSynthesizer));
     }
 
-    public static List<MethodSignature> reservedMethodMisOverridings(Set<MethodSignature> methodSignatures) {
-      return methodSignatures.stream()
-          .filter(SynthesizedObject.RESERVED_METHOD_SIGNATURES::contains)
-          .collect(toList());
+    public static List<ObjectSynthesizer.Violation> reservedMethodMisOverridings(Collection<MethodHandlerEntry> methodHandlerEntries) {
+      return methodHandlerEntries
+          .stream()
+          .map((MethodHandlerEntry methodHandlerEntry) -> new ObjectSynthesizer.Violation(
+              methodHandlerEntry,
+              RESERVED_METHOD_SIGNATURES
+                  .stream()
+                  .filter(eachReservedMethodSignature -> methodHandlerEntry.matcher().matches(eachReservedMethodSignature))
+                  .collect(Collectors.toList())))
+          .filter(violation -> !violation.violatedReservedMethods.isEmpty())
+          .collect(Collectors.toList());
     }
 
     static <V> void validateValue(V value, Predicate<V> predicate) {
@@ -312,6 +314,21 @@ public class ObjectSynthesizer {
             throw new ValidationException(s);
           }
       );
+    }
+  }
+
+  public static class Violation {
+    final List<MethodSignature> violatedReservedMethods;
+    final MethodHandlerEntry    violatingEntry;
+
+    Violation(MethodHandlerEntry violatingEntry, List<MethodSignature> violatedReservedMethods) {
+      this.violatedReservedMethods = violatedReservedMethods;
+      this.violatingEntry = violatingEntry;
+    }
+
+    @Override
+    public String toString() {
+      return String.format("violation:entry:%s -> %s", violatingEntry, violatedReservedMethods);
     }
   }
 }

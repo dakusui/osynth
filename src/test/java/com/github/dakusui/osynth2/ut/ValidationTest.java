@@ -35,6 +35,7 @@ public class ValidationTest extends UtBase {
           .synthesize();
       System.out.println(synthesizedObject);
     } catch (RuntimeException e) {
+      e.printStackTrace();
       assertThat(e.getMessage(), allOf(
           containsString("Reserved methods cannot be overridden"),
           containsString("descriptor()")

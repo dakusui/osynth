@@ -9,7 +9,7 @@ public interface MethodHandlerEntry {
 
   MethodHandler handler();
 
-  static MethodHandlerEntry create(MethodSignature matcher, MethodHandler handler) {
+  static MethodHandlerEntry create(MethodMatcher matcher, MethodHandler handler) {
     requireNonNull(matcher);
     requireNonNull(handler);
     return new MethodHandlerEntry() {
@@ -52,21 +52,7 @@ public interface MethodHandlerEntry {
     }
 
     public MethodHandlerEntry build() {
-
-      return new MethodHandlerEntry() {
-        final MethodMatcher matcher = requireState(Builder.this.matcher, isNotNull());
-        final MethodHandler handler = requireState(Builder.this.handler, isNotNull());
-
-        @Override
-        public MethodMatcher matcher() {
-          return this.matcher;
-        }
-
-        @Override
-        public MethodHandler handler() {
-          return this.handler;
-        }
-      };
+      return create(matcher, handler);
     }
   }
 }

@@ -1,9 +1,6 @@
 package com.github.dakusui.osynth2.annotations;
 
-import com.github.dakusui.osynth2.core.MethodHandler;
-import com.github.dakusui.osynth2.core.MethodHandlerEntry;
-import com.github.dakusui.osynth2.core.MethodSignature;
-import com.github.dakusui.osynth2.core.SynthesizedObject;
+import com.github.dakusui.osynth2.core.*;
 
 import java.lang.annotation.Retention;
 import java.lang.reflect.Method;

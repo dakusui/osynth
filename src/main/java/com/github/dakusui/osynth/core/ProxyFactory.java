@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.utils.InternalUtils.rethrow;
-import static com.github.dakusui.osynth2.core.utils.MessageUtils.failedToInstantiate;
+import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForInstantiationFailure;
 
 public class ProxyFactory {
   public static final Method                                            DESCRIPTOR_METHOD = retrieveDescriptorMethod();
@@ -52,7 +52,7 @@ public class ProxyFactory {
         throw e.getTargetException();
       }
     } catch (Throwable e) {
-      throw new RuntimeException(failedToInstantiate(anInterfaceClass), e);
+      throw new RuntimeException(messageForInstantiationFailure(anInterfaceClass), e);
     }
   }
 
