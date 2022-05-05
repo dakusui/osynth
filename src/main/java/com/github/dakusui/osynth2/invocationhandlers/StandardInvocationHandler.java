@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
+import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromInterfaces;
 import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.forms.Functions.stream;
 import static com.github.dakusui.pcond.forms.Predicates.*;
@@ -38,11 +39,7 @@ public class StandardInvocationHandler extends OsynthInvocationHandler.Base impl
     if (this.methodHandlerMap.containsKey(methodSignature))
       methodHandler = this.methodHandlerMap.get(methodSignature);
     else
-      methodHandler = descriptor().interfaces().stream()
-          .map((Class<?> eachInterfaceClass) -> MethodUtils.createMethodHandlerFromInterfaceClass(eachInterfaceClass, methodSignature))
-          .filter(Optional::isPresent)
-          .map(Optional::get)
-          .findFirst()
+      methodHandler = createMethodHandlerFromInterfaces(descriptor().interfaces(), methodSignature)
           .orElseGet(() -> createMethodHandlerFromFallbackObject(descriptor().fallbackObject(), methodSignature));
     return methodHandler;
   }

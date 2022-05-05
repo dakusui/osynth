@@ -19,8 +19,6 @@ import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForMissi
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 import static com.github.dakusui.pcond.forms.Predicates.transform;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 
 public enum MethodUtils {
   ;
@@ -94,6 +92,14 @@ public enum MethodUtils {
     if (args == null)
       return OsynthInvocationHandler.EMPTY_ARGS;
     return args;
+  }
+
+  public static Optional<MethodHandler> createMethodHandlerFromInterfaces(List<Class<?>> interfaces, MethodSignature methodSignature) {
+    return interfaces.stream()
+        .map((Class<?> eachInterfaceClass) -> createMethodHandlerFromInterfaceClass(eachInterfaceClass, methodSignature))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst();
   }
 
   /**

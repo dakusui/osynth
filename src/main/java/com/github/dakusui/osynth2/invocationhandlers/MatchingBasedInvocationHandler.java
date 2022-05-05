@@ -5,10 +5,10 @@ import com.github.dakusui.osynth2.core.utils.MethodUtils;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
+import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromInterfaces;
 
 public class MatchingBasedInvocationHandler extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
   private final Map<Method, MethodHandler> cache = new ConcurrentHashMap<>();
@@ -25,13 +25,8 @@ public class MatchingBasedInvocationHandler extends OsynthInvocationHandler.Base
         .filter(me -> me.matcher().matches(methodSignature))
         .map(MethodHandlerEntry::handler)
         .findFirst()
-        .orElseGet(() -> descriptor().interfaces().stream()
-            .map((Class<?> eachInterfaceClass) -> MethodUtils.createMethodHandlerFromInterfaceClass(eachInterfaceClass, methodSignature))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .findFirst()
-            .orElseGet(() -> createMethodHandlerFromFallbackObject(descriptor().fallbackObject(), methodSignature))
-        );
+        .orElseGet(() -> createMethodHandlerFromInterfaces(descriptor().interfaces(), methodSignature)
+            .orElseGet(() -> createMethodHandlerFromFallbackObject(descriptor().fallbackObject(), methodSignature)));
   }
 
   @Override
