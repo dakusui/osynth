@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth2;
 
 import com.github.dakusui.osynth2.core.*;
+import com.github.dakusui.osynth2.invocationhandlers.StandardInvocationHandler;
 import com.github.dakusui.osynth2.core.utils.AssertionUtils;
 import com.github.dakusui.osynth2.exceptions.ValidationException;
 import com.github.dakusui.pcond.Validations;
@@ -35,8 +36,8 @@ public class ObjectSynthesizer {
       validateValue(
           descriptor,
           withMessage(
-              () -> messageForReservedMethodOverridingValidationFailure(reservedMethodMisOverridings(descriptor.methodHandlers())),
-              transform(descriptorMethodHandlers()
+              () -> messageForReservedMethodOverridingValidationFailure(reservedMethodMisOverridings(descriptor.methodHandlerEntries())),
+              transform(descriptorMethodHandlerEntries()
                   .andThen(InternalUtils::reservedMethodMisOverridings))
                   .check(isEmpty())));
       return descriptor;
@@ -58,7 +59,7 @@ public class ObjectSynthesizer {
           ret = requireNonNull(each).apply(objectSynthesizer, descriptor);
           ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
               transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
-              transform(descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
+              transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),
               transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
         }
         return ret;
@@ -268,7 +269,7 @@ public class ObjectSynthesizer {
     SynthesizedObject.Descriptor ret = this.validator.apply(this, descriptor);
     ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
         transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
-        transform(descriptorMethodHandlers()).check(isEqualTo(descriptor.methodHandlers())),
+        transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),
         transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
     return ret;
   }

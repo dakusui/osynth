@@ -76,14 +76,14 @@ public interface SynthesizedObject {
       return this.fallbackObject;
     }
 
-    public List<MethodHandlerEntry> methodHandlers() {
+    public List<MethodHandlerEntry> methodHandlerEntries() {
       return this.methodHandlers;
     }
 
     @Override
     public String toString() {
       return String.format("{methodHandlers=%s,interfaces=%s,fallback:%s}",
-          this.methodHandlers(),
+          this.methodHandlerEntries(),
           this.interfaces(),
           this.fallbackObject());
     }
@@ -101,7 +101,7 @@ public interface SynthesizedObject {
       public Builder(Descriptor descriptor) {
         this();
         this.interfaces.addAll(descriptor.interfaces());
-        this.methodHandlers.addAll(descriptor.methodHandlers());
+        this.methodHandlers.addAll(descriptor.methodHandlerEntries());
         this.fallbackObject = descriptor.fallbackObject;
       }
 

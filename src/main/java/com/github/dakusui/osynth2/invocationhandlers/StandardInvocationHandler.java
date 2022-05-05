@@ -1,26 +1,35 @@
-package com.github.dakusui.osynth2.core;
+package com.github.dakusui.osynth2.invocationhandlers;
 
+import com.github.dakusui.osynth2.core.*;
+import com.github.dakusui.osynth2.core.utils.AssertionUtils;
 import com.github.dakusui.osynth2.core.utils.MethodUtils;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
+import static com.github.dakusui.pcond.Preconditions.require;
+import static com.github.dakusui.pcond.forms.Functions.stream;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class StandardInvocationHandler extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
-  private final Map<MethodMatcher, MethodHandler>       methodHandlerMap;
-  private final ThreadLocal<Map<Method, MethodHandler>> methodHandlerCache = new ThreadLocal<>();
+  private final Map<MethodMatcher, MethodHandler> methodHandlerMap;
+  private final Map<Method, MethodHandler>        methodHandlerCache = new ConcurrentHashMap<>();
 
   public StandardInvocationHandler(SynthesizedObject.Descriptor descriptor) {
     super(descriptor);
+    require(descriptor.methodHandlerEntries(),
+        transform(stream().andThen(AssertionUtils.streamToMethodHandlerEntryStream())
+            .andThen(AssertionUtils.methodHandlerEntryStreamToMethodMatcherStream()))
+            .check(allMatch(isInstanceOf(MethodSignature.class))));
     this.methodHandlerMap = new HashMap<>();
-    this.descriptor().methodHandlers()
+    this.descriptor().methodHandlerEntries()
         .forEach(eachEntry -> methodHandlerMap.put(
             eachEntry.matcher(),
             eachEntry.handler()));
-    this.methodHandlerCache.set(new HashMap<>());
   }
 
   public MethodHandler figureOutMethodHandlerFor(Method method) {
@@ -40,6 +49,6 @@ public class StandardInvocationHandler extends OsynthInvocationHandler.Base impl
 
   @Override
   public Map<Method, MethodHandler> cache() {
-    return this.methodHandlerCache.get();
+    return this.methodHandlerCache;
   }
 }

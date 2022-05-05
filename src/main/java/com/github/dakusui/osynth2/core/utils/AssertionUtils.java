@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
 import static com.github.dakusui.pcond.forms.Functions.call;
@@ -26,8 +27,8 @@ public enum AssertionUtils {
     return call(instanceMethod(parameter(), "fallbackObject"));
   }
 
-  public static Function<SynthesizedObject.Descriptor, List<MethodHandlerEntry>> descriptorMethodHandlers() {
-    return call(instanceMethod(parameter(), "methodHandlers"));
+  public static Function<SynthesizedObject.Descriptor, List<MethodHandlerEntry>> descriptorMethodHandlerEntries() {
+    return call(instanceMethod(parameter(), "methodHandlerEntries"));
   }
 
   public static Function<SynthesizedObject.Descriptor, List<Class<?>>> descriptorInterfaces() {
@@ -67,5 +68,13 @@ public enum AssertionUtils {
 
   public static <T> Predicate<Class<T>> classIsInterface() {
     return Printables.predicate("isInterface", Class::isInterface);
+  }
+
+  public static Function<Stream<MethodHandlerEntry>, Stream<MethodMatcher>> methodHandlerEntryStreamToMethodMatcherStream() {
+    return Printables.function("methodHandlerEntryStreamToMethodMatcherStream", methodHandlerEntryStream -> methodHandlerEntryStream.map(MethodHandlerEntry::matcher));
+  }
+
+  public static Function<Stream<?>, Stream<MethodHandlerEntry>> streamToMethodHandlerEntryStream() {
+    return Printables.function("streamToMethodHandlerEntryStream", stream -> stream.map(e -> (MethodHandlerEntry) e));
   }
 }
