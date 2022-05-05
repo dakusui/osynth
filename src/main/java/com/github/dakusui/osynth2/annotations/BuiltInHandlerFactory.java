@@ -1,6 +1,8 @@
 package com.github.dakusui.osynth2.annotations;
 
 import com.github.dakusui.osynth2.core.*;
+import com.github.dakusui.osynth2.core.utils.MethodUtils;
+import com.github.dakusui.osynth2.exceptions.OsynthException;
 
 import java.lang.annotation.Retention;
 import java.lang.reflect.Method;
@@ -9,6 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth2.core.utils.AssertionUtils.methodIsAnnotationPresent;
+import static com.github.dakusui.osynth2.core.utils.MethodUtils.withName;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.and;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
@@ -29,7 +32,7 @@ public @interface BuiltInHandlerFactory {
       try {
         return withName("builtIn-" + method.getName(), annotation.value().newInstance().create(descriptorSupplier));
       } catch (InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException(e);
+        throw new OsynthException(e);
       }
     }
 
@@ -41,19 +44,6 @@ public @interface BuiltInHandlerFactory {
               createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier)));
     }
 
-    static MethodHandler withName(String name, MethodHandler methodHandler) {
-      return new MethodHandler() {
-        @Override
-        public Object apply(SynthesizedObject synthesizedObject, Object[] objects) {
-          return methodHandler.apply(synthesizedObject, objects);
-        }
-
-        @Override
-        public String toString() {
-          return name;
-        }
-      };
-    }
   }
 
   class ForToString implements MethodHandlerFactory {

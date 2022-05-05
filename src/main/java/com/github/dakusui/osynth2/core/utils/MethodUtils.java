@@ -103,4 +103,18 @@ public enum MethodUtils {
       return Optional.empty();
     }
   }
+
+  public static MethodHandler withName(String name, MethodHandler methodHandler) {
+    return new MethodHandler() {
+      @Override
+      public Object apply(SynthesizedObject synthesizedObject, Object[] objects) {
+        return methodHandler.apply(synthesizedObject, objects);
+      }
+
+      @Override
+      public String toString() {
+        return name;
+      }
+    };
+  }
 }

@@ -22,8 +22,6 @@ import static com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory.Metho
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Postconditions.ensure;
 import static com.github.dakusui.pcond.Preconditions.*;
-import static com.github.dakusui.pcond.forms.Functions.parameter;
-import static com.github.dakusui.pcond.forms.Functions.stream;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class ObjectSynthesizer {
@@ -88,7 +86,7 @@ public class ObjectSynthesizer {
         SynthesizedObject.Descriptor descriptor);
   }
 
-  interface InvocationHandlerFactory extends Function<ObjectSynthesizer, OsynthInvocationHandler> {
+  interface InvocationHandlerFactory extends Function<ObjectSynthesizer, StandardInvocationHandler> {
 
   }
 
@@ -168,7 +166,7 @@ public class ObjectSynthesizer {
       }
     });
     this.classLoader(this.getClass().getClassLoader())
-        .createInvocationHandlerWith(objectSynthesizer -> new OsynthInvocationHandler(
+        .createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationHandler(
             objectSynthesizer
                 .finalizedDescriptor()))
         .validateWith(Validator.DEFAULT)
