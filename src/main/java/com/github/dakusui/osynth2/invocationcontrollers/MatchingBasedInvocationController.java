@@ -4,13 +4,12 @@ import com.github.dakusui.osynth2.core.*;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromInterfaces;
 
 public class MatchingBasedInvocationController extends InvocationController.Base implements InvocationController.WithCache {
-  private final Map<Method, MethodHandler> cache = new ConcurrentHashMap<>();
+  private final Map<Method, MethodHandler> cache = createCache();
 
   public MatchingBasedInvocationController(SynthesizedObject.Descriptor descriptor) {
     super(descriptor);

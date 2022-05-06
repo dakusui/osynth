@@ -16,7 +16,7 @@ import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class StandardInvocationController extends InvocationController.Base implements InvocationController.WithCache {
   private final Map<MethodSignature, MethodHandler> methodHandlerMap;
-  private final Map<Method, MethodHandler>          methodHandlerCache = new ConcurrentHashMap<>();
+  private final Map<Method, MethodHandler>          methodHandlerCache = createCache();
 
   public StandardInvocationController(SynthesizedObject.Descriptor descriptor) {
     super(descriptor);

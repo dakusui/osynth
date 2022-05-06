@@ -3,6 +3,7 @@ package com.github.dakusui.osynth2.core;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.execute;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.toEmptyArrayIfNull;
@@ -27,6 +28,25 @@ public interface InvocationController extends InvocationHandler {
   SynthesizedObject.Descriptor descriptor();
 
   interface WithCache extends InvocationController {
+    /**
+     * Returns a newly created map object used for method handler cache.
+     *
+     * Default implementation of this method returns a new {@link ConcurrentHashMap}
+     * object.
+     * Assign the returned map of this method to a field returned by
+     * {@link this#cache()} method.
+     *
+     * @return A new map for method handler cache.
+     */
+    default Map<Method, MethodHandler> createCache() {
+      return new ConcurrentHashMap<>();
+    }
+
+    /**
+     * Returns an already created map object to be used for a method handler cache.
+     *
+     * @return A map for method handler cache.
+     */
     Map<Method, MethodHandler> cache();
 
     default MethodHandler methodHandlerFor(Method method) {
@@ -46,4 +66,13 @@ public interface InvocationController extends InvocationHandler {
       return this.descriptor;
     }
   }
+
+  class InvocationContext {
+    private Method onGoingMethod;
+
+    public Method onGoingMethod() {
+      return this.onGoingMethod;
+    }
+  }
+
 }

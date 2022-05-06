@@ -1,5 +1,9 @@
 package com.github.dakusui.osynth2.core;
 
+import com.github.dakusui.osynth2.core.InvocationController.InvocationContext;
+
+import java.lang.reflect.Method;
+
 /**
  * An interface that represents how a method request will be handled.
  *
@@ -9,6 +13,8 @@ package com.github.dakusui.osynth2.core;
  */
 @FunctionalInterface
 public interface MethodHandler {
+
+  ThreadLocal<InvocationContext> INVOCATION_CONTEXT_THREAD_LOCAL = new ThreadLocal<>();
 
   /**
    * A method to handle a method invocation request.
@@ -23,4 +29,8 @@ public interface MethodHandler {
    * @throws Throwable An exception thrown during the handling.
    */
   Object handle(SynthesizedObject synthesizedObject, Object[] args) throws Throwable;
+
+  default InvocationContext invocationContext() {
+    return INVOCATION_CONTEXT_THREAD_LOCAL.get();
+  }
 }

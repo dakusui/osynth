@@ -15,7 +15,7 @@ public class VariationTest {
   }
 
   @Test
-  public void whenCallBuiltInMethodFromInsideHandler() {
+  public void whenCallBuiltInMethodFromInsideHandler$thenCalledSuccessfully() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
         .handle(methodCall("aMethod", String.class)
