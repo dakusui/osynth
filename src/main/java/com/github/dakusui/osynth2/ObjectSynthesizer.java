@@ -1,8 +1,8 @@
 package com.github.dakusui.osynth2;
 
 import com.github.dakusui.osynth2.core.*;
-import com.github.dakusui.osynth2.invocationhandlers.MatchingBasedInvocationHandler;
-import com.github.dakusui.osynth2.invocationhandlers.StandardInvocationHandler;
+import com.github.dakusui.osynth2.invocationcontrollers.MatchingBasedInvocationController;
+import com.github.dakusui.osynth2.invocationcontrollers.StandardInvocationController;
 import com.github.dakusui.osynth2.core.utils.AssertionUtils;
 import com.github.dakusui.osynth2.exceptions.ValidationException;
 import com.github.dakusui.pcond.Validations;
@@ -100,11 +100,11 @@ public class ObjectSynthesizer {
   }
 
   public ObjectSynthesizer handlingMatching() {
-    return this.createInvocationHandlerWith(objectSynthesizer -> new MatchingBasedInvocationHandler(objectSynthesizer.finalizedDescriptor()));
+    return this.createInvocationHandlerWith(objectSynthesizer -> new MatchingBasedInvocationController(objectSynthesizer.finalizedDescriptor()));
   }
 
   public ObjectSynthesizer handlingExact() {
-    return this.createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationHandler(objectSynthesizer.finalizedDescriptor()));
+    return this.createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationController(objectSynthesizer.finalizedDescriptor()));
   }
 
   public SynthesizedObject synthesize(Object fallbackObject) {

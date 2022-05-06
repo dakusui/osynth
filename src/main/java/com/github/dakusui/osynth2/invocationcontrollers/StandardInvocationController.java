@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth2.invocationhandlers;
+package com.github.dakusui.osynth2.invocationcontrollers;
 
 import com.github.dakusui.osynth2.core.*;
 import com.github.dakusui.osynth2.core.utils.AssertionUtils;
@@ -14,11 +14,11 @@ import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.forms.Functions.stream;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
-public class StandardInvocationHandler extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
+public class StandardInvocationController extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
   private final Map<MethodMatcher, MethodHandler> methodHandlerMap;
   private final Map<Method, MethodHandler>        methodHandlerCache = new ConcurrentHashMap<>();
 
-  public StandardInvocationHandler(SynthesizedObject.Descriptor descriptor) {
+  public StandardInvocationController(SynthesizedObject.Descriptor descriptor) {
     super(descriptor);
     require(descriptor.methodHandlerEntries(),
         transform(stream().andThen(AssertionUtils.streamToMethodHandlerEntryStream())

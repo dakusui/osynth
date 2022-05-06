@@ -1,7 +1,6 @@
-package com.github.dakusui.osynth2.invocationhandlers;
+package com.github.dakusui.osynth2.invocationcontrollers;
 
 import com.github.dakusui.osynth2.core.*;
-import com.github.dakusui.osynth2.core.utils.MethodUtils;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -10,10 +9,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromInterfaces;
 
-public class MatchingBasedInvocationHandler extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
+public class MatchingBasedInvocationController extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
   private final Map<Method, MethodHandler> cache = new ConcurrentHashMap<>();
 
-  public MatchingBasedInvocationHandler(SynthesizedObject.Descriptor descriptor) {
+  public MatchingBasedInvocationController(SynthesizedObject.Descriptor descriptor) {
     super(descriptor);
   }
 

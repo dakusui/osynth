@@ -378,7 +378,10 @@ public class ObjectSynthesizerTest extends UtBase {
       e.printStackTrace();
       assertThat(
           e.getMessage(),
-          asString().containsString("A> violated precondition:value methods->stream noneMatch[isDefaultMethod]").$());
+          allOf(
+              asString().containsString("value:").$(),
+              asString().containsString(A.class.getSimpleName()).$(),
+              asString().containsString("violated precondition:value methods->stream noneMatch[isDefaultMethod]").$()));
       throw e;
     }
   }
