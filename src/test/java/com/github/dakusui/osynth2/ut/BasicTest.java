@@ -6,7 +6,7 @@ import com.github.dakusui.osynth2.core.SynthesizedObject;
 import com.github.dakusui.osynth2.exceptions.OsynthException;
 import org.junit.Test;
 
-import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
+import static com.github.dakusui.osynth2.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
@@ -19,7 +19,7 @@ public class BasicTest extends UtBase {
   public void testIfCustomMethodHandlerOverridesAbstractMethod() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
-        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+        .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
         .fallbackObject(new Object())
         .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
@@ -34,7 +34,7 @@ public class BasicTest extends UtBase {
   public void testIfCustomMethodHandlerOverridesAbstractMethodTwice() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
-        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+        .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
         .fallbackObject(new Object())
         .synthesize();
     String output1 = object.castTo(A.class).aMethod("Hello!");
@@ -63,7 +63,7 @@ public class BasicTest extends UtBase {
   public void whenCustomMethodHandlerOverridesAbstractMethodThrowsException$theExceptionThrown() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
-        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
+        .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> {
           throw new TestRuntimeException(
               "customMethodHandler:<" + args[0] + ">");
         }))
@@ -91,7 +91,7 @@ public class BasicTest extends UtBase {
   public void whenCustomMethodHandlerOverridesAbstractMethodThrowsCheckedException$theExceptionThrownAsOsynthInvocationTargetException() throws Throwable {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
-        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> {
+        .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> {
           throw new TestCheckedException(
               "customMethodHandler:<" + args[0] + ">");
         }))
@@ -114,7 +114,7 @@ public class BasicTest extends UtBase {
     Object fallbackObject = new Object();
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
-        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
+        .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
         .fallbackObject(fallbackObject)
         .synthesize();
     String output = object.castTo(A.class).toString();
@@ -136,7 +136,7 @@ public class BasicTest extends UtBase {
   public void testDefaultMethodIsOverridden() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(B.class)
-        .handle(method("bMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for bMethod:<" + args[0] + ">"))
+        .handle(methodCall("bMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for bMethod:<" + args[0] + ">"))
         .fallbackObject(new Object())
         .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
@@ -152,7 +152,7 @@ public class BasicTest extends UtBase {
   public void testDefaultMethodIsUsed() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(B.class)
-        .handle(method("aMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for aMethod:<" + args[0] + ">"))
+        .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for aMethod:<" + args[0] + ">"))
         .fallbackObject(new Object())
         .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");

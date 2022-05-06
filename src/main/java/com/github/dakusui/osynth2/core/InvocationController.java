@@ -1,7 +1,5 @@
 package com.github.dakusui.osynth2.core;
 
-import com.github.dakusui.osynth2.core.utils.MethodUtils;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -9,7 +7,7 @@ import java.util.Map;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.execute;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.toEmptyArrayIfNull;
 
-public interface OsynthInvocationHandler extends InvocationHandler {
+public interface InvocationController extends InvocationHandler {
 
   Object[] EMPTY_ARGS = new Object[0];
 
@@ -28,7 +26,7 @@ public interface OsynthInvocationHandler extends InvocationHandler {
 
   SynthesizedObject.Descriptor descriptor();
 
-  interface WithCache extends OsynthInvocationHandler {
+  interface WithCache extends InvocationController {
     Map<Method, MethodHandler> cache();
 
     default MethodHandler methodHandlerFor(Method method) {
@@ -36,7 +34,7 @@ public interface OsynthInvocationHandler extends InvocationHandler {
     }
   }
 
-  abstract class Base implements OsynthInvocationHandler {
+  abstract class Base implements InvocationController {
     private final SynthesizedObject.Descriptor descriptor;
 
     protected Base(SynthesizedObject.Descriptor descriptor) {

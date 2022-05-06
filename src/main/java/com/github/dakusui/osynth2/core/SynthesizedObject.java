@@ -53,7 +53,6 @@ public interface SynthesizedObject {
           .map(MethodSignature::create)
           .collect(toSet());
     }
-
   }
 
   final class Descriptor {

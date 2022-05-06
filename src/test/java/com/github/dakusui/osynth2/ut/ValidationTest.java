@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import java.io.Serializable;
 
-import static com.github.dakusui.osynth2.ObjectSynthesizer.method;
+import static com.github.dakusui.osynth2.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
@@ -21,7 +21,7 @@ public class ValidationTest extends UtBase {
     SynthesizedObject synthesizedObject = new ObjectSynthesizer()
         .disableValidation()
         .fallbackObject(new Object())
-        .handle(method("descriptor")
+        .handle(methodCall("descriptor")
             .with(createNewDescriptorReturningHandler())).synthesize();
     System.out.println(synthesizedObject.descriptor());
   }
@@ -31,7 +31,7 @@ public class ValidationTest extends UtBase {
     try {
       SynthesizedObject synthesizedObject = new ObjectSynthesizer()
           .fallbackObject(new Object())
-          .handle(method("descriptor").with(createNewDescriptorReturningHandler()))
+          .handle(methodCall("descriptor").with(createNewDescriptorReturningHandler()))
           .synthesize();
       System.out.println(synthesizedObject);
     } catch (RuntimeException e) {
@@ -49,8 +49,8 @@ public class ValidationTest extends UtBase {
     try {
       SynthesizedObject synthesizedObject = new ObjectSynthesizer()
           .fallbackObject(new Object())
-          .handle(method("descriptor").with(createNewDescriptorReturningHandler()))
-          .handle(method("castTo", Class.class).with(createNewDescriptorReturningHandler()))
+          .handle(methodCall("descriptor").with(createNewDescriptorReturningHandler()))
+          .handle(methodCall("castTo", Class.class).with(createNewDescriptorReturningHandler()))
           .synthesize();
       System.out.println(synthesizedObject);
     } catch (RuntimeException e) {

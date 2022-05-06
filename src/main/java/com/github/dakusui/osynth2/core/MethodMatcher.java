@@ -1,9 +1,11 @@
 package com.github.dakusui.osynth2.core;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.dakusui.pcond.Preconditions.require;
-import static com.github.dakusui.pcond.forms.Predicates.*;
+import static java.util.Objects.requireNonNull;
 
 public interface MethodMatcher {
   default boolean matches(Method m) {
@@ -12,38 +14,84 @@ public interface MethodMatcher {
 
   boolean matches(MethodSignature s);
 
-  interface Descriptor {
-    interface BySignature extends Descriptor {
-      String methodName();
+  enum Factory {
+    /**
+     * It does not make sense to use a matcher created by this factory with
+     * {@link com.github.dakusui.osynth2.invocationcontrollers.StandardInvocationController}.
+     * Because the controller searches for a custom method handler for an invoked
+     * method by "exact match", always.
+     */
+    LENIENT {
+      @Override
+      MethodSignatureMatcher create(MethodSignature handlableMethod) {
+        return new MethodSignatureMatcher.Base(handlableMethod) {
+          @Override
+          public boolean matches(MethodSignature candidate) {
+            AtomicInteger i = new AtomicInteger(0);
+            return Objects.equals(handlableMethod().name(), candidate.name()) &&
+                handlableMethod().parameterTypes().length == candidate.parameterTypes().length &&
+                Arrays.stream(handlableMethod().parameterTypes())
+                    .allMatch(type -> type.isAssignableFrom(candidate.parameterTypes()[i.getAndIncrement()]));
+          }
+        };
+      }
+    },
+    STRICT {
+      @Override
+      MethodSignatureMatcher create(MethodSignature handlableMethod) {
+        return new MethodSignatureMatcher.Base(handlableMethod) {
+          @Override
+          public boolean matches(MethodSignature candidate) {
+            return Objects.equals(this.handlableMethod().name(), candidate.name())
+                && Arrays.equals(this.handlableMethod().parameterTypes(), candidate.parameterTypes());
+          }
+        };
+      }
+    };
 
-      Class<?>[] parameterTypes();
-    }
+    abstract MethodSignatureMatcher create(MethodSignature request);
   }
 
-  interface Factory {
-    MethodMatcher create(Descriptor descriptor);
+  interface MethodSignatureMatcher extends MethodMatcher {
+    MethodSignature handlableMethod();
 
-    interface FromSignature extends Factory {
+    abstract class Base implements MethodSignatureMatcher {
+      private final MethodSignature handlableMethod;
+
+      protected Base(MethodSignature handlableMethod) {
+        this.handlableMethod = requireNonNull(handlableMethod);
+      }
+
       @Override
-      default MethodMatcher create(Descriptor descriptor) {
-        Descriptor.BySignature desc = (Descriptor.BySignature) require(descriptor,
-            and(isNotNull(), isInstanceOf(Descriptor.BySignature.class)));
-        return createBySignature(desc);
+      public MethodSignature handlableMethod() {
+        return this.handlableMethod;
       }
 
-      MethodMatcher createBySignature(Descriptor.BySignature descriptor);
+      @Override
+      public int hashCode() {
+        return Objects.hashCode(this.handlableMethod.hashCode());
+      }
+
+      @SuppressWarnings("EqualsWhichDoesntCheckParameterClass" /* It is actually checking using .getClass() method */)
+      @Override
+      public boolean equals(Object anotherObject) {
+        if (this == anotherObject)
+          return true;
+        if (anotherObject == null)
+          return false;
+        Base another = (Base) anotherObject;
+        return Objects.equals(this.handlableMethod(), another.handlableMethod()) &&
+            Objects.equals(this.getClass(), another.getClass());
+      }
+
+      @Override
+      public String toString() {
+        return "matcher:" + this.handlableMethod();
+      }
     }
 
-    interface Exact extends FromSignature {
-      default MethodMatcher createBySignature(Descriptor.BySignature descriptor) {
-        return new MethodSignature.Impl(descriptor.methodName(), descriptor.parameterTypes());
-      }
-    }
-
-    interface Lenient extends FromSignature {
-      default MethodMatcher createBySignature(Descriptor.BySignature descriptor) {
-        return new MethodSignature.Impl(descriptor.methodName(), descriptor.parameterTypes());
-      }
+    static MethodSignatureMatcher create(MethodSignature methodSignature, MethodMatcher.Factory factory) {
+      return factory.create(methodSignature);
     }
   }
 }

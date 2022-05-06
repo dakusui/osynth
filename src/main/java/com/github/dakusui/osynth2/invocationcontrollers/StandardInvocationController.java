@@ -14,26 +14,26 @@ import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.forms.Functions.stream;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
-public class StandardInvocationController extends OsynthInvocationHandler.Base implements OsynthInvocationHandler.WithCache {
-  private final Map<MethodMatcher, MethodHandler> methodHandlerMap;
-  private final Map<Method, MethodHandler>        methodHandlerCache = new ConcurrentHashMap<>();
+public class StandardInvocationController extends InvocationController.Base implements InvocationController.WithCache {
+  private final Map<MethodSignature, MethodHandler> methodHandlerMap;
+  private final Map<Method, MethodHandler>          methodHandlerCache = new ConcurrentHashMap<>();
 
   public StandardInvocationController(SynthesizedObject.Descriptor descriptor) {
     super(descriptor);
     require(descriptor.methodHandlerEntries(),
         transform(stream().andThen(AssertionUtils.streamToMethodHandlerEntryStream())
             .andThen(AssertionUtils.methodHandlerEntryStreamToMethodMatcherStream()))
-            .check(allMatch(isInstanceOf(MethodSignature.class))));
+            .check(allMatch(isInstanceOf(MethodMatcher.MethodSignatureMatcher.class))));
     this.methodHandlerMap = new HashMap<>();
     this.descriptor().methodHandlerEntries()
         .forEach(eachEntry -> methodHandlerMap.put(
-            eachEntry.matcher(),
+            ((MethodMatcher.MethodSignatureMatcher) eachEntry.matcher()).handlableMethod(),
             eachEntry.handler()));
   }
 
-  public MethodHandler figureOutMethodHandlerFor(Method method) {
+  public MethodHandler figureOutMethodHandlerFor(Method invokedMethod) {
     MethodHandler methodHandler;
-    MethodSignature methodSignature = MethodSignature.create(method);
+    MethodSignature methodSignature = MethodSignature.create(invokedMethod);
     if (this.methodHandlerMap.containsKey(methodSignature))
       methodHandler = this.methodHandlerMap.get(methodSignature);
     else

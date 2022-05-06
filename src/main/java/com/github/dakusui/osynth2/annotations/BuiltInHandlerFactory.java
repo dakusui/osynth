@@ -1,8 +1,6 @@
 package com.github.dakusui.osynth2.annotations;
 
 import com.github.dakusui.osynth2.core.*;
-import com.github.dakusui.osynth2.core.utils.MethodUtils;
-import com.github.dakusui.osynth2.exceptions.OsynthException;
 
 import java.lang.annotation.Retention;
 import java.lang.reflect.Method;
@@ -37,7 +35,7 @@ public @interface BuiltInHandlerFactory {
       return Arrays.stream(SynthesizedObject.class.getMethods())
           .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
           .map((Method eachMethod) -> MethodHandlerEntry.create(
-              MethodSignature.create(eachMethod),
+              MethodMatcher.MethodSignatureMatcher.create(MethodSignature.create(eachMethod), MethodMatcher.Factory.STRICT),
               createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier)));
     }
 

@@ -1,9 +1,6 @@
 package com.github.dakusui.osynth2.core.utils;
 
-import com.github.dakusui.osynth2.core.MethodHandler;
-import com.github.dakusui.osynth2.core.MethodSignature;
-import com.github.dakusui.osynth2.core.OsynthInvocationHandler;
-import com.github.dakusui.osynth2.core.SynthesizedObject;
+import com.github.dakusui.osynth2.core.*;
 import com.github.dakusui.osynth2.exceptions.OsynthException;
 
 import java.lang.invoke.MethodHandle;
@@ -25,18 +22,15 @@ public enum MethodUtils {
 
   public static MethodHandler createMethodHandlerFromFallbackObject(final Object fallbackObject, MethodSignature methodSignature) {
     Objects.requireNonNull(fallbackObject);
-    return (synthesizedObject, args) -> {
-      assert synthesizedObject != null && synthesizedObject.descriptor().fallbackObject() == fallbackObject;
-      return execute(() -> {
-        try {
-          Method method = fallbackObject.getClass().getMethod(methodSignature.name(), methodSignature.parameterClasses());
-          method.setAccessible(true);
-          return method.invoke(fallbackObject, args);
-        } catch (NoSuchMethodException e) {
-          throw new UnsupportedOperationException(messageForMissingMethodHandler(methodSignature, synthesizedObject, e), e);
-        }
-      });
-    };
+    return (synthesizedObject, args) -> execute(() -> {
+      try {
+        Method method = fallbackObject.getClass().getMethod(methodSignature.name(), methodSignature.parameterTypes());
+        method.setAccessible(true);
+        return method.invoke(fallbackObject, args);
+      } catch (NoSuchMethodException e) {
+        throw new UnsupportedOperationException(messageForMissingMethodHandler(methodSignature, synthesizedObject, e), e);
+      }
+    });
   }
 
   public static Optional<MethodHandler> createMethodHandlerFromInterfaceClass(Class<?> fromClass, MethodSignature methodSignature) {
@@ -90,7 +84,7 @@ public enum MethodUtils {
 
   public static Object[] toEmptyArrayIfNull(Object[] args) {
     if (args == null)
-      return OsynthInvocationHandler.EMPTY_ARGS;
+      return InvocationController.EMPTY_ARGS;
     return args;
   }
 
@@ -114,7 +108,7 @@ public enum MethodUtils {
 
   private static Optional<Method> findMethodMatchingWith(MethodSignature methodSignature, Class<?> fromClass) {
     try {
-      return Optional.of(fromClass.getMethod(methodSignature.name(), methodSignature.parameterClasses()));
+      return Optional.of(fromClass.getMethod(methodSignature.name(), methodSignature.parameterTypes()));
     } catch (NoSuchMethodException e) {
       return Optional.empty();
     }

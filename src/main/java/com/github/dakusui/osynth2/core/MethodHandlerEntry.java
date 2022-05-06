@@ -1,8 +1,6 @@
 package com.github.dakusui.osynth2.core;
 
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
-import static com.github.dakusui.pcond.Preconditions.requireState;
-import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 
 public interface MethodHandlerEntry {
   MethodMatcher matcher();
@@ -31,15 +29,29 @@ public interface MethodHandlerEntry {
   }
 
   class Builder {
-    MethodMatcher matcher;
-    MethodHandler handler;
+    MethodSignature       methodRequest;
+    MethodHandler         handler;
+    MethodMatcher.Factory matcherFactory;
 
     public Builder() {
+      this.strictly();
     }
 
-    public Builder matcher(MethodMatcher signature) {
-      this.matcher = requireNonNull(signature);
+    public Builder handle(MethodSignature methodRequest) {
+      this.methodRequest = requireNonNull(methodRequest);
       return this;
+    }
+
+    public Builder strictly() {
+      return this.createMatcherWith(MethodMatcher.Factory.STRICT);
+    }
+
+    public Builder leniently() {
+      return this.createMatcherWith(MethodMatcher.Factory.LENIENT);
+    }
+
+    public MethodHandlerEntry with(MethodHandler handler) {
+      return this.handler(handler).build();
     }
 
     public Builder handler(MethodHandler handler) {
@@ -47,12 +59,13 @@ public interface MethodHandlerEntry {
       return this;
     }
 
-    public MethodHandlerEntry with(MethodHandler handler) {
-      return this.handler(handler).build();
+    public Builder createMatcherWith(MethodMatcher.Factory matcherFactory) {
+      this.matcherFactory = requireNonNull(matcherFactory);
+      return this;
     }
 
     public MethodHandlerEntry build() {
-      return create(matcher, handler);
+      return create(this.matcherFactory.create(this.methodRequest), handler);
     }
   }
 }

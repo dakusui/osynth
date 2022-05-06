@@ -6,44 +6,27 @@ import java.util.Objects;
 
 import static java.util.stream.Collectors.joining;
 
-public interface MethodSignature extends MethodMatcher {
-  String name();
-
-  Class<?>[] parameterClasses();
-
-  static com.github.dakusui.osynth2.core.MethodSignature create(String name, Class<?>... parameterClasses) {
-    return new MethodSignature.Impl(name, parameterClasses);
+public interface MethodSignature {
+  static MethodSignature create(String name, Class<?>... parameterTypes) {
+    return new Impl(name, parameterTypes);
   }
 
-  static com.github.dakusui.osynth2.core.MethodSignature create(Method method) {
+  static MethodSignature create(Method method) {
     return create(method.getName(), method.getParameterTypes());
   }
 
-  final class Impl implements MethodMatcher, com.github.dakusui.osynth2.core.MethodSignature {
-    final String     name;
-    final Class<?>[] parameterClasses;
+  String name();
 
-    public Impl(String name, Class<?>[] parameterClasses) {
-      this.name = Objects.requireNonNull(name);
-      this.parameterClasses = Objects.requireNonNull(parameterClasses);
-    }
+  Class<?>[] parameterTypes();
 
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(this.name);
-    }
+  class Impl implements MethodSignature {
 
-    @Override
-    public boolean equals(Object anotherObject) {
-      if (!(anotherObject instanceof MethodSignature))
-        return false;
-      MethodSignature another = (MethodSignature) anotherObject;
-      return Objects.equals(this.name(), another.name()) && Arrays.equals(this.parameterClasses(), another.parameterClasses());
-    }
+    private final String     name;
+    private final Class<?>[] parameterTypes;
 
-    @Override
-    public String toString() {
-      return String.format("%s(%s)", this.name, Arrays.stream(this.parameterClasses).map(Class::getSimpleName).collect(joining(",")));
+    public Impl(String name, Class<?>[] parameterTypes) {
+      this.name = name;
+      this.parameterTypes = parameterTypes;
     }
 
     @Override
@@ -52,14 +35,25 @@ public interface MethodSignature extends MethodMatcher {
     }
 
     @Override
-    public Class<?>[] parameterClasses() {
-      return Arrays.copyOf(parameterClasses, parameterClasses.length);
+    public Class<?>[] parameterTypes() {
+      return Arrays.copyOf(this.parameterTypes, this.parameterTypes.length);
     }
 
     @Override
-    public boolean matches(com.github.dakusui.osynth2.core.MethodSignature m) {
-      Objects.requireNonNull(m);
-      return Objects.equals(this.name, m.name()) && Arrays.equals(this.parameterClasses, m.parameterClasses());
+    public int hashCode() {
+      return this.name.hashCode();
+    }
+    @Override
+    public boolean equals(Object anotherObject) {
+      if (!(anotherObject instanceof MethodSignature))
+        return false;
+      MethodSignature another = (MethodSignature) anotherObject;
+      return Objects.equals(this.name(), another.name()) && Arrays.equals(this.parameterTypes(), another.parameterTypes());
+    }
+
+    @Override
+    public String toString() {
+      return String.format("%s(%s)", this.name, Arrays.stream(this.parameterTypes).map(Class::getSimpleName).collect(joining(",")));
     }
   }
 }

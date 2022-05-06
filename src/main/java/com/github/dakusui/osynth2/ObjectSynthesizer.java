@@ -133,12 +133,12 @@ public class ObjectSynthesizer {
     return finalizedDescriptor.get() != null;
   }
 
-  public static MethodHandlerEntry.Builder method(String methodName, Class<?>... parameterTypes) {
-    return method(MethodSignature.create(methodName, parameterTypes));
+  public static MethodHandlerEntry.Builder methodCall(String methodName, Class<?>... parameterTypes) {
+    return methodCall(MethodSignature.create(methodName, parameterTypes));
   }
 
-  public static MethodHandlerEntry.Builder method(MethodMatcher matcher) {
-    return new MethodHandlerEntry.Builder().matcher(matcher);
+  public static MethodHandlerEntry.Builder methodCall(MethodSignature methodRequest) {
+    return new MethodHandlerEntry.Builder().handle(methodRequest);
   }
 
   private void finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
@@ -301,7 +301,7 @@ public class ObjectSynthesizer {
               methodHandlerEntry,
               RESERVED_METHOD_SIGNATURES
                   .stream()
-                  .filter(eachReservedMethodSignature -> methodHandlerEntry.matcher().matches(eachReservedMethodSignature))
+                  .filter((MethodSignature eachReservedMethodSignature) -> methodHandlerEntry.matcher().matches(eachReservedMethodSignature))
                   .collect(Collectors.toList())))
           .filter(reservedMethodViolation -> !reservedMethodViolation.violatedReservedMethods.isEmpty())
           .collect(Collectors.toList());

@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth.sandbox;
 
 import com.github.dakusui.osynth2.core.MethodHandler;
+import com.github.dakusui.osynth2.core.MethodMatcher;
 import com.github.dakusui.osynth2.core.MethodSignature;
 import com.github.dakusui.osynth2.core.utils.MethodUtils;
 import com.github.dakusui.osynth2.core.SynthesizedObject;

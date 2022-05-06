@@ -1,6 +1,5 @@
 package com.github.dakusui.osynth2.core.utils;
 
-import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.osynth2.core.MethodSignature;
 import com.github.dakusui.osynth2.core.SynthesizedObject;
 
