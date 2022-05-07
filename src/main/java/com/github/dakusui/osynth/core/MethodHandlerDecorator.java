@@ -1,10 +1,16 @@
 package com.github.dakusui.osynth.core;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
+
+import static com.github.dakusui.osynth.core.SynthesizedObject.BUILT_IN_METHODS;
+import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHODS;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * This interface is applied to a method handler right after it is figured out
@@ -16,12 +22,12 @@ import java.util.function.BiFunction;
  */
 public interface MethodHandlerDecorator extends BiFunction<Method, MethodHandler, MethodHandler> {
   MethodHandlerDecorator IDENTITY                       = (method, methodHandler) -> methodHandler;
-  Set<MethodSignature>   PASS_THROUGH_METHOD_SIGNATURES = new HashSet<MethodSignature>() {
+  Set<MethodSignature>   PASS_THROUGH_METHOD_SIGNATURES = unmodifiableSet(new HashSet<MethodSignature>() {
     {
-      this.addAll(SynthesizedObject.RESERVED_METHOD_SIGNATURES);
-      this.addAll(SynthesizedObject.BUILT_IN_METHOD_SIGNATURES);
+      this.addAll(RESERVED_METHODS.stream().map(MethodSignature::create).collect(toSet()));
+      this.addAll(BUILT_IN_METHODS.stream().map(MethodSignature::create).collect(toSet()));
     }
-  };
+  });
 
   default MethodHandlerDecorator compose(MethodHandlerDecorator before) {
     return (method, methodHandler) -> MethodHandlerDecorator.this.apply(method, before.apply(method, methodHandler));

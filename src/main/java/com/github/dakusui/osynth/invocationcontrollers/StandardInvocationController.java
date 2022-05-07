@@ -19,7 +19,7 @@ public class StandardInvocationController extends InvocationController.Base impl
   public MethodHandler figuredOutMethodHandlerFor(Method invokedMethod) {
     MethodSignature invokedMethodSignature = MethodSignature.create(invokedMethod);
     return this.descriptor().methodHandlerEntries().stream()
-        .filter(me -> me.matcher().matches(invokedMethodSignature))
+        .filter(me -> me.matcher().test(invokedMethod))
         .map(MethodHandlerEntry::handler)
         .findFirst()
         .orElseGet(() -> createMethodHandlerFromInterfaces(descriptor().interfaces(), invokedMethodSignature)

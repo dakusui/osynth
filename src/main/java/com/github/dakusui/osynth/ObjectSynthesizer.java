@@ -22,7 +22,7 @@ import static com.github.dakusui.osynth.ObjectSynthesizer.InternalUtils.reserved
 import static com.github.dakusui.osynth.ObjectSynthesizer.InternalUtils.validateValue;
 import static com.github.dakusui.osynth.annotations.BuiltInHandlerFactory.MethodHandlerFactory.createMethodHandlersForBuiltInMethods;
 import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPredefinedMethods;
-import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHOD_SIGNATURES;
+import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHODS;
 import static com.github.dakusui.osynth.core.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
 import static com.github.dakusui.pcond.Assertions.that;
@@ -35,18 +35,18 @@ import static com.github.dakusui.pcond.internals.InternalUtils.formatObject;
  * The main entry pont of the `osynth` object synthesizer library.
  */
 public class ObjectSynthesizer {
-  private static final Object DEFAULT_FALLBACK_OBJECT = new Object() {
+  private static final Object                                        DEFAULT_FALLBACK_OBJECT = new Object() {
     @Override
     public String toString() {
       return "autoCreated:<" + super.toString() + ">";
     }
   };
-  private final SynthesizedObject.Descriptor.Builder descriptorBuilder;
-  private       Validator                                     validator;
-  private       Preprocessor                                  preprocessor;
-  private       ClassLoader                                   classLoader;
-  private       InvocationControllerFactory                   invocationControllerFactory;
-  private final AtomicReference<SynthesizedObject.Descriptor> finalizedDescriptor = new AtomicReference<>(null);
+  private final        SynthesizedObject.Descriptor.Builder          descriptorBuilder;
+  private              Validator                                     validator;
+  private              Preprocessor                                  preprocessor;
+  private              ClassLoader                                   classLoader;
+  private              InvocationControllerFactory                   invocationControllerFactory;
+  private final        AtomicReference<SynthesizedObject.Descriptor> finalizedDescriptor     = new AtomicReference<>(null);
 
   public ObjectSynthesizer() {
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(DEFAULT_FALLBACK_OBJECT);
@@ -362,9 +362,10 @@ public class ObjectSynthesizer {
           .stream()
           .map((MethodHandlerEntry methodHandlerEntry) -> new ReservedMethodViolation(
               methodHandlerEntry,
-              RESERVED_METHOD_SIGNATURES
+              RESERVED_METHODS
                   .stream()
-                  .filter((MethodSignature eachReservedMethodSignature) -> methodHandlerEntry.matcher().matches(eachReservedMethodSignature))
+                  .filter(methodHandlerEntry.matcher())
+                  .map(MethodSignature::create)
                   .collect(Collectors.toList())))
           .filter(reservedMethodViolation -> !reservedMethodViolation.violatedReservedMethods.isEmpty())
           .collect(Collectors.toList());

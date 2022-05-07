@@ -5,8 +5,8 @@ import com.github.dakusui.osynth.annotations.ReservedByOSynth;
 import com.github.dakusui.osynth.core.utils.AssertionUtils;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.builtIndMethodSignatures;
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.reservedMethodSignatures;
@@ -17,8 +17,8 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toSet;
 
 public interface SynthesizedObject {
-  Set<MethodSignature> RESERVED_METHOD_SIGNATURES = reservedMethodSignatures();
-  Set<MethodSignature> BUILT_IN_METHOD_SIGNATURES = builtIndMethodSignatures();
+  Set<Method> RESERVED_METHODS = reservedMethodSignatures();
+  Set<Method> BUILT_IN_METHODS = builtIndMethodSignatures();
 
   @BuiltInHandlerFactory(BuiltInHandlerFactory.ForDescriptor.class)
   @ReservedByOSynth
@@ -51,18 +51,17 @@ public interface SynthesizedObject {
   enum InternalUtils {
     ;
 
-    static Set<MethodSignature> reservedMethodSignatures() {
+    static Set<Method> reservedMethodSignatures() {
       return methodsAnnotatedBy(ReservedByOSynth.class);
     }
 
-    static Set<MethodSignature> builtIndMethodSignatures() {
+    static Set<Method> builtIndMethodSignatures() {
       return methodsAnnotatedBy(BuiltInHandlerFactory.class);
     }
 
-    private static Set<MethodSignature> methodsAnnotatedBy(Class<? extends Annotation> annotationClass) {
+    private static Set<Method> methodsAnnotatedBy(Class<? extends Annotation> annotationClass) {
       return Arrays.stream(SynthesizedObject.class.getMethods())
           .filter(each -> each.isAnnotationPresent(annotationClass))
-          .map(MethodSignature::create)
           .collect(toSet());
     }
   }
