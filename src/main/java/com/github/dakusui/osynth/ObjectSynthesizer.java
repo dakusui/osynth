@@ -3,7 +3,6 @@ package com.github.dakusui.osynth;
 import com.github.dakusui.osynth.core.*;
 import com.github.dakusui.osynth.core.utils.AssertionUtils;
 import com.github.dakusui.osynth.exceptions.ValidationException;
-import com.github.dakusui.osynth.invocationcontrollers.MatchingBasedInvocationController;
 import com.github.dakusui.osynth.invocationcontrollers.StandardInvocationController;
 import com.github.dakusui.pcond.Validations;
 
@@ -52,7 +51,7 @@ public class ObjectSynthesizer {
   public ObjectSynthesizer() {
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(DEFAULT_FALLBACK_OBJECT);
     this.classLoader(this.getClass().getClassLoader())
-        .handleMethodCallsWithExactSignatures()
+        .handleMethodsWithSignatureMatching()
         .validateWith(Validator.DEFAULT)
         .preprocessWith(Preprocessor.DEFAULT)
         .disableMethodHandlerDecorator();
@@ -98,7 +97,7 @@ public class ObjectSynthesizer {
     return this;
   }
 
-  public ObjectSynthesizer includeInterfacesFrom() {
+  public ObjectSynthesizer includeInterfacesFromFallbackObject() {
     return this.preprocessWith(Preprocessor.sequence(this.preprocessor(), Preprocessor.INCLUDE_INTERFACES_FROM_FALLBACK));
   }
 
@@ -106,7 +105,7 @@ public class ObjectSynthesizer {
     return this.preprocessWith(Preprocessor.PASS_THROUGH);
   }
 
-  public ObjectSynthesizer createInvocationHandlerWith(InvocationControllerFactory factory) {
+  public ObjectSynthesizer createInvocationControllerWith(InvocationControllerFactory factory) {
     this.invocationControllerFactory = requireNonNull(factory);
     return this;
   }
@@ -158,11 +157,7 @@ public class ObjectSynthesizer {
   }
 
   public ObjectSynthesizer handleMethodsWithSignatureMatching() {
-    return this.createInvocationHandlerWith(objectSynthesizer -> new MatchingBasedInvocationController(objectSynthesizer.finalizedDescriptor()));
-  }
-
-  public ObjectSynthesizer handleMethodCallsWithExactSignatures() {
-    return this.createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationController(objectSynthesizer.finalizedDescriptor()));
+    return this.createInvocationControllerWith(objectSynthesizer -> new StandardInvocationController(objectSynthesizer.finalizedDescriptor()));
   }
 
   public SynthesizedObject synthesize(Object fallbackObject) {

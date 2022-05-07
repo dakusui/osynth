@@ -304,7 +304,7 @@ public class ObjectSynthesizerTest extends UtBase {
         .castTo(A.class);
     A aa = LegacyObjectSynthesizer.create(false)
         .handle(methodCall("aMethod").with((self, args) -> "Re-OverridingA was called"))
-        .includeInterfacesFrom()
+        .includeInterfacesFromFallbackObject()
         .fallbackTo(a)
         .synthesize()
         .castTo(A.class);

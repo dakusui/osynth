@@ -38,7 +38,7 @@ public class InterfaceInclusionTest extends UtBase {
   @Test
   public void givenInterfaceInclusionIsRequested$whenObjectIsCastToTestIF$thenSuccessfullyCast() {
     String out = new ObjectSynthesizer()
-        .includeInterfacesFrom()
+        .includeInterfacesFromFallbackObject()
         .synthesize((F) method -> "anon:F:<" + method + ">")
         .castTo(F.class)
         .fMethod("Hello");

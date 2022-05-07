@@ -15,12 +15,6 @@ public interface MethodMatcher {
   boolean matches(MethodSignature s);
 
   enum Factory {
-    /**
-     * It does not make sense to use a matcher created by this factory with
-     * {@link com.github.dakusui.osynth.invocationcontrollers.StandardInvocationController}.
-     * Because the controller searches for a custom method handler for an invoked
-     * method by "exact match", always.
-     */
     LENIENT {
       @Override
       MethodSignatureMatcher create(MethodSignature handlableMethod) {

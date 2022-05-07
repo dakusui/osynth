@@ -284,7 +284,7 @@
                 <executions>
                     <execution><!-- Remove diagram caches -->
                         <id>remove diag-*.png files</id>
-                        <phase>generate-sources</phase>
+                        <phase>clean</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -314,7 +314,7 @@
                     </execution>
                     <execution><!-- Run our version calculation script -->
                         <id>asciidoctor-diagram-installation</id>
-                        <phase>initialize</phase>
+                        <phase>package</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
@@ -335,6 +335,7 @@
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>

@@ -8,7 +8,7 @@ public class LegacyObjectSynthesizer extends com.github.dakusui.osynth.ObjectSyn
 
   public static LegacyObjectSynthesizer create(boolean b) {
     if (b)
-      return (LegacyObjectSynthesizer) new LegacyObjectSynthesizer().includeInterfacesFrom();
+      return (LegacyObjectSynthesizer) new LegacyObjectSynthesizer().includeInterfacesFromFallbackObject();
     else
       return new LegacyObjectSynthesizer();
   }
