@@ -84,7 +84,7 @@ Under the plugin configuration for `org.pitest:pitest-maven`, you can find a fol
 [source,xml]
 ----
     <targetClasses>
-        <param>com.github.dakusui.osynth2.*</param>
+        <param>com.github.dakusui.osynth.*</param>
     </targetClasses>
 ----
 [[pitest-maven-config]]
