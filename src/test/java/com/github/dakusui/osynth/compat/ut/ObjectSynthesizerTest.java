@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
@@ -251,6 +252,7 @@ public class ObjectSynthesizerTest extends UtBase {
     Object o = new Object();
     Object x1 = new ObjectSynthesizer().addInterface(A.class).fallbackObject(o).synthesize();
     Object x2 = new ObjectSynthesizer().addInterface(A.class).fallbackObject(o).synthesize();
+    System.out.println(Objects.equals(x1, x2));
     assertThat(
         x1,
         asBoolean(call("equals", x2).$()).isTrue().$()

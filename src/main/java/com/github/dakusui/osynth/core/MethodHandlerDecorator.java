@@ -2,6 +2,7 @@ package com.github.dakusui.osynth.core;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -31,11 +32,30 @@ public interface MethodHandlerDecorator extends BiFunction<Method, MethodHandler
   }
 
   static MethodHandlerDecorator filterPredefinedMethods(MethodHandlerDecorator decorator) {
-    return (method, methodHandler) -> {
-      if (isPassThroughMethod(method))
-        return methodHandler;
-      return decorator.apply(method, methodHandler);
-    };
+    class PredefinedMethodFilteringMethodHandlerDecorator implements MethodHandlerDecorator {
+      final MethodHandlerDecorator childDecorator = decorator;
+
+      @Override
+      public MethodHandler apply(Method method, MethodHandler methodHandler) {
+        if (isPassThroughMethod(method))
+          return methodHandler;
+        return decorator.apply(method, methodHandler);
+      }
+
+      public int hashCode() {
+        return decorator.hashCode();
+      }
+
+      public boolean equals(Object anotherObject) {
+        if (this == anotherObject)
+          return true;
+        if (!(anotherObject instanceof PredefinedMethodFilteringMethodHandlerDecorator))
+          return false;
+        PredefinedMethodFilteringMethodHandlerDecorator another = (PredefinedMethodFilteringMethodHandlerDecorator) anotherObject;
+        return Objects.equals(this.childDecorator, another.childDecorator);
+      }
+    }
+    return new PredefinedMethodFilteringMethodHandlerDecorator();
   }
 
   static boolean isPassThroughMethod(Method method) {

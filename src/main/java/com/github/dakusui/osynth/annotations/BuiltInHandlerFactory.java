@@ -5,6 +5,7 @@ import com.github.dakusui.osynth.core.*;
 import java.lang.annotation.Retention;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -44,7 +45,7 @@ public @interface BuiltInHandlerFactory {
 
   class ForToString implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
+    public MethodHandler.BuiltIn create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       return (synthesizedObject, objects) -> composeFormattedString(synthesizedObject);
     }
 
@@ -60,21 +61,28 @@ public @interface BuiltInHandlerFactory {
 
   class ForHashCode implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
-      return (synthesizedObject, objects) -> synthesizedObject.descriptor().fallbackObject().hashCode();
+    public MethodHandler.BuiltIn create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
+      return (synthesizedObject, objects) -> synthesizedObject.descriptor().hashCode();
     }
   }
 
   class ForEquals implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
-      return (synthesizedObject, objects) -> synthesizedObject == objects[0];
+    public MethodHandler.BuiltIn create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
+      return (synthesizedObject, objects) -> {
+        if (synthesizedObject == objects[0])
+          return true;
+        if (!(objects[0] instanceof SynthesizedObject))
+          return false;
+        SynthesizedObject another = (SynthesizedObject) objects[0];
+        return Objects.equals(synthesizedObject.descriptor(), another.descriptor());
+      };
     }
   }
 
   class ForDescriptor implements MethodHandlerFactory {
     @Override
-    public MethodHandler create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
+    public MethodHandler.BuiltIn create(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       return (synthesizedObject, objects) -> descriptorSupplier.get();
     }
   }

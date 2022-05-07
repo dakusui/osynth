@@ -6,6 +6,7 @@ import com.github.dakusui.osynth.core.utils.AssertionUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.builtIndMethodSignatures;
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.reservedMethodSignatures;
@@ -101,6 +102,34 @@ public interface SynthesizedObject {
 
     public List<MethodHandlerEntry> methodHandlerEntries() {
       return this.methodHandlers;
+    }
+
+    @Override
+    public int hashCode() {
+      return this.fallbackObject.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object anotherObject) {
+      if (this == anotherObject)
+        return true;
+      if (!(anotherObject instanceof Descriptor)) {
+        return false;
+      }
+      Descriptor another = (Descriptor) anotherObject;
+      Set<MethodHandlerEntry> collect = methodHandlers.stream()
+          .filter(each -> each.handler().isBuiltIn())
+          .collect(toSet());
+      Set<MethodHandlerEntry> collect1 = another.methodHandlers.stream()
+          .filter(each -> each.handler().isBuiltIn())
+          .collect(toSet());
+      return Objects.equals(fallbackObject, another.fallbackObject) &&
+          Objects.equals(methodHandlerDecorator, another.methodHandlerDecorator) &&
+          Objects.equals(interfaces, another.interfaces) &&
+          Objects.equals(
+              collect,
+              collect1
+              );
     }
 
     @Override

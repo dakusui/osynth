@@ -23,4 +23,15 @@ public interface MethodHandler {
    * @throws Throwable An exception thrown during the handling.
    */
   Object handle(SynthesizedObject synthesizedObject, Object[] args) throws Throwable;
+
+  default boolean isBuiltIn() {
+    return false;
+  }
+
+  interface BuiltIn extends MethodHandler {
+    @Override
+    default boolean isBuiltIn() {
+      return true;
+    }
+  }
 }
