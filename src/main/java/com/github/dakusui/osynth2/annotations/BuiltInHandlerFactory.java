@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth2.core.utils.AssertionUtils.methodIsAnnotationPresent;
@@ -15,6 +16,7 @@ import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.and;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.util.stream.Collectors.joining;
 
 @Retention(RUNTIME)
 public @interface BuiltInHandlerFactory {
@@ -48,7 +50,12 @@ public @interface BuiltInHandlerFactory {
     }
 
     private static String composeFormattedString(SynthesizedObject synthesizedObject) {
-      return String.format("osynth:%s", synthesizedObject.descriptor());
+      return String.format("osynth(%s):%s",
+          synthesizedObject.descriptor().interfaces()
+              .stream()
+              .map(Class::getSimpleName)
+              .collect(joining(",")),
+          synthesizedObject.descriptor());
     }
   }
 

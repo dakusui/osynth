@@ -16,7 +16,7 @@ public class MatchingBasedInvocationController extends InvocationController.Base
   }
 
   @Override
-  public MethodHandler figureOutMethodHandlerFor(Method invokedMethod) {
+  public MethodHandler figuredOutMethodHandlerFor(Method invokedMethod) {
     MethodSignature invokedMethodSignature = MethodSignature.create(invokedMethod);
     return this.descriptor().methodHandlerEntries().stream()
         .filter(me -> me.matcher().matches(invokedMethodSignature))

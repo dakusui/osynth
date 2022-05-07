@@ -9,21 +9,25 @@ import static com.github.dakusui.osynth2.core.utils.MethodUtils.execute;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.toEmptyArrayIfNull;
 
 public interface InvocationController extends InvocationHandler {
-
   Object[] EMPTY_ARGS = new Object[0];
 
   @Override
   default Object invoke(Object proxy, Method method, Object[] args) {
-    //assert that(proxy, and(isNotNull(), isInstanceOf(SynthesizedObject.class)));
     assert proxy instanceof SynthesizedObject;
     return execute(() -> methodHandlerFor(method).handle((SynthesizedObject) proxy, toEmptyArrayIfNull(args)));
   }
 
   default MethodHandler methodHandlerFor(Method method) {
-    return figureOutMethodHandlerFor(method);
+    return figuredOutMethodHandlerAndApplyDecorator(method);
   }
 
-  MethodHandler figureOutMethodHandlerFor(Method method);
+  default MethodHandler figuredOutMethodHandlerAndApplyDecorator(Method method) {
+    return descriptor()
+        .methodHandlerDecorator()
+        .apply(method, figuredOutMethodHandlerFor(method));
+  }
+
+  MethodHandler figuredOutMethodHandlerFor(Method invokedMethod);
 
   SynthesizedObject.Descriptor descriptor();
 
@@ -50,7 +54,7 @@ public interface InvocationController extends InvocationHandler {
     Map<Method, MethodHandler> cache();
 
     default MethodHandler methodHandlerFor(Method method) {
-      return cache().computeIfAbsent(method, this::figureOutMethodHandlerFor);
+      return cache().computeIfAbsent(method, this::figuredOutMethodHandlerAndApplyDecorator);
     }
   }
 
@@ -66,13 +70,4 @@ public interface InvocationController extends InvocationHandler {
       return this.descriptor;
     }
   }
-
-  class InvocationContext {
-    private Method onGoingMethod;
-
-    public Method onGoingMethod() {
-      return this.onGoingMethod;
-    }
-  }
-
 }

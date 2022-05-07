@@ -120,7 +120,7 @@ public class BasicTest extends UtBase {
     String output = object.castTo(A.class).toString();
     System.out.println(output);
     assertThat(output, allOf(
-        startsWith("osynth:"),
+        startsWith("osynth(A,"),
         containsString("fallback:"),
         containsString(fallbackObject.toString())
     ));
@@ -264,7 +264,7 @@ public class BasicTest extends UtBase {
       assertThat(output, allOf(
           containsString("bMethod(String)"),
           containsString("was not found in"),
-          containsString("'osynth:"),
+          containsString("'osynth(BB,"),
           containsString("methodHandlers=["),
           containsString(BB.class.getName())
       ));

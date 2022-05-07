@@ -6,7 +6,9 @@ import com.github.dakusui.osynth2.core.utils.AssertionUtils;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiFunction;
 
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
 import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlerFromInterfaces;
@@ -31,7 +33,7 @@ public class StandardInvocationController extends InvocationController.Base impl
             eachEntry.handler()));
   }
 
-  public MethodHandler figureOutMethodHandlerFor(Method invokedMethod) {
+  public MethodHandler figuredOutMethodHandlerFor(Method invokedMethod) {
     MethodHandler methodHandler;
     MethodSignature methodSignature = MethodSignature.create(invokedMethod);
     if (this.methodHandlerMap.containsKey(methodSignature))

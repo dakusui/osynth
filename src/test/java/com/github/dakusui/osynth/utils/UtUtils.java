@@ -1,12 +1,14 @@
 package com.github.dakusui.osynth.utils;
 
 
-
 import com.github.dakusui.thincrest_pcond.functions.Printable;
 import org.hamcrest.CoreMatchers;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 

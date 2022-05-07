@@ -1,30 +1,40 @@
 package com.github.dakusui.osynth2;
 
 import com.github.dakusui.osynth2.core.*;
-import com.github.dakusui.osynth2.invocationcontrollers.MatchingBasedInvocationController;
-import com.github.dakusui.osynth2.invocationcontrollers.StandardInvocationController;
 import com.github.dakusui.osynth2.core.utils.AssertionUtils;
 import com.github.dakusui.osynth2.exceptions.ValidationException;
+import com.github.dakusui.osynth2.invocationcontrollers.MatchingBasedInvocationController;
+import com.github.dakusui.osynth2.invocationcontrollers.StandardInvocationController;
 import com.github.dakusui.pcond.Validations;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.reservedMethodMisOverridings;
 import static com.github.dakusui.osynth2.ObjectSynthesizer.InternalUtils.validateValue;
+import static com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory.MethodHandlerFactory.createMethodHandlersForBuiltInMethods;
+import static com.github.dakusui.osynth2.core.MethodHandlerDecorator.filterPredefinedMethods;
 import static com.github.dakusui.osynth2.core.SynthesizedObject.RESERVED_METHOD_SIGNATURES;
 import static com.github.dakusui.osynth2.core.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth2.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
-import static com.github.dakusui.osynth2.annotations.BuiltInHandlerFactory.MethodHandlerFactory.createMethodHandlersForBuiltInMethods;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Postconditions.ensure;
 import static com.github.dakusui.pcond.Preconditions.*;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.pcond.internals.InternalUtils.formatObject;
 
+/**
+ * The main entry pont of the `osynth` object synthesizer library.
+ */
 public class ObjectSynthesizer {
   private final SynthesizedObject.Descriptor.Builder          descriptorBuilder;
   private       Validator                                     validator;
@@ -41,9 +51,10 @@ public class ObjectSynthesizer {
       }
     });
     this.classLoader(this.getClass().getClassLoader())
-        .handlingExact()
+        .handleMethodCallsWithExactSignatures()
         .validateWith(Validator.DEFAULT)
-        .preprocessWith(Preprocessor.DEFAULT);
+        .preprocessWith(Preprocessor.DEFAULT)
+        .disableMethodHandlerDecorator();
   }
 
   public ObjectSynthesizer addInterface(Class<?> interfaceClass) {
@@ -99,11 +110,57 @@ public class ObjectSynthesizer {
     return this;
   }
 
-  public ObjectSynthesizer handlingMatching() {
+  public ObjectSynthesizer methodHandlerDecorator(MethodHandlerDecorator methodHandlerDecorator) {
+    this.descriptorBuilder.methodHandlerDecorator(requireNonNull(methodHandlerDecorator));
+    return this;
+  }
+
+  public ObjectSynthesizer disableMethodHandlerDecorator() {
+    return this.methodHandlerDecorator(MethodHandlerDecorator.IDENTITY);
+  }
+
+  public ObjectSynthesizer enableAutoLogging() {
+    return enableAutoLoggingWritingTo(System.out::println);
+  }
+
+  /**
+   * Note that this method is using {@link this#defaultLogEntryPrinter(Consumer)},
+   * which is not meant for production usages.
+   * This method should also not be used in the production.
+   *
+   * @param out A consumer to which log records are sent.
+   * @return This object.
+   */
+  public ObjectSynthesizer enableAutoLoggingWritingTo(Consumer<String> out) {
+    return enableAutoLoggingWith(defaultLogEntryPrinter(out));
+  }
+
+  public ObjectSynthesizer enableAutoLoggingWith(AutoLogger autoLogger) {
+    return this.methodHandlerDecorator(AutoLogger.create(autoLogger));
+  }
+
+  /**
+   * Note that the {@link AutoLogger} instance returned by this method is meant
+   * only for demonstrating how the feature works, not for real-production usage.
+   *
+   * @param out A consumer log records sent to.
+   * @return A default log entry printer instance.
+   */
+  static AutoLogger defaultLogEntryPrinter(Consumer<String> out) {
+    return entry -> {
+      out.accept(InternalUtils.formatLogEntry(entry));
+      if (entry.type() == AutoLogger.Entry.Type.EXCEPTION) {
+        assert entry.value() instanceof Throwable;
+        ((Throwable) entry.value()).printStackTrace(InternalUtils.toPrintStream(out));
+      }
+    };
+  }
+
+  public ObjectSynthesizer handleMethodsWithSignatureMatching() {
     return this.createInvocationHandlerWith(objectSynthesizer -> new MatchingBasedInvocationController(objectSynthesizer.finalizedDescriptor()));
   }
 
-  public ObjectSynthesizer handlingExact() {
+  public ObjectSynthesizer handleMethodCallsWithExactSignatures() {
     return this.createInvocationHandlerWith(objectSynthesizer -> new StandardInvocationController(objectSynthesizer.finalizedDescriptor()));
   }
 
@@ -112,7 +169,12 @@ public class ObjectSynthesizer {
   }
 
   public SynthesizedObject synthesize() {
-    finalizeDescriptor(preprocessDescriptor(validateDescriptor(this.descriptorBuilder.build())));
+    finalizeDescriptor(
+        preprocessDescriptor(
+            validateDescriptor(
+                this.descriptorBuilder.methodHandlerDecorator(
+                        filterPredefinedMethods(this.descriptorBuilder.methodHandlerDecorator()))
+                    .build())));
     return (SynthesizedObject) InternalUtils.createProxy(this);
   }
 
@@ -122,6 +184,10 @@ public class ObjectSynthesizer {
 
   public Validator validator() {
     return this.validator;
+  }
+
+  public MethodHandlerDecorator methodHandlerDecorator() {
+    return this.descriptorBuilder.methodHandlerDecorator();
   }
 
   public SynthesizedObject.Descriptor finalizedDescriptor() {
@@ -251,6 +317,11 @@ public class ObjectSynthesizer {
 
     Preprocessor PASS_THROUGH = toNamed("passThrough", (objectSynthesizer, descriptor) -> descriptor);
 
+
+    SynthesizedObject.Descriptor apply(
+        ObjectSynthesizer objectSynthesizer,
+        SynthesizedObject.Descriptor descriptor);
+
     static Preprocessor sequence(Preprocessor... preprocessors) {
       return toNamed("preprocessorSequence:" + Arrays.toString(preprocessors), (objectSynthesizer, descriptor) -> {
         SynthesizedObject.Descriptor ret = descriptor;
@@ -260,10 +331,6 @@ public class ObjectSynthesizer {
         return ret;
       });
     }
-
-    SynthesizedObject.Descriptor apply(
-        ObjectSynthesizer objectSynthesizer,
-        SynthesizedObject.Descriptor descriptor);
 
     static Preprocessor toNamed(String name, Preprocessor preprocessor) {
       require(name, isNotNull());
@@ -315,6 +382,46 @@ public class ObjectSynthesizer {
             throw new ValidationException(s);
           }
       );
+    }
+
+    private static String formatLogEntry(AutoLogger.Entry logEntry) {
+      String valueType = logEntry.type().outputValueLabel();
+
+      return String.format(
+          "%-10s class:<%s> method:<%s> object:<%10s>  %s:<%s>",
+          logEntry.type() + ":",
+          logEntry.method().getDeclaringClass().getSimpleName(),
+          MethodSignature.create(logEntry.method()),
+          formatObject(logEntry.object(), 20),
+          valueType,
+          formatObject(logEntry.value(), 80));
+    }
+
+    private static PrintStream toPrintStream(Consumer<String> out) {
+      return new PrintStream(new OutputStream() {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final char LINE_SEPARATOR_CHAR = String.format("%n").charAt(0);
+
+        @Override
+        public void write(int b) {
+          if (b == LINE_SEPARATOR_CHAR) {
+            lineBreak();
+          } else {
+            bos.write(b);
+          }
+        }
+
+        private void lineBreak() {
+          out.accept(bos.toString());
+          bos.reset();
+        }
+
+        @Override
+        public void close() throws IOException {
+          super.close();
+          lineBreak();
+        }
+      });
     }
 
     static class ReservedMethodViolation {
