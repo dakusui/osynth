@@ -37,7 +37,7 @@ public class AutoLoggingTest extends UtBase {
   public void enableAutoLogging() {
     A aobj = new ObjectSynthesizer()
         .handle(methodCall("aMethod").with((synthesizedObject, args) -> "handler:aMethod"))
-        .fallbackObject(newObjectImplementingAForFallback())
+        .fallbackTo(newObjectImplementingAForFallback())
         .enableAutoLogging()
         .addInterface(A.class)
         .synthesize()
@@ -67,7 +67,7 @@ public class AutoLoggingTest extends UtBase {
   public void disableAutoLogging() {
     A aobj = new ObjectSynthesizer()
         .handle(methodCall("aMethod").with((synthesizedObject, args) -> "handler:aMethod"))
-        .fallbackObject(newObjectImplementingAForFallback())
+        .fallbackTo(newObjectImplementingAForFallback())
         .disableMethodHandlerDecorator()
         .addInterface(A.class)
         .synthesize()

@@ -39,7 +39,7 @@ public class Examples {
   public void example2() {
     HelloWorld helloWorld = ObjectSynthesizer.create(false)
         .addInterface(HelloWorld.class)
-        .fallbackObject((HelloWorld) () -> "Bye.")
+        .fallbackTo((HelloWorld) () -> "Bye.")
         .synthesize()
         .castTo(HelloWorld.class);
     System.out.println(helloWorld.hello("world"));
@@ -49,7 +49,7 @@ public class Examples {
   @Test
   public void example3() {
     HelloWorld helloWorld = ObjectSynthesizer.create(true)
-        .fallbackObject((HelloWorld) () -> "Bye.")
+        .fallbackTo((HelloWorld) () -> "Bye.")
         .synthesize()
         .castTo(HelloWorld.class);
     System.out.println(helloWorld.hello("world"));
@@ -59,7 +59,7 @@ public class Examples {
   @Test
   public void example4() {
     HelloWorld helloWorld = ObjectSynthesizer.create(true)
-        .fallbackObject((HelloWorld) () -> "Bye.")
+        .fallbackTo((HelloWorld) () -> "Bye.")
         .synthesize()
         .castTo(HelloWorld.class);
     System.out.println(helloWorld.hello("world"));
@@ -71,7 +71,7 @@ public class Examples {
     Hello hello = new ObjectSynthesizer()
         .addInterface(Hello.class)
         .addInterface(Bye.class)
-        .fallbackObject((HelloWorld) () -> "Bye.")
+        .fallbackTo((HelloWorld) () -> "Bye.")
         .synthesize()
         .castTo(HelloWorld.class);
     Bye bye = (Bye) hello;

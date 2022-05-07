@@ -20,7 +20,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
         .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);
@@ -35,7 +35,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
         .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     String output1 = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output1);
@@ -67,7 +67,7 @@ public class BasicTest extends UtBase {
           throw new TestRuntimeException(
               "customMethodHandler:<" + args[0] + ">");
         }))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     try {
       String output = object.castTo(A.class).aMethod("Hello!");
@@ -95,7 +95,7 @@ public class BasicTest extends UtBase {
           throw new TestCheckedException(
               "customMethodHandler:<" + args[0] + ">");
         }))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     try {
       String output = object.castTo(A.class).aMethod("Hello!");
@@ -115,7 +115,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
         .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "customMethodHandler:<" + args[0] + ">"))
-        .fallbackObject(fallbackObject)
+        .fallbackTo(fallbackObject)
         .synthesize();
     String output = object.castTo(A.class).toString();
     System.out.println(output);
@@ -137,7 +137,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(B.class)
         .handle(methodCall("bMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for bMethod:<" + args[0] + ">"))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
     System.out.println(output);
@@ -153,7 +153,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(B.class)
         .handle(methodCall("aMethod", String.class).with((synthesizedObject, args) -> "overridden by methodHandler for aMethod:<" + args[0] + ">"))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
     System.out.println(output);
@@ -180,7 +180,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
         .addInterface(B.class)
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     String output = object.castTo(B.class).bMethod("Hello!");
     System.out.println(output);
@@ -196,7 +196,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
         .addInterface(B.class)
-        .fallbackObject(new C())
+        .fallbackTo(new C())
         .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);
@@ -213,7 +213,7 @@ public class BasicTest extends UtBase {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(A.class)
         .addInterface(B.class)
-        .fallbackObject(new B() {
+        .fallbackTo(new B() {
         })
         .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
@@ -234,7 +234,7 @@ public class BasicTest extends UtBase {
   public void testFallbackObject$whenMethodWithDefaultImplementationIsOverriddenWithoutDefaultImplementation$methodInFallbackIsPickedUp() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(BB.class)
-        .fallbackObject(new B() {
+        .fallbackTo(new B() {
           @Override
           public String bMethod(String message) {
             return "fallback bMethod: <" + message + ">";
@@ -254,7 +254,7 @@ public class BasicTest extends UtBase {
   public void testFallbackObject$whenImplementationIsOverriddenWithoutDefaultImplementation$methodInFallbackIsPickedUpAndUnsupportedOperationThrown() {
     SynthesizedObject object = new ObjectSynthesizer()
         .addInterface(BB.class)
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     try {
       object.castTo(B.class).bMethod("Hello!");

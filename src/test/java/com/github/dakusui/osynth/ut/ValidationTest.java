@@ -3,6 +3,7 @@ package com.github.dakusui.osynth.ut;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandler;
+import com.github.dakusui.osynth.core.MethodHandlerDecorator;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.exceptions.ValidationException;
 import org.junit.Test;
@@ -20,7 +21,7 @@ public class ValidationTest extends UtBase {
   public void givenValidationDisabled$whenReservedMethodTriedOverridden$thenNoExceptionThrown() {
     SynthesizedObject synthesizedObject = new ObjectSynthesizer()
         .disableValidation()
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .handle(methodCall("descriptor")
             .with(createNewDescriptorReturningHandler())).synthesize();
     System.out.println(synthesizedObject.descriptor());
@@ -30,7 +31,7 @@ public class ValidationTest extends UtBase {
   public void givenValidationLeftDefault$whenOneReservedMethodTriedOverridden$thenExceptionThrown() {
     try {
       SynthesizedObject synthesizedObject = new ObjectSynthesizer()
-          .fallbackObject(new Object())
+          .fallbackTo(new Object())
           .handle(methodCall("descriptor").with(createNewDescriptorReturningHandler()))
           .synthesize();
       System.out.println(synthesizedObject);
@@ -48,7 +49,7 @@ public class ValidationTest extends UtBase {
   public void givenValidationLeftDefault$whenTwoReservedMethodsTriedOverridden$thenExceptionThrown() {
     try {
       SynthesizedObject synthesizedObject = new ObjectSynthesizer()
-          .fallbackObject(new Object())
+          .fallbackTo(new Object())
           .handle(methodCall("descriptor").with(createNewDescriptorReturningHandler()))
           .handle(methodCall("castTo", Class.class).with(createNewDescriptorReturningHandler()))
           .synthesize();
@@ -67,7 +68,7 @@ public class ValidationTest extends UtBase {
   public void givenDuplicationCheckEnabled$whenSameIFRegisteredTwice$thenExceptionThrown() {
     try {
       SynthesizedObject synthesizedObject = new ObjectSynthesizer()
-          .fallbackObject(new Object())
+          .fallbackTo(new Object())
           .enableDuplicatedInterfaceCheck()
           .addInterface(Serializable.class)
           .addInterface(Serializable.class)
@@ -88,6 +89,7 @@ public class ValidationTest extends UtBase {
   private static MethodHandler createNewDescriptorReturningHandler() {
     return (sobj, objects) -> new SynthesizedObject.Descriptor.Builder()
         .fallbackObject(new Object())
+        .methodHandlerDecorator(MethodHandlerDecorator.IDENTITY)
         .build();
   }
 

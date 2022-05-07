@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import static com.github.dakusui.osynth.ObjectSynthesizer.InternalUtils.reservedMethodMisOverridings;
 import static com.github.dakusui.osynth.ObjectSynthesizer.InternalUtils.validateValue;
 import static com.github.dakusui.osynth.annotations.BuiltInHandlerFactory.MethodHandlerFactory.createMethodHandlersForBuiltInMethods;
-import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterPredefinedMethods;
+import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPredefinedMethods;
 import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHOD_SIGNATURES;
 import static com.github.dakusui.osynth.core.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
@@ -36,7 +36,13 @@ import static com.github.dakusui.pcond.internals.InternalUtils.formatObject;
  * The main entry pont of the `osynth` object synthesizer library.
  */
 public class ObjectSynthesizer {
-  private final SynthesizedObject.Descriptor.Builder          descriptorBuilder;
+  private static final Object DEFAULT_FALLBACK_OBJECT = new Object() {
+    @Override
+    public String toString() {
+      return "autoCreated:<" + super.toString() + ">";
+    }
+  };
+  private final SynthesizedObject.Descriptor.Builder descriptorBuilder;
   private       Validator                                     validator;
   private       Preprocessor                                  preprocessor;
   private       ClassLoader                                   classLoader;
@@ -44,12 +50,7 @@ public class ObjectSynthesizer {
   private final AtomicReference<SynthesizedObject.Descriptor> finalizedDescriptor = new AtomicReference<>(null);
 
   public ObjectSynthesizer() {
-    this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(new Object() {
-      @Override
-      public String toString() {
-        return "autoCreated:" + super.toString();
-      }
-    });
+    this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(DEFAULT_FALLBACK_OBJECT);
     this.classLoader(this.getClass().getClassLoader())
         .handleMethodCallsWithExactSignatures()
         .validateWith(Validator.DEFAULT)
@@ -67,7 +68,7 @@ public class ObjectSynthesizer {
     return this;
   }
 
-  public ObjectSynthesizer fallbackObject(Object fallbackObject) {
+  public ObjectSynthesizer fallbackTo(Object fallbackObject) {
     this.descriptorBuilder.fallbackObject(fallbackObject);
     return this;
   }
@@ -165,7 +166,7 @@ public class ObjectSynthesizer {
   }
 
   public SynthesizedObject synthesize(Object fallbackObject) {
-    return this.fallbackObject(fallbackObject).synthesize();
+    return this.fallbackTo(fallbackObject).synthesize();
   }
 
   public SynthesizedObject synthesize() {
@@ -173,7 +174,7 @@ public class ObjectSynthesizer {
         preprocessDescriptor(
             validateDescriptor(
                 this.descriptorBuilder.methodHandlerDecorator(
-                        filterPredefinedMethods(this.descriptorBuilder.methodHandlerDecorator()))
+                        filterOutPredefinedMethods(this.descriptorBuilder.methodHandlerDecorator()))
                     .build())));
     return (SynthesizedObject) InternalUtils.createProxy(this);
   }

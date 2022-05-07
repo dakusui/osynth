@@ -93,7 +93,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     X x = new SimpleObjectSynthesizer<>(X.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackObject(handlerObject)
+        .fallbackTo(handlerObject)
         .synthesize()
         .castTo(X.class);
     assertThat(
@@ -101,7 +101,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
         allOf(
             asString("aMethod").equalTo("a is called").$(),
             asString("bMethod").equalTo("b is called").$(),
-            asString("toString").startsWith("proxy:osynth:").$(),
+            asString("toString").startsWith("osynth(X,Synth").$(),
             asString("cMethod").equalTo("cMethod").$(),
             asString("xMethod").equalTo("xMethod").$(),
             asInteger(call("xMethod").andThen("toString").andThen("length").$()).equalTo(7).$()
@@ -113,7 +113,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     X x = SimpleObjectSynthesizer.create(X.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackObject(handlerObject)
+        .fallbackTo(handlerObject)
         .synthesize()
         .castTo(X.class);
         assertThat(
@@ -127,7 +127,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     X x = SimpleObjectSynthesizer.create(X.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackObject(handlerObject)
+        .fallbackTo(handlerObject)
         .synthesize()
         .castTo(X.class);
     assertThat(
@@ -141,7 +141,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     Y y = SimpleObjectSynthesizer.create(Y.class)
         .handle(methodCall("aMethod").with((self, args) -> "a is called"))
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .fallbackObject(handlerObject)
+        .fallbackTo(handlerObject)
         .synthesize()
         .castTo(Y.class);
     assertThat(
@@ -162,7 +162,7 @@ public class SimpleObjectSynthesizerTest extends UtBase {
   }
 
   private static <T> T createProxyFor(@SuppressWarnings("SameParameterValue") Class<T> klass, T obj) {
-    return SimpleObjectSynthesizer.create(klass).fallbackObject(obj).synthesize(klass).castTo(klass);
+    return SimpleObjectSynthesizer.create(klass).fallbackTo(obj).synthesize(klass).castTo(klass);
   }
 
   private Y createY() {

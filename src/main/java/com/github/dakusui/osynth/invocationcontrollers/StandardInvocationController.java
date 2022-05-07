@@ -5,7 +5,9 @@ import com.github.dakusui.osynth.core.utils.AssertionUtils;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static com.github.dakusui.osynth.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
 import static com.github.dakusui.osynth.core.utils.MethodUtils.createMethodHandlerFromInterfaces;
@@ -24,7 +26,12 @@ public class StandardInvocationController extends InvocationController.Base impl
             .andThen(AssertionUtils.methodHandlerEntryStreamToMethodMatcherStream()))
             .check(allMatch(isInstanceOf(MethodMatcher.MethodSignatureMatcher.class))));
     this.methodHandlerMap = new HashMap<>();
-    this.descriptor().methodHandlerEntries()
+    // Put the entries in the reverse order in order to more prioritize an entry
+    // comes earlier than the one comes later.
+    MethodHandlerEntry[] methodHandlerEntries = this.descriptor().methodHandlerEntries().toArray(new MethodHandlerEntry[0]);
+    IntStream.range(0, methodHandlerEntries.length)
+        .map(i -> methodHandlerEntries.length - (i + 1))
+        .mapToObj(i -> methodHandlerEntries[i])
         .forEach(eachEntry -> methodHandlerMap.put(
             ((MethodMatcher.MethodSignatureMatcher) eachEntry.matcher()).handlableMethod(),
             eachEntry.handler()));

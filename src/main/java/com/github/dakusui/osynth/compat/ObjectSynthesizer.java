@@ -7,6 +7,9 @@ public class ObjectSynthesizer extends com.github.dakusui.osynth.ObjectSynthesiz
   }
 
   public static ObjectSynthesizer create(boolean b) {
-    return new ObjectSynthesizer();
+    if (b)
+      return (ObjectSynthesizer) new ObjectSynthesizer().includeInterfacesFrom();
+    else
+      return new ObjectSynthesizer();
   }
 }

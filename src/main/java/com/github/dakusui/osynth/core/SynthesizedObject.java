@@ -129,7 +129,7 @@ public interface SynthesizedObject {
           Objects.equals(
               collect,
               collect1
-              );
+          );
     }
 
     @Override

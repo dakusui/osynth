@@ -22,6 +22,7 @@ public class DefaultMethodToDefaultMethodCallTest {
     }
   }
 
+  @SuppressWarnings("NewClassNamingConvention")
   public static class GivenHandlerObjectImplementingTestInterfaceAndMethodHandlerForCalleeMethod extends UtBase {
     /**
      * This is a test for counter intuitive behavior.
@@ -40,9 +41,9 @@ public class DefaultMethodToDefaultMethodCallTest {
         }
       };
       TestInterface i = ObjectSynthesizer.create(false)
-          .fallbackObject(handlerObject)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
+          .fallbackTo(handlerObject)
           .synthesize()
           .castTo(TestInterface.class);
       int result = i.caller();
@@ -53,13 +54,13 @@ public class DefaultMethodToDefaultMethodCallTest {
       System.out.println(handlerObject.getClass().getMethod("caller"));
       System.out.println(handlerObject.getClass().getMethod("caller").isSynthetic());
       System.out.println(handlerObject.getClass().getMethod("caller").isDefault());
-      assertThat(result, asInteger().equalTo(-100).$());
+      assertThat(result, asInteger().equalTo(100).$());
     }
 
     @Test
     public void whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() {
       TestInterface i = ObjectSynthesizer.create(false)
-          .fallbackObject(new TestInterface() {
+          .fallbackTo(new TestInterface() {
             @Override
             public int caller() {
               return -100;
@@ -73,13 +74,15 @@ public class DefaultMethodToDefaultMethodCallTest {
     }
   }
 
-  public static class GivenSimpleHandlerObjectOverridingCalleeMethod extends UtBase {
+  @SuppressWarnings("NewClassNamingConvention")
+  public static class GivenFallbackObjectOverridingCalleeMethod extends UtBase {
     @Test
-    public void whenCallerMethodIsInvoked$thenCalleeInHandlerObjectIsRun() {
+    public void whenCallerMethodIsInvoked$thenCalleeInInterfaceDefaultIsRun() {
       TestInterface i = ObjectSynthesizer.create(false)
-          .fallbackObject(new Object() {
+          .addInterface(TestInterface.class)
+          .fallbackTo(new Object() {
             /**
-             * Even a compiler doesn't its usage, this method is called through the ObjectSynthesizer.
+             * Even a compiler doesn't detect its usage, this method is called through the ObjectSynthesizer.
              * @return -99
              */
             @SuppressWarnings("unused")
@@ -87,15 +90,15 @@ public class DefaultMethodToDefaultMethodCallTest {
               return -99;
             }
           })
-          .addInterface(TestInterface.class)
           .synthesize()
           .castTo(TestInterface.class);
       int result = i.caller();
       System.out.println(result);
-      assertThat(result, asInteger().equalTo(-99).$());
+      assertThat(result, asInteger().equalTo(1).$());
     }
   }
 
+  @SuppressWarnings("NewClassNamingConvention")
   public static class GivenNoHandlerObjectAndMethodHandlerForCalleeMethod extends UtBase {
     @Test
     public void whenCallerMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() throws NoSuchMethodException {

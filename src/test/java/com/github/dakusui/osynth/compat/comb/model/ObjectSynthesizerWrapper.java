@@ -49,7 +49,7 @@ public class ObjectSynthesizerWrapper {
   public ObjectSynthesizerWrapper addHandlerObjects(TargetMethodDef targetMethodDef, int numHandlerObjects) {
     List<?> handlerObjects = targetMethodDef.getMethodType().handlerObjects(targetMethodDef.getExceptionType());
     for (int i = 0; i < numHandlerObjects; i++)
-      requireNonNull(objectSynthesizer.fallbackObject(handlerObjects.get(i)));
+      requireNonNull(objectSynthesizer.fallbackTo(handlerObjects.get(i)));
     return this;
   }
 
@@ -70,7 +70,7 @@ public class ObjectSynthesizerWrapper {
   private static void example() {
     Object obj = new ObjectSynthesizer()
         .handle(ObjectSynthesizerWrapper.createMethodHandler(1, MethodType.NORMAL, null))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .addInterface(I1N.class)
         .addInterface(I2N.class)
         .synthesize();

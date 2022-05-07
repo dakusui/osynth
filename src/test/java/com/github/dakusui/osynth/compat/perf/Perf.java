@@ -82,7 +82,7 @@ public class Perf extends UtBase {
   Acc synthesizeObjectWithHandlerObject() {
     return new ObjectSynthesizer()
         .addInterface(Acc.class)
-        .fallbackObject((Acc) value -> value + 1)
+        .fallbackTo((Acc) value -> value + 1)
         .synthesize()
         .castTo(Acc.class);
   }

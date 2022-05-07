@@ -31,8 +31,8 @@ public interface MethodHandlerDecorator extends BiFunction<Method, MethodHandler
     return (method, methodHandler) -> after.apply(method, MethodHandlerDecorator.this.apply(method, methodHandler));
   }
 
-  static MethodHandlerDecorator filterPredefinedMethods(MethodHandlerDecorator decorator) {
-    class PredefinedMethodFilteringMethodHandlerDecorator implements MethodHandlerDecorator {
+  static MethodHandlerDecorator filterOutPredefinedMethods(MethodHandlerDecorator decorator) {
+    class PredefinedMethodFilteringOutMethodHandlerDecorator implements MethodHandlerDecorator {
       final MethodHandlerDecorator childDecorator = decorator;
 
       @Override
@@ -43,19 +43,19 @@ public interface MethodHandlerDecorator extends BiFunction<Method, MethodHandler
       }
 
       public int hashCode() {
-        return decorator.hashCode();
+        return this.childDecorator.hashCode();
       }
 
       public boolean equals(Object anotherObject) {
         if (this == anotherObject)
           return true;
-        if (!(anotherObject instanceof PredefinedMethodFilteringMethodHandlerDecorator))
+        if (!(anotherObject instanceof PredefinedMethodFilteringOutMethodHandlerDecorator))
           return false;
-        PredefinedMethodFilteringMethodHandlerDecorator another = (PredefinedMethodFilteringMethodHandlerDecorator) anotherObject;
+        PredefinedMethodFilteringOutMethodHandlerDecorator another = (PredefinedMethodFilteringOutMethodHandlerDecorator) anotherObject;
         return Objects.equals(this.childDecorator, another.childDecorator);
       }
     }
-    return new PredefinedMethodFilteringMethodHandlerDecorator();
+    return new PredefinedMethodFilteringOutMethodHandlerDecorator();
   }
 
   static boolean isPassThroughMethod(Method method) {

@@ -21,7 +21,7 @@ public class VariationTest {
         .handle(methodCall("aMethod", String.class)
             .with((synthesizedObject, args) ->
                 args[0] + ":" + synthesizedObject.descriptor().toString()))
-        .fallbackObject(new Object())
+        .fallbackTo(new Object())
         .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);

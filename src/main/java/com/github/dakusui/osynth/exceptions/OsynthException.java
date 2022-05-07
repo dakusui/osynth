@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public class OsynthException extends RuntimeException {
   public OsynthException(Throwable e) {
-    super(e.getCause());
+    super(e);
   }
 
   public OsynthException(String message) {
