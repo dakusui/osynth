@@ -4,6 +4,7 @@ import com.github.dakusui.osynth.compat.ObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import com.github.dakusui.osynth.compat.utils.UtUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.util.List;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
+import static org.junit.Assert.assertNotNull;
 
 public class ObjectSynthesizerTest extends UtBase {
   interface A {
@@ -55,8 +57,8 @@ public class ObjectSynthesizerTest extends UtBase {
         ));
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void givenNoHandlerForMethodInB$whenMethodInBCalled$thenIllegalArgumentExceptionThrown() {
+  @Test(expected = UnsupportedOperationException.class)
+  public void givenNoHandlerForMethodInB$whenMethodInBCalled$thenUnsupportedOperationException() {
     B x = new ObjectSynthesizer()
         .addInterface(A.class)
         .addInterface(B.class)
@@ -65,17 +67,20 @@ public class ObjectSynthesizerTest extends UtBase {
         .castTo(B.class);
     try {
       System.out.println(x.bMethod());
-    } catch (IllegalArgumentException e) {
+    } catch (UnsupportedOperationException e) {
+      e.printStackTrace();
       // No appropriate handler for the requested method:'public abstract java.lang.String com.github.dakusui.osynth.ut.ObjectSynthesizerTest$B.bMethod()' was found in fallback object:'[java.lang.Object@39ba5a14]'
       assertThat(
           e,
           asString(call("getMessage").$())
               .check(
-                  substringAfterRegex("No appropriate handler")
-                      .after("ObjectSynthesizerTest\\$B")
-                      .after("bMethod")
-                      .after("was found in fallback object")
-                      .after("java.lang.Object")
+                  substringAfterRegex("An appropriate method")
+                      .after("handler")
+                      .after("implementation")
+                      .after("for")
+                      .after("bMethod\\(\\)")
+                      .after("was not found in")
+                      .after("osynth\\(A,B,SynthesizedObject")
                       .$(),
                   UtUtils.nonEmptyString())
               .containsString("bMethod").$());
@@ -84,7 +89,7 @@ public class ObjectSynthesizerTest extends UtBase {
   }
 
   @Test(expected = AssertionInCatchClauseFinished.class)
-  public void whenSynthesizedWithUnregisteredInterface$thenIllegalArgumentExceptionThrown() {
+  public void whenSynthesizedWithUnregisteredInterface$thenClassCastExceptionThrown() {
     try {
       Serializable x = new ObjectSynthesizer()
           .addInterface(A.class)
@@ -93,20 +98,18 @@ public class ObjectSynthesizerTest extends UtBase {
           .synthesize()
           .castTo(Serializable.class);
       System.out.println(x);
-    } catch (IllegalArgumentException e) {
+    } catch (ClassCastException e) {
       e.printStackTrace();
       assertThat(
           e,
           asString(call("getMessage").$())
               .check(
-                  substringAfterRegex("value:")
+                  substringAfterRegex("Tried to cast to")
                       .after(Serializable.class.getName())
-                      .after("violated")
-                      .after("isEqualTo\\[class java.lang.Object\\]")
-                      .after("isInterface")
-                      .after(A.class.getSimpleName())
-                      .after(B.class.getSimpleName())
-                      .after("isAssignableFrom")
+                      .after("but available interfaces are only")
+                      .after("A,")
+                      .after("B,")
+                      .after("SynthesizedObject")
                       .$(),
                   UtUtils.nonEmptyString())
               .$());
@@ -141,29 +144,15 @@ public class ObjectSynthesizerTest extends UtBase {
     assertThat(x.apply("hello"), asString().equalTo("hello").$());
   }
 */
+
   /**
    * Passes on JDK8
    */
-  @Test(expected = AssertionInCatchClauseFinished.class)
-  public void givenCoreInterface$whenSynthesized$thenFail() {
-    try {
-      System.out.println(new ObjectSynthesizer().addInterface(Serializable.class).fallbackObject(new Object()).<Object>synthesize());
-    } catch (RuntimeException e) {
-      assertThat(
-          e,
-          allOf(
-              asString(call("getMessage").$())
-                  .startsWith("Failed to create a method handles lookup")
-                  .containsString(Serializable.class.getCanonicalName())
-                  .containsString("prohibited")
-                  .$(),
-              asObject(call(UtUtils.class, "rootCause", e).$())
-                  .isInstanceOf(IllegalArgumentException.class)
-                  .$()
-          )
-      );
-      AssertionInCatchClauseFinished.assertionInCatchClauseFinished();
-    }
+  @Test
+  public void givenCoreInterface$whenSynthesized$thenPass() {
+    Object out = new ObjectSynthesizer().addInterface(Serializable.class).fallbackObject(new Object()).synthesize();
+    System.out.println(out);
+    assertNotNull(out);
   }
 
   @Test(expected = AssertionInCatchClauseFinished.class)
@@ -196,6 +185,11 @@ public class ObjectSynthesizerTest extends UtBase {
         .eMethod();
   }
 
+  /**
+   * Now, only one fallback is allowed.
+   */
+  @ReleaseNote
+  @Ignore
   @Test
   public void givenMultipleHandlerObjects$whenMethodsRun$thenMethodsOnHandlerObjectsCalled() {
     Object x = new ObjectSynthesizer().addInterface(A.class)
@@ -231,6 +225,11 @@ public class ObjectSynthesizerTest extends UtBase {
     );
   }
 
+  /**
+   * See also: givenSynthesizedObjectsFromTheSameDefinitions$whenEquals$thenTrue
+   */
+  @Ignore
+  @ReleaseNote
   @Test
   public void givenEmptySynthesizedObjects$whenEquals$thenTrue() {
     Object x1 = new ObjectSynthesizer().addInterface(A.class).synthesize();
@@ -241,6 +240,12 @@ public class ObjectSynthesizerTest extends UtBase {
     );
   }
 
+  /**
+   * Perhaps, I should fix this test.
+   * We would be able to implement equals/hash based on the equal-ness of descriptors.
+   */
+  @ReleaseNote
+  @Ignore
   @Test
   public void givenSynthesizedObjectsFromTheSameDefinitions$whenEquals$thenTrue() {
     Object o = new Object();
@@ -279,8 +284,8 @@ public class ObjectSynthesizerTest extends UtBase {
 
   }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void givenNoExplicitInterface$whenSynthesizeObjectInNonAutoMode$thenErrorIsThrown() {
+  @Test(expected = ClassCastException.class)
+  public void givenNoExplicitInterface$whenSynthesizedWithoutInclusionFromFallbackInNonAutoMode$thenClassCastException() {
     B b = new ObjectSynthesizer()
         .fallbackObject((B) () -> "bMethod in lambda (test10) was called.")
         .synthesize()
@@ -304,22 +309,23 @@ public class ObjectSynthesizerTest extends UtBase {
     System.out.println(aa.aMethod());
   }
 
-  @Test(expected = IllegalStateException.class)
-  public void givenSynthesizerWithInterfaceB$whenSynthesizeWithB$thenThrowsException() {
+  @Test(expected = IllegalArgumentException.class)
+  public void givenSynthesizerWithInterfaceBTwice$whenSynthesize$thenThrowsException() {
     try {
       B b = ObjectSynthesizer.synthesizer()
+          .addInterface(B.class)
           .addInterface(B.class)
           .fallbackObject((B) () -> "bMethod in lambda (test10) was called.")
           .synthesize()
           .castTo(B.class);
       System.out.println(b.bMethod());
-    } catch (IllegalStateException e) {
+    } catch (IllegalArgumentException e) {
       e.printStackTrace();
       assertThat(
           e.getMessage(),
           asString()
-              .containsString("violated precondition:value stream noneMatch[isInstanceOf[")
-              .containsString("B]]").$());
+              .containsString("repeated interface: ")
+              .containsString(B.class.getName()).$());
       throw e;
     }
   }
@@ -352,31 +358,5 @@ public class ObjectSynthesizerTest extends UtBase {
         .castTo(B.class);
     System.out.println(b.bMethod());
     assertThat(b.bMethod(), asString().equalTo("bMethod in lambda (test10) was called.").$());
-  }
-
-  @Test(expected = IllegalStateException.class)
-  public void givenTweakerWithInterfaceA$whenSynthesizeWithA$thenThrowsException() {
-    try {
-      A a = new ObjectSynthesizer()
-          .addInterface(A.class)
-          .fallbackObject((new A() {
-            @Override
-            public String aMethod() {
-              throw new RuntimeException("aMethod in handlerObject: This method should not be called because A.class is registered and synthesizer is in 'tweak' mode.");
-            }
-          }))
-          .synthesize()
-          .castTo(A.class);
-      System.out.println(a.aMethod());
-    } catch (IllegalStateException e) {
-      e.printStackTrace();
-      assertThat(
-          e.getMessage(),
-          allOf(
-              asString().containsString("value:").$(),
-              asString().containsString(A.class.getSimpleName()).$(),
-              asString().containsString("violated precondition:value methods->stream noneMatch[isDefaultMethod]").$()));
-      throw e;
-    }
   }
 }
