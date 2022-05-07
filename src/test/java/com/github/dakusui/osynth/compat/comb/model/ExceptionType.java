@@ -1,10 +1,6 @@
 package com.github.dakusui.osynth.compat.comb.model;
 
-import com.github.dakusui.osynth.comb.def.*;
 import com.github.dakusui.osynth.compat.comb.def.*;
-import com.github.dakusui.osynth.ut.compat.comb.def.*;
-import com.github.dakusui.osynth.ut.compat.osynth.comb.def.*;
-import com.github.dakusui.osynth.ut.osynth.comb.def.*;
 
 public enum ExceptionType {
   RUNTIME_EXCEPTION {
