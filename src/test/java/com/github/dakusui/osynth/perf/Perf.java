@@ -75,19 +75,22 @@ public class Perf extends UtBase {
     return new ObjectSynthesizer()
         .addInterface(Acc.class)
         .handle(methodCall("increment", Integer.class).with((self, args) -> ((Integer) args[0]) + 1))
-        .synthesize(Acc.class);
+        .synthesize()
+        .castTo(Acc.class);
   }
 
   Acc synthesizeObjectWithHandlerObject() {
     return new ObjectSynthesizer()
         .addInterface(Acc.class)
-        .addHandlerObject((Acc) value -> value + 1)
-        .synthesize(Acc.class);
+        .fallbackObject((Acc) value -> value + 1)
+        .synthesize()
+        .castTo(Acc.class);
   }
 
   Acc synthesizeObjectWithDefaultMethod() {
     return new ObjectSynthesizer()
         .addInterface(AccDefault.class)
-        .synthesize(Acc.class);
+        .synthesize()
+        .castTo(Acc.class);
   }
 }

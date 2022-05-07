@@ -28,7 +28,7 @@ public class ParameterizedMethodHandlingTest extends UtBase {
 
   @Test
   public void testSingle() {
-    Single x = new ObjectSynthesizer().addInterface(Single.class).synthesize(Single.class);
+    Single x = new ObjectSynthesizer().addInterface(Single.class).synthesize().castTo(Single.class);
     assertThat(
         x.addIndex(99) + ":" + x.addIndex(100L),
         asString().equalTo("HELLO_INT_99:HELLO_LONG_100").$());
@@ -40,7 +40,8 @@ public class ParameterizedMethodHandlingTest extends UtBase {
         .addInterface(Single.class)
         .handle(methodCall("addIndex", int.class).with((self, args) -> "handleInt:" + Arrays.toString(args)))
         .handle(methodCall("addIndex", long.class).with((self, args) -> "handleLong:" + Arrays.toString(args)))
-        .synthesize(Single.class);
+        .synthesize()
+        .castTo(Single.class);
     assertThat(
         x,
         allOf(
@@ -50,7 +51,7 @@ public class ParameterizedMethodHandlingTest extends UtBase {
 
   @Test
   public void testDouble() {
-    Multi x = new ObjectSynthesizer().addInterface(Multi.class).synthesize(Multi.class);
+    Multi x = new ObjectSynthesizer().addInterface(Multi.class).synthesize().castTo(Multi.class);
     assertThat(
         x.addIndex("hello", 100),
         asString().equalTo("hello_100").$());

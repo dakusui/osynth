@@ -4,23 +4,24 @@ import com.github.dakusui.osynth.comb.def.I1;
 import com.github.dakusui.osynth.comb.def.I1N;
 import com.github.dakusui.osynth.comb.def.I2;
 import com.github.dakusui.osynth.comb.def.I2N;
-import com.github.dakusui.osynth.core.FallbackMethodHandlerFactory;
+import com.github.dakusui.osynth2.core.MethodHandler;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
-import static com.github.dakusui.osynth.utils.InternalUtils.rethrow;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 public enum MethodType {
   NORMAL {
-    Map<List<Class<?>>, Map<ExceptionType, BiFunction<Object, Object[], Object>>> methodHandlerPool = new HashMap<>();
-    Map<ExceptionType, List<?>> handlerObjectPool = new HashMap<>();
-    Map<ExceptionType, FallbackMethodHandlerFactory> fallbackHandlerFactoryPool = new HashMap<>();
+    final Map<List<Class<?>>, Map<ExceptionType, MethodHandler>> methodHandlerPool = new HashMap<>();
+    final Map<ExceptionType, List<?>> handlerObjectPool = new HashMap<>();
 
     @Override
-    public BiFunction<Object, Object[], Object> createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType) {
+    public MethodHandler createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType) {
       return updateEntryIfAbsent(methodHandlerPool, argTypes, exceptionType, (self, args) -> format("apply%s(%s) on methodHandler", argTypes.length, Arrays.toString(argTypes)));
     }
 
@@ -29,14 +30,6 @@ public enum MethodType {
       return new Class[] { I1N.class, I2N.class };
     }
 
-    @Override
-    public FallbackMethodHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
-      fallbackHandlerFactoryPool.computeIfAbsent(
-          exceptionType,
-          e -> proxyDescriptor -> method -> Optional.of((o, objects) ->
-              String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes()))));
-      return fallbackHandlerFactoryPool.get(exceptionType);
-    }
 
     @Override
     public List<?> handlerObjects(ExceptionType exceptionType) {
@@ -71,12 +64,11 @@ public enum MethodType {
     }
   },
   EXCEPTION {
-    Map<List<Class<?>>, Map<ExceptionType, BiFunction<Object, Object[], Object>>> methodHandlerPool = new HashMap<>();
-    Map<ExceptionType, List<?>> handlerObjectPool = new HashMap<>();
-    Map<ExceptionType, FallbackMethodHandlerFactory> fallbackHandlerFactoryPool = new HashMap<>();
+    final Map<List<Class<?>>, Map<ExceptionType, MethodHandler>> methodHandlerPool = new HashMap<>();
+    final Map<ExceptionType, List<?>> handlerObjectPool = new HashMap<>();
 
     @Override
-    public BiFunction<Object, Object[], Object> createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType) {
+    public MethodHandler createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType) {
       return updateEntryIfAbsent(methodHandlerPool, argTypes, exceptionType, (self, args) -> {
         try {
           return exceptionType.createException(format("apply%s(%s) on methodHandler", argTypes.length, Arrays.toString(argTypes)));
@@ -89,18 +81,6 @@ public enum MethodType {
     @Override
     public Class<?>[] interfaces(ExceptionType exceptionType) {
       return exceptionType.createInterfaces();
-    }
-
-    @Override
-    public FallbackMethodHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType) {
-      fallbackHandlerFactoryPool.computeIfAbsent(exceptionType, e -> proxyDescriptor -> method -> Optional.of((o, objects) -> {
-        try {
-          throw e.createException(String.format("%s(%s) on FallbackHandler", method.getName(), Arrays.toString(method.getParameterTypes())));
-        } catch (Throwable throwable) {
-          throw rethrow(throwable);
-        }
-      }));
-      return fallbackHandlerFactoryPool.get(exceptionType);
     }
 
     @Override
@@ -138,15 +118,13 @@ public enum MethodType {
 
   };
 
-  public abstract BiFunction<Object, Object[], Object> createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType);
+  public abstract MethodHandler createMethodHandler(Class<?>[] argTypes, ExceptionType exceptionType);
 
   public abstract Class<?>[] interfaces(ExceptionType exceptionType);
 
-  public abstract FallbackMethodHandlerFactory createFallbackHandlerFactory(ExceptionType exceptionType);
-
   public abstract List<?> handlerObjects(ExceptionType exceptionType);
 
-  BiFunction<Object, Object[], Object> updateEntryIfAbsent(Map<List<Class<?>>, Map<ExceptionType, BiFunction<Object, Object[], Object>>> pool, Class<?>[] argTypes, ExceptionType exceptionType, BiFunction<Object, Object[], Object> function) {
+  MethodHandler updateEntryIfAbsent(Map<List<Class<?>>, Map<ExceptionType, MethodHandler>> pool, Class<?>[] argTypes, ExceptionType exceptionType, MethodHandler function) {
     if (!pool.containsKey(asList(argTypes)))
       pool.put(asList(argTypes), new HashMap<>());
     if (!pool.get(asList(argTypes)).containsKey(exceptionType))

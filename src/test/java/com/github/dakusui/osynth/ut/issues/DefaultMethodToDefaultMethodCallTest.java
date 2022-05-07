@@ -40,10 +40,11 @@ public class DefaultMethodToDefaultMethodCallTest {
         }
       };
       TestInterface i = ObjectSynthesizer.create(false)
-          .addHandlerObject(handlerObject)
+          .fallbackObject(handlerObject)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
-          .synthesize();
+          .synthesize()
+          .castTo(TestInterface.class);
       int result = i.caller();
       System.out.println(result);
       // This behavior is counter-intuitive.
@@ -58,7 +59,7 @@ public class DefaultMethodToDefaultMethodCallTest {
     @Test
     public void whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() {
       TestInterface i = ObjectSynthesizer.create(false)
-          .addHandlerObject(new TestInterface() {
+          .fallbackObject(new TestInterface() {
             @Override
             public int caller() {
               return -100;
@@ -66,7 +67,8 @@ public class DefaultMethodToDefaultMethodCallTest {
           })
           .handle(methodCall("caller").with((self, args) -> 100))
           .addInterface(TestInterface.class)
-          .synthesize();
+          .synthesize()
+          .castTo(TestInterface.class);
       System.out.println(i.caller());
     }
   }
@@ -75,7 +77,7 @@ public class DefaultMethodToDefaultMethodCallTest {
     @Test
     public void whenCallerMethodIsInvoked$thenCalleeInHandlerObjectIsRun() {
       TestInterface i = ObjectSynthesizer.create(false)
-          .addHandlerObject(new Object() {
+          .fallbackObject(new Object() {
             /**
              * Even a compiler doesn't its usage, this method is called through the ObjectSynthesizer.
              * @return -99
@@ -86,7 +88,8 @@ public class DefaultMethodToDefaultMethodCallTest {
             }
           })
           .addInterface(TestInterface.class)
-          .synthesize();
+          .synthesize()
+          .castTo(TestInterface.class);
       int result = i.caller();
       System.out.println(result);
       assertThat(result, asInteger().equalTo(-99).$());
@@ -99,7 +102,8 @@ public class DefaultMethodToDefaultMethodCallTest {
       TestInterface i = ObjectSynthesizer.create(false)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
-          .synthesize();
+          .synthesize()
+          .castTo(TestInterface.class);
       int result = i.caller();
       System.out.println(result);
       // This behavior is counter-intuitive.
@@ -112,7 +116,8 @@ public class DefaultMethodToDefaultMethodCallTest {
       TestInterface i = ObjectSynthesizer.create(false)
           .handle(methodCall("caller").with((self, args) -> 100))
           .addInterface(TestInterface.class)
-          .synthesize();
+          .synthesize()
+          .castTo(TestInterface.class);
       System.out.println(i.callee());
     }
   }

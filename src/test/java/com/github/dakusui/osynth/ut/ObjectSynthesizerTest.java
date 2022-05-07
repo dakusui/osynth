@@ -1,12 +1,11 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.core.Describable;
-import com.github.dakusui.osynth.core.ProxyDescriptor;
 import com.github.dakusui.osynth.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.utils.UtBase;
 import com.github.dakusui.osynth.utils.UtUtils;
 import org.junit.Test;
+import org.junit.runner.Describable;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -51,7 +50,7 @@ public class ObjectSynthesizerTest extends UtBase {
         .addInterface(A.class)
         .addInterface(B.class)
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
-        .addHandlerObject(fallbackObject)
+        .fallbackObject(fallbackObject)
         .synthesize();
     assertThat(x,
         allOf(
@@ -65,8 +64,9 @@ public class ObjectSynthesizerTest extends UtBase {
     B x = new ObjectSynthesizer()
         .addInterface(A.class)
         .addInterface(B.class)
-        .addHandlerObject(fallbackObject)
-        .synthesize(B.class);
+        .fallbackObject(fallbackObject)
+        .synthesize()
+        .castTo(B.class);
     try {
       System.out.println(x.bMethod());
     } catch (IllegalArgumentException e) {
@@ -93,8 +93,9 @@ public class ObjectSynthesizerTest extends UtBase {
       Serializable x = new ObjectSynthesizer()
           .addInterface(A.class)
           .addInterface(B.class)
-          .addHandlerObject(fallbackObject)
-          .synthesize(Serializable.class);
+          .fallbackObject(fallbackObject)
+          .synthesize()
+          .castTo(Serializable.class);
       System.out.println(x);
     } catch (IllegalArgumentException e) {
       e.printStackTrace();
@@ -120,7 +121,7 @@ public class ObjectSynthesizerTest extends UtBase {
   interface TestFunction {
     String apply(String value);
   }
-
+/*
   @Test(expected = AssertionInCatchClauseFinished.class)
   public void givenErrorThrowingFallbackHandlerIsGiven$whenInvokeMethod$thenIntendedErrorThrown() {
     TestFunction x = new ObjectSynthesizer()
@@ -131,7 +132,8 @@ public class ObjectSynthesizerTest extends UtBase {
         .synthesize();
     x.apply("hello");
   }
-
+*/
+ /*
   @Test(expected = AssertionInCatchClauseFinished.class)
   public void givenErrorValueReturningFallbackHandlerIsGiven$whenInvokeMethod$thenIntendedValueReturned() {
     TestFunction x = new ObjectSynthesizer()
@@ -142,14 +144,14 @@ public class ObjectSynthesizerTest extends UtBase {
         .synthesize();
     assertThat(x.apply("hello"), asString().equalTo("hello").$());
   }
-
+*/
   /**
    * Passes on JDK8
    */
   @Test(expected = AssertionInCatchClauseFinished.class)
   public void givenCoreInterface$whenSynthesized$thenFail() {
     try {
-      System.out.println(new ObjectSynthesizer().addInterface(Serializable.class).addHandlerObject(new Object()).<Object>synthesize());
+      System.out.println(new ObjectSynthesizer().addInterface(Serializable.class).fallbackObject(new Object()).<Object>synthesize());
     } catch (RuntimeException e) {
       assertThat(
           e,
@@ -180,20 +182,21 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test(expected = E.EException.class)
   public void whenErrorThrowingDefaultMethodExecuted$thenErrorThrown() {
-    System.out.println(new ObjectSynthesizer().addInterface(E.class).synthesize(E.class).eMethod());
+    System.out.println(new ObjectSynthesizer().addInterface(E.class).synthesize().castTo(E.class).eMethod());
   }
 
   @Test(expected = E.EException.class)
   public void whenErrorThrowingOverridingMethodExecuted$thenErrorThrown() {
     new ObjectSynthesizer()
         .addInterface(E.class)
-        .addHandlerObject(new E() {
+        .fallbackObject(new E() {
           @Override
           public String eMethod() {
             throw new EException();
           }
         })
-        .synthesize(E.class)
+        .synthesize()
+        .castTo(E.class)
         .eMethod();
   }
 
@@ -201,13 +204,13 @@ public class ObjectSynthesizerTest extends UtBase {
   public void givenMultipleHandlerObjects$whenMethodsRun$thenMethodsOnHandlerObjectsCalled() {
     Object x = new ObjectSynthesizer().addInterface(A.class)
         .addInterface(B.class)
-        .addHandlerObject(new A() {
+        .fallbackObject(new A() {
           @Override
           public String aMethod() {
             return "Overridden A";
           }
         })
-        .addHandlerObject((B) () -> "Overridden B")
+        .fallbackObject((B) () -> "Overridden B")
         .synthesize();
     A a = (A) x;
     B b = (B) x;
@@ -245,8 +248,8 @@ public class ObjectSynthesizerTest extends UtBase {
   @Test
   public void givenSynthesizedObjectsFromTheSameDefinitions$whenEquals$thenTrue() {
     Object o = new Object();
-    Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
-    Object x2 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o).synthesize();
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).fallbackObject(o).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).fallbackObject(o).synthesize();
     assertThat(
         x1,
         asBoolean(call("equals", x2).$()).isTrue().$()
@@ -257,8 +260,8 @@ public class ObjectSynthesizerTest extends UtBase {
   public void givenSynthesizedObjectsFromDifferentDefinitions$whenEquals$thenFalse() {
     Object o1 = new Object();
     Object o2 = new Object();
-    Object x1 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o1).synthesize();
-    Object x2 = new ObjectSynthesizer().addInterface(A.class).addHandlerObject(o2).synthesize();
+    Object x1 = new ObjectSynthesizer().addInterface(A.class).fallbackObject(o1).synthesize();
+    Object x2 = new ObjectSynthesizer().addInterface(A.class).fallbackObject(o2).synthesize();
     assertThat(
         x1,
         asBoolean(call("equals", x2).$()).isFalse().$()
@@ -267,15 +270,10 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test(expected = E.EException.class)
   public void whenErrorThrowingMethodIsInvoked$thenExceptionThrown() {
-    E e = new ObjectSynthesizer().addInterface(E.class).synthesize();
+    E e = new ObjectSynthesizer().addInterface(E.class).synthesize().castTo(E.class);
     System.out.println(e.eMethod());
   }
 
-  @Test
-  public void givenEmptyProxyDescriptor$whenHashCode$thenEqualToHashCodeFromEmptyList() {
-    ProxyDescriptor desc = createEmptyDesc();
-    assertThat(desc.hashCode(), asInteger().equalTo(emptyList().hashCode()).$());
-  }
 
   @Test
   public void example() {
@@ -285,20 +283,12 @@ public class ObjectSynthesizerTest extends UtBase {
 
   }
 
-  @Test
-  public void givenNoExplicitInterface$whenSynthesizeObjectInAutoMode$thenDescribable() {
-    X x = ObjectSynthesizer.create(true)
-        .addHandlerObject((X) () -> "bMethodX in lambda")
-        .synthesize();
-    System.out.println(x.bMethod());
-    System.out.println(((Describable) x).describe());
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void givenNoExplicitInterface$whenSynthesizeObjectInNonAutoMode$thenErrorIsThrown() {
-    B b = ObjectSynthesizer.create(false)
-        .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
-        .synthesize(B.class);
+    B b = new ObjectSynthesizer()
+        .fallbackObject((B) () -> "bMethod in lambda (test10) was called.")
+        .synthesize()
+        .castTo(B.class);
     System.out.println(b.bMethod());
   }
 
@@ -307,10 +297,14 @@ public class ObjectSynthesizerTest extends UtBase {
     A a = ObjectSynthesizer.create(false)
         .addInterface(A.class)
         .handle(methodCall("aMethod").with((self, args) -> "OverridingA was called"))
-        .synthesize();
+        .synthesize()
+        .castTo(A.class);
     A aa = ObjectSynthesizer.create(false)
         .handle(methodCall("aMethod").with((self, args) -> "Re-OverridingA was called"))
-        .resynthesizeFrom(a);
+        .includeInterfacesFrom()
+        .fallbackObject(a)
+        .synthesize()
+        .castTo(A.class);
     System.out.println(aa.aMethod());
   }
 
@@ -319,8 +313,9 @@ public class ObjectSynthesizerTest extends UtBase {
     try {
       B b = ObjectSynthesizer.synthesizer()
           .addInterface(B.class)
-          .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
-          .synthesize();
+          .fallbackObject((B) () -> "bMethod in lambda (test10) was called.")
+          .synthesize()
+          .castTo(B.class);
       System.out.println(b.bMethod());
     } catch (IllegalStateException e) {
       e.printStackTrace();
@@ -337,7 +332,7 @@ public class ObjectSynthesizerTest extends UtBase {
   public void givenSynthesizerWithInterfaceB$whenSynthesizeWithNonB$thenReturnValueFromNonB() {
     B b = ObjectSynthesizer.synthesizer()
         .addInterface(B.class)
-        .addHandlerObject(new Object() {
+        .fallbackObject(new Object() {
           /**
            * This method is called through the synthesizer
            */
@@ -346,17 +341,19 @@ public class ObjectSynthesizerTest extends UtBase {
             return "bMethod in handlerObject";
           }
         })
-        .synthesize();
+        .synthesize()
+        .castTo(B.class);
     System.out.println(b.bMethod());
     assertThat(b.bMethod(), asString().equalTo("bMethod in handlerObject").$());
   }
 
   @Test
   public void givenTweakerWithInterfaceB$whenSynthesizeWithB$thenReturnValueFromB() {
-    B b = ObjectSynthesizer.tweaker()
+    B b = new ObjectSynthesizer()
         .addInterface(B.class)
-        .addHandlerObject((B) () -> "bMethod in lambda (test10) was called.")
-        .synthesize();
+        .fallbackObject((B) () -> "bMethod in lambda (test10) was called.")
+        .synthesize()
+        .castTo(B.class);
     System.out.println(b.bMethod());
     assertThat(b.bMethod(), asString().equalTo("bMethod in lambda (test10) was called.").$());
   }
@@ -364,15 +361,16 @@ public class ObjectSynthesizerTest extends UtBase {
   @Test(expected = IllegalStateException.class)
   public void givenTweakerWithInterfaceA$whenSynthesizeWithA$thenThrowsException() {
     try {
-      A a = ObjectSynthesizer.tweaker()
+      A a = new ObjectSynthesizer()
           .addInterface(A.class)
-          .addHandlerObject((new A() {
+          .fallbackObject((new A() {
             @Override
             public String aMethod() {
               throw new RuntimeException("aMethod in handlerObject: This method should not be called because A.class is registered and synthesizer is in 'tweak' mode.");
             }
           }))
-          .synthesize();
+          .synthesize()
+          .castTo(A.class);
       System.out.println(a.aMethod());
     } catch (IllegalStateException e) {
       e.printStackTrace();
@@ -384,13 +382,5 @@ public class ObjectSynthesizerTest extends UtBase {
               asString().containsString("violated precondition:value methods->stream noneMatch[isDefaultMethod]").$()));
       throw e;
     }
-  }
-
-  protected ProxyDescriptor createEmptyDesc() {
-    return new ProxyDescriptor(
-        new LinkedList<>(),
-        new LinkedList<>(),
-        new LinkedList<>(),
-        ObjectSynthesizer.DEFAULT_FALLBACK_HANDLER_FACTORY);
   }
 }

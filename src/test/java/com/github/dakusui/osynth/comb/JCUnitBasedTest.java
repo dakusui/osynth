@@ -182,7 +182,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
       @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
-    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThat(
         obj,
         asString(targetMethodDef.methodName(), targetMethodDef.args())
@@ -197,7 +197,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("numHandlerObjects") int numHandlerObjects,
       @From("customFallback") boolean customFallback) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
-    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThat(
         obj,
         asString("apply0_both").containsString("apply0_both:I1:").$());
@@ -211,7 +211,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("numHandlerObjects") int numHandlerObjects,
       @From("customFallback") boolean customFallback) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
-    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThat(
         obj,
         asString("apply0_1").containsString("apply0_1:I1:").$());
@@ -225,7 +225,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("numHandlerObjects") int numHandlerObjects,
       @From("customFallback") boolean customFallback) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(MethodType.NORMAL, 0, ExceptionType.NONE);
-    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    I obj = (I) synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThat(
         obj,
         asString("apply0_2").containsString("apply0_2:I2:").$());
@@ -241,7 +241,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
       @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
-    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThrows(IllegalArgumentException.class, () -> {
       try {
         System.out.println(((I) obj).apply0());
@@ -261,8 +261,8 @@ public class JCUnitBasedTest extends UtBase {
       @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
       @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
-    Object obj1 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
-    Object obj2 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object obj1 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
+    Object obj2 = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     Object objX = new Object();
     System.out.println(obj1.equals(obj2));
     assertThat(
@@ -289,7 +289,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
       @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
-    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThrows(
         ExceptionType.IntentionalRuntimeException.class,
         () -> {
@@ -312,7 +312,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
       @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
-    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThrows(
         ExceptionType.IntentionalError.class,
         () -> {
@@ -336,7 +336,7 @@ public class JCUnitBasedTest extends UtBase {
       @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
       @From("exceptionType") ExceptionType exceptionType) {
     TargetMethodDef targetMethodDef = new TargetMethodDef(methodType, numArgs, exceptionType);
-    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, customFallback, targetMethodDef);
+    Object obj = synthesizeObject(auto, numMethodHandlers, numInterfaces, numHandlerObjects, targetMethodDef);
     assertThrows(
         ExceptionType.IntentionalCheckedException.class,
         () -> {
@@ -354,7 +354,6 @@ public class JCUnitBasedTest extends UtBase {
   public void whenSynthesizedWithSimpleObjectSynthesizer$thenTargetMethodIsRun(
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numHandlerObjects") int numHandlerObjects,
-      @From("customFallback") boolean customFallback,
       @From("methodType") MethodType methodType, @From("numArgs") int numArgs,
       @From("exceptionType") ExceptionType exceptionType) {
     assert precondition(methodType, isNotNull());
@@ -363,8 +362,7 @@ public class JCUnitBasedTest extends UtBase {
     Object obj = new ObjectSynthesizerWrapper(requireNonNull(SimpleObjectSynthesizer.create(interfaces[0])))
         .addMethodHandlers(targetMethodDef, numMethodHandlers)
         .addHandlerObjects(targetMethodDef, numHandlerObjects)
-        .setFallbackHandlerFactory(targetMethodDef, customFallback)
-        .synthesize();
+        .synthesize(Object.class);
     assertThat(
         obj,
         asString(targetMethodDef.methodName(), targetMethodDef.args())
@@ -378,7 +376,6 @@ public class JCUnitBasedTest extends UtBase {
       int numMethodHandlers,
       int numInterfaces,
       int numHandlerObjects,
-      boolean customFallback,
       TargetMethodDef targetMethodDef) {
     ObjectSynthesizer objectSynthesizer = ObjectSynthesizer.create(auto);
     objectSynthesizer.addInterface(I.class);
@@ -386,8 +383,7 @@ public class JCUnitBasedTest extends UtBase {
         .addMethodHandlers(targetMethodDef, numMethodHandlers)
         .addHandlerObjects(targetMethodDef, numHandlerObjects)
         .addInterfaces(targetMethodDef, numInterfaces)
-        .setFallbackHandlerFactory(targetMethodDef, customFallback)
-        .synthesize();
+        .synthesize(Object.class);
   }
 
   private static void assertThrows(Class<? extends Throwable> exceptionClass, Executable executable) {

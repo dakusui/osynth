@@ -52,7 +52,7 @@ public enum MethodUtils {
     return execute(() -> createMethodHandlesLookupFor(fromClass).in(fromClass).unreflectSpecial(m, fromClass));
   }
 
-  private static synchronized MethodHandles.Lookup createMethodHandlesLookupFor(Class<?> anInterfaceClass) {
+  public static synchronized MethodHandles.Lookup createMethodHandlesLookupFor(Class<?> anInterfaceClass) {
     return execute(() -> {
       Constructor<MethodHandles.Lookup> constructor;
       constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class);

@@ -11,7 +11,7 @@ import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import static com.github.dakusui.osynth.core.ProxyFactory.createMethodHandlesLookupFor;
+import static com.github.dakusui.osynth2.core.utils.MethodUtils.createMethodHandlesLookupFor;
 
 @SuppressWarnings({ "SuspiciousInvocationHandlerImplementation", "Convert2Lambda", "RedundantThrows", "NewClassNamingConvention" })
 public class Sandbox {

@@ -52,7 +52,7 @@ public class SimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
   @Test
   public void test() {
     Base base = SimpleObjectSynthesizer.create(Base.class)
-        .addHandlerObject(new FallbackBase() {
+        .fallbackObject(new FallbackBase() {
           @Override
           public String method3() {
             return "Fallback:method3";
@@ -72,7 +72,8 @@ public class SimpleObjectSynthesizerFloorplanIssue53Test extends UtBase {
         .handle(methodCall("method6").with((object, args) -> "Synth:method6"))
         .handle(methodCall("method7").with((object, args) -> "Synth:method7"))
         .handle(methodCall("method8").with((object, args) -> "Synth:method8"))
-        .synthesize();
+        .synthesize()
+        .castTo(Base.class);
 
     System.out.println(base.method2());
     System.out.println(base.method3());
