@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.utils.UtBase;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import org.junit.Test;
 
@@ -9,7 +10,7 @@ import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
 
-public class VariationTest {
+public class VariationTest extends UtBase {
   public interface A {
     String aMethod(String message);
   }

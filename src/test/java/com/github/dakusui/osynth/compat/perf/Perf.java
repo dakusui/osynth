@@ -1,10 +1,10 @@
 package com.github.dakusui.osynth.compat.perf;
 
-import com.github.dakusui.osynth.compat.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import org.junit.Test;
 
-import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
 
 public class Perf extends UtBase {
   interface Acc {
@@ -72,7 +72,7 @@ public class Perf extends UtBase {
   }
 
   Acc synthesizeObjectWithMethodHandler() {
-    return new ObjectSynthesizer()
+    return new LegacyObjectSynthesizer()
         .addInterface(Acc.class)
         .handle(methodCall("increment", Integer.class).with((self, args) -> ((Integer) args[0]) + 1))
         .synthesize()
@@ -80,7 +80,7 @@ public class Perf extends UtBase {
   }
 
   Acc synthesizeObjectWithHandlerObject() {
-    return new ObjectSynthesizer()
+    return new LegacyObjectSynthesizer()
         .addInterface(Acc.class)
         .fallbackTo((Acc) value -> value + 1)
         .synthesize()
@@ -88,7 +88,7 @@ public class Perf extends UtBase {
   }
 
   Acc synthesizeObjectWithDefaultMethod() {
-    return new ObjectSynthesizer()
+    return new LegacyObjectSynthesizer()
         .addInterface(AccDefault.class)
         .synthesize()
         .castTo(Acc.class);

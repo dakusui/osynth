@@ -1,8 +1,9 @@
 package com.github.dakusui.osynth.compat;
 
+import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import org.junit.Test;
 
-import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
 
 @SuppressWarnings("NewClassNamingConvention")
 public class Examples {
@@ -26,7 +27,7 @@ public class Examples {
 
   @Test
   public void example1() {
-    HelloWorld helloWorld = new ObjectSynthesizer()
+    HelloWorld helloWorld = new LegacyObjectSynthesizer()
         .addInterface(HelloWorld.class)
         .handle(methodCall("bye").with((self, args) -> "Bye."))
         .synthesize()
@@ -37,7 +38,7 @@ public class Examples {
 
   @Test
   public void example2() {
-    HelloWorld helloWorld = ObjectSynthesizer.create(false)
+    HelloWorld helloWorld = LegacyObjectSynthesizer.create(false)
         .addInterface(HelloWorld.class)
         .fallbackTo((HelloWorld) () -> "Bye.")
         .synthesize()
@@ -48,7 +49,7 @@ public class Examples {
 
   @Test
   public void example3() {
-    HelloWorld helloWorld = ObjectSynthesizer.create(true)
+    HelloWorld helloWorld = LegacyObjectSynthesizer.create(true)
         .fallbackTo((HelloWorld) () -> "Bye.")
         .synthesize()
         .castTo(HelloWorld.class);
@@ -58,7 +59,7 @@ public class Examples {
 
   @Test
   public void example4() {
-    HelloWorld helloWorld = ObjectSynthesizer.create(true)
+    HelloWorld helloWorld = LegacyObjectSynthesizer.create(true)
         .fallbackTo((HelloWorld) () -> "Bye.")
         .synthesize()
         .castTo(HelloWorld.class);
@@ -68,7 +69,7 @@ public class Examples {
 
   @Test
   public void example5() {
-    Hello hello = new ObjectSynthesizer()
+    Hello hello = new LegacyObjectSynthesizer()
         .addInterface(Hello.class)
         .addInterface(Bye.class)
         .fallbackTo((HelloWorld) () -> "Bye.")

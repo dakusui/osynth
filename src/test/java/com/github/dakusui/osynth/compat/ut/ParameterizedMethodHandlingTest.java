@@ -1,13 +1,13 @@
 package com.github.dakusui.osynth.compat.ut;
 
-import com.github.dakusui.osynth.compat.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import org.junit.Test;
 
 import java.util.Arrays;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
 
 public class ParameterizedMethodHandlingTest extends UtBase {
   interface Single {
@@ -28,7 +28,7 @@ public class ParameterizedMethodHandlingTest extends UtBase {
 
   @Test
   public void testSingle() {
-    Single x = new ObjectSynthesizer().addInterface(Single.class).synthesize().castTo(Single.class);
+    Single x = new LegacyObjectSynthesizer().addInterface(Single.class).synthesize().castTo(Single.class);
     assertThat(
         x.addIndex(99) + ":" + x.addIndex(100L),
         asString().equalTo("HELLO_INT_99:HELLO_LONG_100").$());
@@ -36,7 +36,7 @@ public class ParameterizedMethodHandlingTest extends UtBase {
 
   @Test
   public void testSingle_2() {
-    Single x = new ObjectSynthesizer()
+    Single x = new LegacyObjectSynthesizer()
         .addInterface(Single.class)
         .handle(methodCall("addIndex", int.class).with((self, args) -> "handleInt:" + Arrays.toString(args)))
         .handle(methodCall("addIndex", long.class).with((self, args) -> "handleLong:" + Arrays.toString(args)))
@@ -51,7 +51,7 @@ public class ParameterizedMethodHandlingTest extends UtBase {
 
   @Test
   public void testDouble() {
-    Multi x = new ObjectSynthesizer().addInterface(Multi.class).synthesize().castTo(Multi.class);
+    Multi x = new LegacyObjectSynthesizer().addInterface(Multi.class).synthesize().castTo(Multi.class);
     assertThat(
         x.addIndex("hello", 100),
         asString().equalTo("hello_100").$());

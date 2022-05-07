@@ -1,9 +1,6 @@
 package com.github.dakusui.osynth.compat.sandbox;
 
 import org.junit.Test;
-import sun.reflect.CallerSensitive;
-import sun.reflect.Reflection;
-
 import java.io.Serializable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -327,18 +324,6 @@ public class Sandbox {
   }
 
   @Test
-  @CallerSensitive
-  public void testWhatIsCallerClass() {
-    System.out.println(new Object() {
-      @Override
-      @CallerSensitive
-      public String toString() {
-        return Reflection.getCallerClass().toString();
-      }
-    });
-  }
-
-  @Test
   public void whatIfGetLookUpThroughNormalMethod() throws NoSuchMethodException, IllegalAccessException {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     System.out.println("N");
@@ -529,17 +514,6 @@ public class Sandbox {
     if (Modifier.isPrivate(method.getModifiers()))
       return "  X";
     return "   ";
-  }
-
-  @CallerSensitive
-  public static void main(String... args) {
-    System.out.println(new Object() {
-      @Override
-      @CallerSensitive
-      public String toString() {
-        return Reflection.getCallerClass().toString();
-      }
-    });
   }
 
   private static Object invokeSpecialMethod(Class<?> anInterfaceClass, Proxy proxy, String methodName) {

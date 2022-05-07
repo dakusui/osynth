@@ -1,11 +1,11 @@
 package com.github.dakusui.osynth.compat.ut;
 
-import com.github.dakusui.osynth.compat.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.SimpleObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import org.junit.Test;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.compat.SimpleObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.SimpleObjectSynthesizer.methodCall;
 
 /**
  * A test class to fix a behavior reported as an issue #53 of floorplan library.

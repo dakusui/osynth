@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.compat.ut.issues;
 
-import com.github.dakusui.osynth.compat.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 
 import static com.github.dakusui.crest.Crest.asInteger;
 import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
 
 @RunWith(Enclosed.class)
 public class DefaultMethodToDefaultMethodCallTest {
@@ -40,7 +40,7 @@ public class DefaultMethodToDefaultMethodCallTest {
           return -100;
         }
       };
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = LegacyObjectSynthesizer.create(false)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
           .fallbackTo(handlerObject)
@@ -59,7 +59,7 @@ public class DefaultMethodToDefaultMethodCallTest {
 
     @Test
     public void whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = LegacyObjectSynthesizer.create(false)
           .fallbackTo(new TestInterface() {
             @Override
             public int caller() {
@@ -78,7 +78,7 @@ public class DefaultMethodToDefaultMethodCallTest {
   public static class GivenFallbackObjectOverridingCalleeMethod extends UtBase {
     @Test
     public void whenCallerMethodIsInvoked$thenCalleeInInterfaceDefaultIsRun() {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = LegacyObjectSynthesizer.create(false)
           .addInterface(TestInterface.class)
           .fallbackTo(new Object() {
             /**
@@ -102,7 +102,7 @@ public class DefaultMethodToDefaultMethodCallTest {
   public static class GivenNoHandlerObjectAndMethodHandlerForCalleeMethod extends UtBase {
     @Test
     public void whenCallerMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() throws NoSuchMethodException {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = LegacyObjectSynthesizer.create(false)
           .handle(methodCall("callee").with((self, args) -> 100))
           .addInterface(TestInterface.class)
           .synthesize()
@@ -116,7 +116,7 @@ public class DefaultMethodToDefaultMethodCallTest {
 
     @Test
     public void whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked() {
-      TestInterface i = ObjectSynthesizer.create(false)
+      TestInterface i = LegacyObjectSynthesizer.create(false)
           .handle(methodCall("caller").with((self, args) -> 100))
           .addInterface(TestInterface.class)
           .synthesize()

@@ -6,8 +6,8 @@ import com.github.dakusui.jcunit8.factorspace.Parameter;
 import com.github.dakusui.jcunit8.pipeline.Requirement;
 import com.github.dakusui.jcunit8.runners.junit4.JCUnit8;
 import com.github.dakusui.jcunit8.runners.junit4.annotations.*;
-import com.github.dakusui.osynth.compat.ObjectSynthesizer;
-import com.github.dakusui.osynth.compat.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.SimpleObjectSynthesizer;
 import com.github.dakusui.osynth.compat.comb.def.I;
 import com.github.dakusui.osynth.compat.comb.model.ExceptionType;
 import com.github.dakusui.osynth.compat.comb.model.MethodType;
@@ -381,7 +381,7 @@ public class JCUnitBasedTest extends UtBase {
       int numInterfaces,
       int numHandlerObjects,
       TargetMethodDef targetMethodDef) {
-    ObjectSynthesizer objectSynthesizer = ObjectSynthesizer.create(auto);
+    LegacyObjectSynthesizer objectSynthesizer = LegacyObjectSynthesizer.create(auto);
     objectSynthesizer.addInterface(I.class);
     return new ObjectSynthesizerWrapper(objectSynthesizer)
         .addMethodHandlers(targetMethodDef, numMethodHandlers)

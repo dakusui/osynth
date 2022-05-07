@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.compat.ut;
 
-import com.github.dakusui.osynth.compat.SimpleObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.SimpleObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import org.junit.Before;
 import org.junit.Test;
@@ -8,7 +8,7 @@ import org.junit.Test;
 import java.util.Objects;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.compat.SimpleObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.SimpleObjectSynthesizer.methodCall;
 
 public class SimpleObjectSynthesizerTest extends UtBase {
   private X handlerObject;

@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.compat.ut;
 
-import com.github.dakusui.osynth.compat.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import com.github.dakusui.osynth.compat.utils.UtUtils;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.github.dakusui.crest.Crest.*;
-import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
 import static org.junit.Assert.assertNotNull;
 
 public class ObjectSynthesizerTest extends UtBase {
@@ -45,7 +45,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test
   public void givenHandlerForMethodInB$whenMethodInBCalled$thenHandlerIsRun() {
-    Object x = new ObjectSynthesizer()
+    Object x = new LegacyObjectSynthesizer()
         .addInterface(A.class)
         .addInterface(B.class)
         .handle(methodCall("bMethod").with((self, args) -> "b is called"))
@@ -60,7 +60,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test(expected = UnsupportedOperationException.class)
   public void givenNoHandlerForMethodInB$whenMethodInBCalled$thenUnsupportedOperationException() {
-    B x = new ObjectSynthesizer()
+    B x = new LegacyObjectSynthesizer()
         .addInterface(A.class)
         .addInterface(B.class)
         .fallbackTo(fallbackObject)
@@ -92,7 +92,7 @@ public class ObjectSynthesizerTest extends UtBase {
   @Test(expected = AssertionInCatchClauseFinished.class)
   public void whenSynthesizedWithUnregisteredInterface$thenClassCastExceptionThrown() {
     try {
-      Serializable x = new ObjectSynthesizer()
+      Serializable x = new LegacyObjectSynthesizer()
           .addInterface(A.class)
           .addInterface(B.class)
           .fallbackTo(fallbackObject)
@@ -151,7 +151,7 @@ public class ObjectSynthesizerTest extends UtBase {
    */
   @Test
   public void givenCoreInterface$whenSynthesized$thenPass() {
-    Object out = new ObjectSynthesizer().addInterface(Serializable.class).fallbackTo(new Object()).synthesize();
+    Object out = new LegacyObjectSynthesizer().addInterface(Serializable.class).fallbackTo(new Object()).synthesize();
     System.out.println(out);
     assertNotNull(out);
   }
@@ -159,7 +159,7 @@ public class ObjectSynthesizerTest extends UtBase {
   @Test(expected = AssertionInCatchClauseFinished.class)
   public void whenNonInterfaceClassPassed$thenExceptionThrown() {
     try {
-      new ObjectSynthesizer().addInterface(String.class).synthesize();
+      new LegacyObjectSynthesizer().addInterface(String.class).synthesize();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage(), asString().containsString(String.class.getCanonicalName()).$());
       AssertionInCatchClauseFinished.assertionInCatchClauseFinished();
@@ -168,12 +168,12 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test(expected = E.EException.class)
   public void whenErrorThrowingDefaultMethodExecuted$thenErrorThrown() {
-    System.out.println(new ObjectSynthesizer().addInterface(E.class).synthesize().castTo(E.class).eMethod());
+    System.out.println(new LegacyObjectSynthesizer().addInterface(E.class).synthesize().castTo(E.class).eMethod());
   }
 
   @Test(expected = E.EException.class)
   public void whenErrorThrowingOverridingMethodExecuted$thenErrorThrown() {
-    new ObjectSynthesizer()
+    new LegacyObjectSynthesizer()
         .addInterface(E.class)
         .fallbackTo(new E() {
           @Override
@@ -193,7 +193,7 @@ public class ObjectSynthesizerTest extends UtBase {
   @Ignore
   @Test
   public void givenMultipleHandlerObjects$whenMethodsRun$thenMethodsOnHandlerObjectsCalled() {
-    Object x = new ObjectSynthesizer().addInterface(A.class)
+    Object x = new LegacyObjectSynthesizer().addInterface(A.class)
         .addInterface(B.class)
         .fallbackTo(new A() {
           @Override
@@ -219,7 +219,7 @@ public class ObjectSynthesizerTest extends UtBase {
   @SuppressWarnings("EqualsWithItself")
   @Test
   public void whenEqualsItself$thenTrue() {
-    Object x = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    Object x = new LegacyObjectSynthesizer().addInterface(A.class).synthesize();
     assertThat(
         x.equals(x),
         asBoolean().isTrue().$()
@@ -233,8 +233,8 @@ public class ObjectSynthesizerTest extends UtBase {
   @ReleaseNote
   @Test
   public void givenEmptySynthesizedObjects$whenEquals$thenTrue() {
-    Object x1 = new ObjectSynthesizer().addInterface(A.class).synthesize();
-    Object x2 = new ObjectSynthesizer().addInterface(A.class).synthesize();
+    Object x1 = new LegacyObjectSynthesizer().addInterface(A.class).synthesize();
+    Object x2 = new LegacyObjectSynthesizer().addInterface(A.class).synthesize();
     assertThat(
         x1,
         asBoolean(call("equals", x2).$()).isTrue().$()
@@ -250,8 +250,8 @@ public class ObjectSynthesizerTest extends UtBase {
   @Test
   public void givenSynthesizedObjectsFromTheSameDefinitions$whenEquals$thenTrue() {
     Object o = new Object();
-    Object x1 = new ObjectSynthesizer().addInterface(A.class).fallbackTo(o).synthesize();
-    Object x2 = new ObjectSynthesizer().addInterface(A.class).fallbackTo(o).synthesize();
+    Object x1 = new LegacyObjectSynthesizer().addInterface(A.class).fallbackTo(o).synthesize();
+    Object x2 = new LegacyObjectSynthesizer().addInterface(A.class).fallbackTo(o).synthesize();
     System.out.println(Objects.equals(x1, x2));
     assertThat(
         x1,
@@ -263,8 +263,8 @@ public class ObjectSynthesizerTest extends UtBase {
   public void givenSynthesizedObjectsFromDifferentDefinitions$whenEquals$thenFalse() {
     Object o1 = new Object();
     Object o2 = new Object();
-    Object x1 = new ObjectSynthesizer().addInterface(A.class).fallbackTo(o1).synthesize();
-    Object x2 = new ObjectSynthesizer().addInterface(A.class).fallbackTo(o2).synthesize();
+    Object x1 = new LegacyObjectSynthesizer().addInterface(A.class).fallbackTo(o1).synthesize();
+    Object x2 = new LegacyObjectSynthesizer().addInterface(A.class).fallbackTo(o2).synthesize();
     assertThat(
         x1,
         asBoolean(call("equals", x2).$()).isFalse().$()
@@ -273,7 +273,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test(expected = E.EException.class)
   public void whenErrorThrowingMethodIsInvoked$thenExceptionThrown() {
-    E e = new ObjectSynthesizer().addInterface(E.class).synthesize().castTo(E.class);
+    E e = new LegacyObjectSynthesizer().addInterface(E.class).synthesize().castTo(E.class);
     System.out.println(e.eMethod());
   }
 
@@ -288,7 +288,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test(expected = ClassCastException.class)
   public void givenNoExplicitInterface$whenSynthesizedWithoutInclusionFromFallbackInNonAutoMode$thenClassCastException() {
-    B b = new ObjectSynthesizer()
+    B b = new LegacyObjectSynthesizer()
         .fallbackTo((B) () -> "bMethod in lambda (test10) was called.")
         .synthesize()
         .castTo(B.class);
@@ -297,12 +297,12 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test
   public void givenSynthesizedObject$whenResynthesize$overridingHandlerIsInvoked() {
-    A a = ObjectSynthesizer.create(false)
+    A a = LegacyObjectSynthesizer.create(false)
         .addInterface(A.class)
         .handle(methodCall("aMethod").with((self, args) -> "OverridingA was called"))
         .synthesize()
         .castTo(A.class);
-    A aa = ObjectSynthesizer.create(false)
+    A aa = LegacyObjectSynthesizer.create(false)
         .handle(methodCall("aMethod").with((self, args) -> "Re-OverridingA was called"))
         .includeInterfacesFrom()
         .fallbackTo(a)
@@ -314,7 +314,7 @@ public class ObjectSynthesizerTest extends UtBase {
   @Test(expected = IllegalArgumentException.class)
   public void givenSynthesizerWithInterfaceBTwice$whenSynthesize$thenThrowsException() {
     try {
-      B b = ObjectSynthesizer.synthesizer()
+      B b = LegacyObjectSynthesizer.synthesizer()
           .addInterface(B.class)
           .addInterface(B.class)
           .fallbackTo((B) () -> "bMethod in lambda (test10) was called.")
@@ -334,7 +334,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test
   public void givenSynthesizerWithInterfaceB$whenSynthesizeWithNonB$thenReturnValueFromNonB() {
-    B b = ObjectSynthesizer.synthesizer()
+    B b = LegacyObjectSynthesizer.synthesizer()
         .addInterface(B.class)
         .fallbackTo(new Object() {
           /**
@@ -353,7 +353,7 @@ public class ObjectSynthesizerTest extends UtBase {
 
   @Test
   public void givenTweakerWithInterfaceB$whenSynthesizeWithB$thenReturnValueFromB() {
-    B b = new ObjectSynthesizer()
+    B b = new LegacyObjectSynthesizer()
         .addInterface(B.class)
         .fallbackTo((B) () -> "bMethod in lambda (test10) was called.")
         .synthesize()

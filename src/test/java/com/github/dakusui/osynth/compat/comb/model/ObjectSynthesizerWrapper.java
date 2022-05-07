@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.compat.comb.model;
 
-import com.github.dakusui.osynth.compat.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import com.github.dakusui.osynth.compat.comb.def.I1N;
 import com.github.dakusui.osynth.compat.comb.def.I2N;
 import com.github.dakusui.osynth.core.MethodHandler;
@@ -10,13 +10,13 @@ import java.util.List;
 
 import static com.github.dakusui.crest.Crest.asString;
 import static com.github.dakusui.crest.Crest.assertThat;
-import static com.github.dakusui.osynth.compat.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class ObjectSynthesizerWrapper {
-  final ObjectSynthesizer    objectSynthesizer;
-  final MethodHandlerEntry[] methodHandlersRegisteredAlways = new MethodHandlerEntry[] {
+  final LegacyObjectSynthesizer objectSynthesizer;
+  final MethodHandlerEntry[]    methodHandlersRegisteredAlways = new MethodHandlerEntry[] {
       methodCall("apply0_both").with((o, objects) -> "apply0_both:I1:methodHandler"),
       methodCall("apply0_both").with((o, objects) -> "apply0_both:I2:methodHandler")
   };
@@ -25,7 +25,7 @@ public class ObjectSynthesizerWrapper {
       methodCall("apply0_2").with((o, objects) -> "apply0_2:I2:methodHandler")
   };
 
-  public ObjectSynthesizerWrapper(ObjectSynthesizer objectSynthesizer) {
+  public ObjectSynthesizerWrapper(LegacyObjectSynthesizer objectSynthesizer) {
     this.objectSynthesizer = objectSynthesizer;
   }
 
@@ -68,7 +68,7 @@ public class ObjectSynthesizerWrapper {
   }
 
   private static void example() {
-    Object obj = new ObjectSynthesizer()
+    Object obj = new LegacyObjectSynthesizer()
         .handle(ObjectSynthesizerWrapper.createMethodHandler(1, MethodType.NORMAL, null))
         .fallbackTo(new Object())
         .addInterface(I1N.class)

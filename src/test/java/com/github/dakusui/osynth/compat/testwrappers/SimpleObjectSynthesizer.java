@@ -1,6 +1,6 @@
-package com.github.dakusui.osynth.compat;
+package com.github.dakusui.osynth.compat.testwrappers;
 
-public class SimpleObjectSynthesizer<T> extends ObjectSynthesizer {
+public class SimpleObjectSynthesizer<T> extends LegacyObjectSynthesizer {
   public SimpleObjectSynthesizer(Class<T> anInterface) {
     this.addInterface(anInterface);
   }
