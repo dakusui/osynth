@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth2.ut;
 
-import com.github.dakusui.osynth.utils.UtBase;
+import com.github.dakusui.osynth2.compat.utils.UtBase;
 import com.github.dakusui.osynth2.ObjectSynthesizer;
 import com.github.dakusui.pcond.forms.Functions;
 import org.junit.Test;
