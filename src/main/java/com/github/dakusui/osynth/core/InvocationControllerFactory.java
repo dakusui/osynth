@@ -4,5 +4,5 @@ import com.github.dakusui.osynth.ObjectSynthesizer;
 
 import java.util.function.Function;
 
-public interface InvocationControllerFactory extends Function<ObjectSynthesizer, InvocationController> {
+public interface InvocationControllerFactory extends Function<AbstractObjectSynthesizer<?>, InvocationController> {
 }
