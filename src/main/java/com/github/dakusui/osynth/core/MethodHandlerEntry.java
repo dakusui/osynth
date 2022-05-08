@@ -67,5 +67,9 @@ public interface MethodHandlerEntry {
     public MethodHandlerEntry build() {
       return create(this.matcherFactory.create(this.methodRequest), handler);
     }
+
+    public Builder matcher(MethodMatcher matcher) {
+      return this;
+    }
   }
 }

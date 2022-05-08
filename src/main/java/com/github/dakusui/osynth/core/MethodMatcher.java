@@ -1,10 +1,13 @@
 package com.github.dakusui.osynth.core;
 
+import com.github.dakusui.osynth.ObjectSynthesizer;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import static java.util.Objects.requireNonNull;
 
@@ -12,6 +15,26 @@ import static java.util.Objects.requireNonNull;
 public interface MethodMatcher extends Predicate<Method> {
   @Override
   boolean test(Method m);
+
+  static MethodMatcher create(Supplier<String> nameComposer, Predicate<? super Method> p) {
+    final Supplier<String> nc;
+    if (ObjectSynthesizer.WipUtils.isToStringOverridden(p.getClass()))
+      nc = () -> nameComposer.get() + ":" + p;
+    else
+      nc = () -> nameComposer.get() + ":" + ObjectSynthesizer.WipUtils.composeSimpleClassName(p.getClass());
+
+    return new MethodMatcher() {
+      @Override
+      public boolean test(Method m) {
+        return p.test(m);
+      }
+
+      @Override
+      public String toString() {
+        return nc.get();
+      }
+    };
+  }
 
   enum Factory {
     LENIENT {
