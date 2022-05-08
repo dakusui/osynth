@@ -39,7 +39,7 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
   }
 
   public static MethodMatcher matchingExactly(MethodSignature signature) {
-    return nameMatchingExactly(signature.name()).and(parameterTypesMatchingExactly(signature.parameterTypes()));
+    return MethodMatcher.overrideToString(mm -> ("matchingExactly:" + mm.toString()), nameMatchingExactly(signature.name()).and(parameterTypesMatchingExactly(signature.parameterTypes())));
   }
 
   /**

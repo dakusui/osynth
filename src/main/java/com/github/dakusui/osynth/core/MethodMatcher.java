@@ -1,13 +1,9 @@
 package com.github.dakusui.osynth.core;
 
-import com.github.dakusui.osynth.core.utils.MethodUtils;
-
 import java.lang.reflect.Method;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
-@FunctionalInterface
 public interface MethodMatcher {
   boolean test(Method m);
 
@@ -29,6 +25,10 @@ public interface MethodMatcher {
 
   static MethodMatcher create(Predicate<Method> methodPredicate) {
     return methodPredicate::test;
+  }
+
+  static MethodMatcher overrideToString(Function<MethodMatcher, String> toString, MethodMatcher methodMatcher) {
+    return PrivateUtils.methodMatcherOverrideToString(toString, methodMatcher);
   }
 
   enum PrivateUtils {
