@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForMissingMethodHandler;
@@ -107,7 +108,7 @@ public enum MethodUtils {
     }
   }
 
-  public static String composeSimpleClassName(Class<?> aClass) {
+  public static String simpleClassNameOf(Class<?> aClass) {
     if (aClass.getSimpleName().length() > 0 && !aClass.isSynthetic())
       return aClass.getSimpleName();
     final String label;
@@ -121,9 +122,33 @@ public enum MethodUtils {
     }
     return streamSupertypes(aClass)
         .filter(each -> !Objects.equals(Object.class, each))
-        .map(MethodUtils::composeSimpleClassName)
+        .map(MethodUtils::simpleClassNameOf)
         .collect(joining(",", label + ":(", ")")) +
         m.map(v -> ":declared in " + v).orElse("");
+  }
+
+  public static String toStringOrCompose(Object object) {
+    if (object == null)
+      return "null";
+    Class<?> aClass = object.getClass();
+    return isToStringOverridden(aClass) ?
+        object.toString() :
+        simpleClassNameOf(aClass) + "@" + System.identityHashCode(object);
+
+  }
+
+  public static <T, P extends Predicate<? super T>> Predicate<T> predicateOverrideToString(Function<P, String> toString, P predicate) {
+    return new Predicate<T>() {
+      @Override
+      public boolean test(T t) {
+        return predicate.test(t);
+      }
+
+      @Override
+      public String toString() {
+        return toString.apply(predicate);
+      }
+    };
   }
 
   private static String enclosingClassNameOfLambda(String canonicalNameOfLambda) {

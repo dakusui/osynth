@@ -20,7 +20,7 @@ public interface MethodMatcher extends Predicate<Method> {
     if (MethodUtils.isToStringOverridden(p.getClass()))
       nc = () -> nameComposer.get() + ":" + p;
     else
-      nc = () -> nameComposer.get() + ":" + MethodUtils.composeSimpleClassName(p.getClass());
+      nc = () -> nameComposer.get() + ":" + MethodUtils.simpleClassNameOf(p.getClass());
 
     return new MethodMatcher() {
       @Override
@@ -37,18 +37,30 @@ public interface MethodMatcher extends Predicate<Method> {
 
   @FunctionalInterface
   interface ByMethodSignature extends MethodMatcher {
-    default boolean test(Method method) {
-      return matches(MethodSignature.create(method));
-    }
+    enum PrivateUtils {
+      ;
 
-    boolean matches(MethodSignature s);
+      private static ByMethodSignature overrideToString(Function<ByMethodSignature, String> toString, ByMethodSignature byMethodSignature) {
+        return new ByMethodSignature() {
+          @Override
+          public boolean test(Method m) {
+            return byMethodSignature.test(m);
+          }
 
-    static ByMethodSignature createStrict(MethodSignature targetMethodSignature) {
-      return overrideToString(
-          v -> "matcher:" + targetMethodSignature,
-          (MethodSignature candidate) -> Objects.equals(targetMethodSignature.name(), candidate.name())
-              && Arrays.equals(targetMethodSignature.parameterTypes(), candidate.parameterTypes()));
+          @Override
+          public String toString() {
+            return toString.apply(this);
+          }
+        };
+      }
     }
+  }
+
+  static ByMethodSignature createStrict(MethodSignature targetMethodSignature) {
+    return ByMethodSignature.PrivateUtils.overrideToString(
+        v -> "matcher:" + targetMethodSignature,
+        (Method candidate) -> Objects.equals(targetMethodSignature.name(), candidate.getName())
+            && Arrays.equals(targetMethodSignature.parameterTypes(), candidate.getParameterTypes()));
   }
 
   /**
@@ -62,28 +74,15 @@ public interface MethodMatcher extends Predicate<Method> {
    * @return A method matcher by signature.
    */
   static ByMethodSignature createLenient(MethodSignature targetMethodSignature) {
-    return overrideToString(
+    return ByMethodSignature.PrivateUtils.overrideToString(
         v -> "matcher:" + targetMethodSignature,
-        (MethodSignature candidate) -> {
+        (Method candidate) -> {
           AtomicInteger i = new AtomicInteger(0);
-          return Objects.equals(targetMethodSignature.name(), candidate.name()) &&
-              targetMethodSignature.parameterTypes().length == candidate.parameterTypes().length &&
+          Class<?>[] parameterTypes = candidate.getParameterTypes();
+          return Objects.equals(targetMethodSignature.name(), candidate.getName()) &&
+              targetMethodSignature.parameterTypes().length == parameterTypes.length &&
               Arrays.stream(targetMethodSignature.parameterTypes())
-                  .allMatch(type -> type.isAssignableFrom(candidate.parameterTypes()[i.getAndIncrement()]));
+                  .allMatch(type -> type.isAssignableFrom(parameterTypes[i.getAndIncrement()]));
         });
-  }
-
-  static ByMethodSignature overrideToString(Function<ByMethodSignature, String> toString, ByMethodSignature byMethodSignature) {
-    return new ByMethodSignature() {
-      @Override
-      public boolean matches(MethodSignature s) {
-        return byMethodSignature.matches(s);
-      }
-
-      @Override
-      public String toString() {
-        return toString.apply(this);
-      }
-    };
   }
 }
