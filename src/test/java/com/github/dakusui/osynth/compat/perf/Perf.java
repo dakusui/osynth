@@ -69,6 +69,29 @@ public class Perf extends UtBase {
    * total:34.829834[msec]
    * result:1000001
    * ----
+   *
+   * .Simplified Method Matching mechanism. Showed slight performance degradation.
+   * ----
+   * commit 4e455cb480d7cfa7d2a2903db3db2a8fec86b52b (HEAD -> master-refining)
+   * Author: Hiroshi Ukai <dakusui@gmail.com>
+   * Date:   Sun May 8 13:55:17 2022 +0900
+   *
+   *     Simplify matching structure.
+   *
+   * 0:5.317750[msec]
+   * 1:4.764667[msec]
+   * 2:3.787500[msec]
+   * 3:3.734625[msec]
+   * 4:3.759875[msec]
+   * 5:3.763875[msec]
+   * 6:3.753541[msec]
+   * 7:3.850250[msec]
+   * 8:6.901375[msec]
+   * 9:3.811042[msec]
+   * numExecutions:1000000
+   * total:43.533458[msec]
+   * result:1000001
+   * ----
    */
   @Test
   public void performWithMethodHandler() {

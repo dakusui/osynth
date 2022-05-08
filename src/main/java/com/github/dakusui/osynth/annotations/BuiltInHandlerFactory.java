@@ -36,9 +36,14 @@ public @interface BuiltInHandlerFactory {
     static Stream<MethodHandlerEntry> createMethodHandlersForBuiltInMethods(Supplier<SynthesizedObject.Descriptor> descriptorSupplier) {
       return Arrays.stream(SynthesizedObject.class.getMethods())
           .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
-          .map((Method eachMethod) -> MethodHandlerEntry.create(
-              MethodMatcher.createStrict(MethodSignature.create(eachMethod)),
-              createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier)));
+          .map((Method eachMethod) -> {
+            MethodSignature targetMethodSignature = MethodSignature.create(eachMethod);
+            return MethodHandlerEntry.create(
+                (Method candidate) ->
+                    Objects.equals(targetMethodSignature.name(), candidate.getName()) &&
+                        Arrays.equals(targetMethodSignature.parameterTypes(), candidate.getParameterTypes()),
+                createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier));
+          });
     }
 
   }
