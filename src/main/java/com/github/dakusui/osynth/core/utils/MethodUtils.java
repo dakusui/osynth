@@ -7,15 +7,18 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForMissingMethodHandler;
 import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 import static com.github.dakusui.pcond.forms.Predicates.transform;
+import static java.util.stream.Collectors.joining;
 
 public enum MethodUtils {
   ;
@@ -94,6 +97,48 @@ public enum MethodUtils {
         .filter(Optional::isPresent)
         .map(Optional::get)
         .findFirst();
+  }
+
+  public static boolean isToStringOverridden(Class<?> aClass) {
+    try {
+      return !aClass.getMethod("toString").getDeclaringClass().equals(Object.class);
+    } catch (NoSuchMethodException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  public static String composeSimpleClassName(Class<?> aClass) {
+    if (aClass.getSimpleName().length() > 0 && !aClass.isSynthetic())
+      return aClass.getSimpleName();
+    final String label;
+    final Optional<String> m;
+    if (aClass.isSynthetic()) {
+      label = "lambda";
+      m = Optional.of(enclosingClassNameOfLambda(aClass.getCanonicalName()));
+    } else {
+      label = "anonymous";
+      m = Optional.empty();
+    }
+    return streamSupertypes(aClass)
+        .filter(each -> !Objects.equals(Object.class, each))
+        .map(MethodUtils::composeSimpleClassName)
+        .collect(joining(",", label + ":(", ")")) +
+        m.map(v -> ":declared in " + v).orElse("");
+  }
+
+  private static String enclosingClassNameOfLambda(String canonicalNameOfLambda) {
+    String ret = canonicalNameOfLambda.substring(0, canonicalNameOfLambda.lastIndexOf("$$"));
+    int b = ret.lastIndexOf("$");
+    if (b < 0)
+      return ret;
+    return ret.substring(b + "$".length());
+  }
+
+  private static Stream<Class<?>> streamSupertypes(Class<?> klass) {
+    return Stream.concat(
+            Stream.of(klass.getSuperclass()),
+            Arrays.stream(klass.getInterfaces()))
+        .filter(Objects::nonNull);
   }
 
   /**

@@ -29,29 +29,15 @@ public interface MethodHandlerEntry {
   }
 
   class Builder {
-    MethodSignature       methodRequest;
-    MethodHandler         handler;
-    MethodMatcher.Factory matcherFactory;
+    MethodHandler handler;
+    private MethodMatcher matcher;
 
     public Builder() {
-      this.strictly();
     }
 
-    public Builder handle(MethodSignature methodRequest) {
-      this.methodRequest = requireNonNull(methodRequest);
+    public Builder matcher(MethodMatcher matcher) {
+      this.matcher = requireNonNull(matcher);
       return this;
-    }
-
-    public Builder strictly() {
-      return this.createMatcherWith(MethodMatcher.Factory.STRICT);
-    }
-
-    public Builder leniently() {
-      return this.createMatcherWith(MethodMatcher.Factory.LENIENT);
-    }
-
-    public MethodHandlerEntry with(MethodHandler handler) {
-      return this.handler(handler).build();
     }
 
     public Builder handler(MethodHandler handler) {
@@ -59,17 +45,12 @@ public interface MethodHandlerEntry {
       return this;
     }
 
-    public Builder createMatcherWith(MethodMatcher.Factory matcherFactory) {
-      this.matcherFactory = requireNonNull(matcherFactory);
-      return this;
-    }
-
     public MethodHandlerEntry build() {
-      return create(this.matcherFactory.create(this.methodRequest), handler);
+      return create(this.matcher, handler);
     }
 
-    public Builder matcher(MethodMatcher matcher) {
-      return this;
+    public MethodHandlerEntry with(MethodHandler handler) {
+      return this.handler(handler).build();
     }
   }
 }

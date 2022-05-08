@@ -52,6 +52,23 @@ public class Perf extends UtBase {
    * total:40.695125[msec]
    * result:1000001
    * ----
+   *
+   * .SignatureMatchingMode (with simple hashmap)
+   * ----
+   * 0:4.579209[msec]
+   * 1:3.901500[msec]
+   * 2:3.42500[msec]
+   * 3:3.172666[msec]
+   * 4:3.45292[msec]
+   * 5:3.56708[msec]
+   * 6:3.58250[msec]
+   * 7:3.58459[msec]
+   * 8:4.304791[msec]
+   * 9:3.388792[msec]
+   * numExecutions:1000000
+   * total:34.829834[msec]
+   * result:1000001
+   * ----
    */
   @Test
   public void performWithMethodHandler() {

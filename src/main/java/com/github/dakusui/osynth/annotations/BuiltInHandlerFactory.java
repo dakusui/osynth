@@ -37,7 +37,7 @@ public @interface BuiltInHandlerFactory {
       return Arrays.stream(SynthesizedObject.class.getMethods())
           .filter(each -> each.isAnnotationPresent(BuiltInHandlerFactory.class))
           .map((Method eachMethod) -> MethodHandlerEntry.create(
-              MethodMatcher.ByMethodSignature.create(MethodSignature.create(eachMethod), MethodMatcher.Factory.STRICT),
+              MethodMatcher.ByMethodSignature.createStrict(MethodSignature.create(eachMethod)),
               createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier)));
     }
 

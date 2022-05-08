@@ -1,15 +1,15 @@
 package com.github.dakusui.osynth;
 
 import com.github.dakusui.osynth.core.*;
+import com.github.dakusui.osynth.core.utils.MethodUtils;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
+import static com.github.dakusui.osynth.core.MethodMatcher.ByMethodSignature.createStrict;
+import static com.github.dakusui.osynth.core.MethodMatcher.createLenient;
 import static java.util.stream.Collectors.joining;
 
 /**
@@ -21,15 +21,27 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
   }
 
   public static MethodHandlerEntry.Builder methodCall(String methodName, Class<?>... parameterTypes) {
-    return methodCall(MethodSignature.create(methodName, parameterTypes));
+    return methodCallStrict(MethodSignature.create(methodName, parameterTypes));
   }
 
-  public static MethodHandlerEntry.Builder methodCall(MethodSignature methodRequest) {
-    return new MethodHandlerEntry.Builder().handle(methodRequest);
+  public static MethodHandlerEntry.Builder methodCallStrict(MethodSignature methodSignature) {
+    return new MethodHandlerEntry.Builder().matcher(createStrict(methodSignature));
+  }
+
+  public static MethodHandlerEntry.Builder lenientMethodCall(MethodSignature methodSignature) {
+    return new MethodHandlerEntry.Builder().matcher(createLenient(methodSignature));
+  }
+
+  public static <A extends Annotation> MethodHandlerEntry.Builder methodAnnotatedWith(Class<A> annotationClass) {
+    return methodAnnotatedWith(annotationClass, v -> true);
+  }
+
+  public static <A extends Annotation> MethodHandlerEntry.Builder methodAnnotatedWith(Class<A> annotationClass, Predicate<A> annotation) {
+    return methodSatisfies(((Predicate<Method>) method -> method.isAnnotationPresent(annotationClass)).and(method -> annotation.test(method.getAnnotation(annotationClass))));
   }
 
   public static MethodHandlerEntry.Builder methodSatisfies(Predicate<? super Method> p) {
-    return methodSatisfies(WipUtils.composeSimpleClassName(p.getClass()), p);
+    return methodSatisfies(MethodUtils.composeSimpleClassName(p.getClass()), p);
   }
 
   public static MethodHandlerEntry.Builder methodSatisfies(String name, Predicate<? super Method> p) {
@@ -42,52 +54,6 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
 
   public static MethodHandlerEntry.Builder methodMatching(MethodMatcher matcher) {
     return new MethodHandlerEntry.Builder().matcher(matcher);
-  }
-
-  public static enum WipUtils {
-    ;
-
-    public static boolean isToStringOverridden(Class<?> aClass) {
-      try {
-        return !aClass.getMethod("toString").getDeclaringClass().equals(Object.class);
-      } catch (NoSuchMethodException e) {
-        throw new AssertionError(e);
-      }
-    }
-
-    public static String composeSimpleClassName(Class<?> aClass) {
-      if (aClass.getSimpleName().length() > 0 && !aClass.isSynthetic())
-        return aClass.getSimpleName();
-      final String label;
-      final Optional<String> m;
-      if (aClass.isSynthetic()) {
-        label = "lambda";
-        m = Optional.of(enclosingClassNameOfLambda(aClass.getCanonicalName()));
-      } else {
-        label = "anonymous";
-        m = Optional.empty();
-      }
-      return streamSupertypes(aClass)
-          .filter(each -> !Objects.equals(Object.class, each))
-          .map(WipUtils::composeSimpleClassName)
-          .collect(joining(",", label + ":(", ")")) +
-          m.map(v -> ":declared in " + v).orElse("");
-    }
-
-    private static String enclosingClassNameOfLambda(String canonicalNameOfLambda) {
-      String ret = canonicalNameOfLambda.substring(0, canonicalNameOfLambda.lastIndexOf("$$"));
-      int b = ret.lastIndexOf("$");
-      if (b < 0)
-        return ret;
-      return ret.substring(b + "$".length());
-    }
-
-    private static Stream<Class<?>> streamSupertypes(Class<?> klass) {
-      return Stream.concat(
-              Stream.of(klass.getSuperclass()),
-              Arrays.stream(klass.getInterfaces()))
-          .filter(Objects::nonNull);
-    }
   }
 
   public static class ComposeSimpleClassNameTest {
@@ -109,16 +75,16 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
           }
         }.get();
         System.out.println("= lamda");
-        System.out.println("custom:lambda:   " + WipUtils.composeSimpleClassName(p.getClass()));
+        System.out.println("custom:lambda:   " + MethodUtils.composeSimpleClassName(p.getClass()));
         System.out.println("normal:lambda:   " + p.getClass().getSimpleName());
         System.out.println("= anonymous class");
-        System.out.println("custom:anonymous:" + WipUtils.composeSimpleClassName(q.getClass()));
+        System.out.println("custom:anonymous:" + MethodUtils.composeSimpleClassName(q.getClass()));
         System.out.println("normal:anonymous:" + q.getClass().getSimpleName());
         System.out.println("= normal class");
-        System.out.println("custom:static:   " + WipUtils.composeSimpleClassName(ComposeSimpleClassNameTest.class));
+        System.out.println("custom:static:   " + MethodUtils.composeSimpleClassName(ComposeSimpleClassNameTest.class));
         System.out.println("normal:static:   " + ComposeSimpleClassNameTest.class.getSimpleName());
         System.out.println("= lambda defined inside anonymous");
-        System.out.println("custom:lambda:   " + WipUtils.composeSimpleClassName(p.getClass()));
+        System.out.println("custom:lambda:   " + MethodUtils.composeSimpleClassName(p.getClass()));
         System.out.println("normal:lambda:   " + p.getClass().getSimpleName());
         System.out.println("canonical:lambda:" + p.getClass().getCanonicalName());
       }

@@ -3,12 +3,13 @@ package com.github.dakusui.osynth.ut;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.UtBase;
 import com.github.dakusui.osynth.core.SynthesizedObject;
+import com.github.dakusui.pcond.forms.Functions;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.forms.Predicates.allOf;
-import static com.github.dakusui.pcond.forms.Predicates.containsString;
+import static com.github.dakusui.pcond.forms.Functions.findString;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class VariationTest extends UtBase {
   public interface A {
@@ -26,11 +27,10 @@ public class VariationTest extends UtBase {
         .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);
-    assertThat(output, allOf(
-        containsString("Hello!"),
-        containsString("{methodHandlers=["),
-        containsString("(matcher:aMethod(String),")
-    ));
+    assertThat(output, transform(
+        findString("Hello!").andThen(
+            findString("{methodHandlers=[").andThen(
+                findString("(matcher:aMethod(String),"))))
+        .check(isNotNull()));
   }
-
 }
