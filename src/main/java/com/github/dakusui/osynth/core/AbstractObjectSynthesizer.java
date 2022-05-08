@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -236,7 +237,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
               methodHandlerEntry,
               RESERVED_METHODS
                   .stream()
-                  .filter(methodHandlerEntry.matcher())
+                  .filter(method -> methodHandlerEntry.matcher().test(method))
                   .map(MethodSignature::create)
                   .collect(Collectors.toList())))
           .filter(reservedMethodViolation -> !reservedMethodViolation.violatedReservedMethods.isEmpty())

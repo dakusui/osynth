@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -57,27 +58,27 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
 
   public static MethodMatcher nameMatchingExactly(String methodName) {
     return MethodMatcher.create(
-        () -> format("nameMatchingExactly[%s]", methodName),
+        (mm) -> format("nameMatchingExactly[%s]", methodName),
         method -> Objects.equals(methodName, method.getName()));
   }
 
   public static MethodMatcher nameMatchingRegex(String regexForMethodName) {
     Pattern regex = Pattern.compile(regexForMethodName);
     return MethodMatcher.create(
-        () -> format("nameMatchingRegex[%s]", regexForMethodName),
+        (mm) -> format("nameMatchingRegex[%s]", regexForMethodName),
         method -> regex.matcher(method.getName()).matches());
   }
 
   public static MethodMatcher parameterTypesMatchingExactly(Class<?>[] parameterTypes) {
     return MethodMatcher.create(
-        () -> format("parameterTypesMatchingExactly%s", Arrays.toString(parameterTypes)),
+        (mm) -> format("parameterTypesMatchingExactly%s", Arrays.toString(parameterTypes)),
         method -> Arrays.equals(parameterTypes, method.getParameterTypes())
     );
   }
 
   public static MethodMatcher parameterTypesMatchingLeniently(Class<?>[] parameterTypes) {
     return MethodMatcher.create(
-        () -> format("parameterTypesMatchingLeniently%s", Arrays.toString(parameterTypes)),
+        (mm) -> format("parameterTypesMatchingLeniently%s", Arrays.toString(parameterTypes)),
         method -> {
           AtomicInteger i = new AtomicInteger(0);
           return parameterTypes.length == method.getParameterTypes().length &&
@@ -93,13 +94,13 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
 
   public static <A extends Annotation> MethodMatcher annotatedWith(Class<A> annotationClass, Predicate<A> annotation) {
     return matching(
-        () -> format("and(has annotation %s, %s)", simpleClassNameOf(annotationClass), toStringOrCompose(annotation)),
+        (mm) -> format("and(has annotation %s, %s)", simpleClassNameOf(annotationClass), toStringOrCompose(annotation)),
         ((Predicate<Method>) method -> method.isAnnotationPresent(annotationClass)).and(
             method -> annotation.test(method.getAnnotation(annotationClass)))
     );
   }
 
-  public static MethodMatcher matching(Supplier<String> nameComposer, Predicate<Method> p) {
+  public static MethodMatcher matching(Function<MethodMatcher, String> nameComposer, Predicate<Method> p) {
     return MethodMatcher.create(nameComposer, p);
   }
 }

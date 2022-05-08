@@ -12,35 +12,23 @@ public interface MethodMatcher {
   boolean test(Method m);
 
   default MethodMatcher and(MethodMatcher other) {
-    return (m -> this.test(m) && other.test(m));
+    return create(m -> "and(" + this + "," + other + ")", v -> this.test(v) && other.test(v));
   }
 
   default MethodMatcher or(MethodMatcher other) {
-    throw new UnsupportedOperationException();
+    return create(m -> "or(" + this + "," + other + ")", v -> this.test(v) || other.test(v));
   }
 
   default MethodMatcher negate() {
-    throw new UnsupportedOperationException();
+    return create(m -> "not(" + this + ")", v -> !test(v));
   }
 
-  static MethodMatcher create(Supplier<String> nameComposer, Predicate<? super Method> p) {
-    final Supplier<String> nc;
-    if (MethodUtils.isToStringOverridden(p.getClass()))
-      nc = () -> nameComposer.get() + ":" + p;
-    else
-      nc = () -> nameComposer.get() + ":" + MethodUtils.simpleClassNameOf(p.getClass());
+  static MethodMatcher create(Function<MethodMatcher, String> toString, Predicate<Method> methodPredicate) {
+    return PrivateUtils.methodMatcherOverrideToString(toString, create(methodPredicate));
+  }
 
-    return new MethodMatcher() {
-      @Override
-      public boolean test(Method m) {
-        return p.test(m);
-      }
-
-      @Override
-      public String toString() {
-        return nc.get();
-      }
-    };
+  static MethodMatcher create(Predicate<Method> methodPredicate) {
+    return methodPredicate::test;
   }
 
   enum PrivateUtils {

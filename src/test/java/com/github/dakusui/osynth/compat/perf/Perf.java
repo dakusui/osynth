@@ -92,6 +92,23 @@ public class Perf extends UtBase {
    * total:43.533458[msec]
    * result:1000001
    * ----
+   *
+   * .Introduce Invocation Context mechanism (session 3)
+   * ---
+   * 0:4.875125[msec]
+   * 1:4.699500[msec]
+   * 2:3.984208[msec]
+   * 3:3.940167[msec]
+   * 4:3.939166[msec]
+   * 5:4.220417[msec]
+   * 6:4.220458[msec]
+   * 7:3.918000[msec]
+   * 8:4.24167[msec]
+   * 9:4.298750[msec]
+   * numExecutions:1000000
+   * total:42.248375[msec]
+   * result:1000001
+   * ----
    */
   @Test
   public void performWithMethodHandler() {
@@ -210,6 +227,23 @@ public class Perf extends UtBase {
    * 9:1.512708[msec]
    * numExecutions:1000000
    * total:19.57750[msec]
+   * result:1000001
+   * ----
+   *
+   * .Session 3
+   * ----
+   * 0:6.5833[msec]
+   * 1:1.298625[msec]
+   * 2:1.1959[msec]
+   * 3:0.983500[msec]
+   * 4:0.980791[msec]
+   * 5:0.967334[msec]
+   * 6:1.26291[msec]
+   * 7:1.202334[msec]
+   * 8:1.110791[msec]
+   * 9:1.320709[msec]
+   * numExecutions:1000000
+   * total:16.5292[msec]
    * result:1000001
    * ----
    */

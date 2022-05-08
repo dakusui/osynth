@@ -25,12 +25,17 @@ public enum MethodUtils {
   ;
 
   public static MethodHandler createMethodHandlerFromFallbackObject(final Object fallbackObject, MethodSignature methodSignature) {
-    Objects.requireNonNull(fallbackObject);
+    assert fallbackObject != null;
+    return createMethodHandlerDelegatingToObject(fallbackObject, methodSignature);
+  }
+
+  public static MethodHandler createMethodHandlerDelegatingToObject(Object object, MethodSignature methodSignature) {
+    assert object != null;
     return (synthesizedObject, args) -> execute(() -> {
       try {
-        Method method = fallbackObject.getClass().getMethod(methodSignature.name(), methodSignature.parameterTypes());
+        Method method = object.getClass().getMethod(methodSignature.name(), methodSignature.parameterTypes());
         method.setAccessible(true);
-        return method.invoke(fallbackObject, args);
+        return method.invoke(object, args);
       } catch (NoSuchMethodException e) {
         throw new UnsupportedOperationException(messageForMissingMethodHandler(methodSignature, synthesizedObject, e), e);
       }
