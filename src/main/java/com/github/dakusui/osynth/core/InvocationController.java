@@ -14,7 +14,7 @@ public interface InvocationController extends InvocationHandler {
   @Override
   default Object invoke(Object proxy, Method method, Object[] args) {
     assert proxy instanceof SynthesizedObject;
-    Context.Impl.contextWith(method);
+    InvocationContext.Impl.contextWith(method);
     return execute(() -> methodHandlerFor(method).handle((SynthesizedObject) proxy, toEmptyArrayIfNull(args)));
   }
 
@@ -32,8 +32,8 @@ public interface InvocationController extends InvocationHandler {
 
   SynthesizedObject.Descriptor descriptor();
 
-  static Context context() {
-    return Context.forCurrentThread();
+  static InvocationContext invocationContext() {
+    return InvocationContext.forCurrentThread();
   }
 
   interface WithCache extends InvocationController {
@@ -73,47 +73,6 @@ public interface InvocationController extends InvocationHandler {
     @Override
     public SynthesizedObject.Descriptor descriptor() {
       return this.descriptor;
-    }
-  }
-
-  interface Context {
-    ThreadLocal<Context> CONTEXT_THREAD_LOCAL = new ThreadLocal<>();
-
-    Method invokedMethod();
-
-    static Context forCurrentThread() {
-      Context ret = CONTEXT_THREAD_LOCAL.get();
-      assert ret != null;
-      return ret;
-    }
-
-    class Impl implements Context {
-      private static void forCurrentThreadOrNewOneWith(Method invokedMethod) {
-        createContextIfNotYet().invokedMethod(invokedMethod);
-      }
-
-      private static void contextWith(Method invokedMethod) {
-        Impl.forCurrentThreadOrNewOneWith(invokedMethod);
-      }
-      private static Context.Impl createContextIfNotYet() {
-        Context.Impl ret = (Impl) CONTEXT_THREAD_LOCAL.get();
-        if (ret == null) {
-          ret = new Impl();
-          CONTEXT_THREAD_LOCAL.set(ret);
-        }
-        return ret;
-      }
-
-      private Method invokedMethod;
-
-      void invokedMethod(Method invokedMethod) {
-        this.invokedMethod = invokedMethod;
-      }
-
-      @Override
-      public Method invokedMethod() {
-        return this.invokedMethod;
-      }
     }
   }
 }

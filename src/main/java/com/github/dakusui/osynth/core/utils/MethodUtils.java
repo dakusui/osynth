@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForMissingMethodHandler;
@@ -52,7 +51,6 @@ public enum MethodUtils {
   }
 
   static Optional<MethodHandle> findMethodHandleFor(MethodSignature methodSignature, Class<?> fromClass) {
-    //require(fromClass, allOf(isNotNull(), classIsInterface()));
     return findMethodMatchingWith(methodSignature, fromClass).filter(Method::isDefault).map(m -> methodHandleFor(m, fromClass));
   }
 
@@ -132,28 +130,13 @@ public enum MethodUtils {
         m.map(v -> ":declared in " + v).orElse("");
   }
 
-  public static String toStringOrCompose(Object object) {
+  public static String toSlightlyPrettierStringUnlessToStringOverridden(Object object) {
     if (object == null)
       return "null";
     Class<?> aClass = object.getClass();
     return isToStringOverridden(aClass) ?
         object.toString() :
         simpleClassNameOf(aClass) + "@" + System.identityHashCode(object);
-
-  }
-
-  public static <T, P extends Predicate<? super T>> Predicate<T> predicateOverrideToString(Function<P, String> toString, P predicate) {
-    return new Predicate<T>() {
-      @Override
-      public boolean test(T t) {
-        return predicate.test(t);
-      }
-
-      @Override
-      public String toString() {
-        return toString.apply(predicate);
-      }
-    };
   }
 
   private static String enclosingClassNameOfLambda(String canonicalNameOfLambda) {

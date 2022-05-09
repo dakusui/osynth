@@ -1,9 +1,6 @@
 package com.github.dakusui.osynth.core;
 
-import com.github.dakusui.osynth.core.utils.MethodUtils;
-
 import static com.github.dakusui.osynth.core.utils.MethodUtils.createMethodHandlerDelegatingToObject;
-import static com.github.dakusui.osynth.core.utils.MethodUtils.createMethodHandlerFromFallbackObject;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 
 public interface MethodHandlerEntry {
@@ -59,9 +56,9 @@ public interface MethodHandlerEntry {
 
     public MethodHandlerEntry delegatingTo(Object object) {
       requireNonNull(object);
-      return this.handler(createMethodHandlerDelegatingToObject(
+      return this.handler((synthesizedObject, args) -> createMethodHandlerDelegatingToObject(
               object,
-              MethodSignature.create(InvocationController.context().invokedMethod())))
+              MethodSignature.create(InvocationController.invocationContext().invokedMethod())).handle(synthesizedObject, args))
           .build();
     }
   }

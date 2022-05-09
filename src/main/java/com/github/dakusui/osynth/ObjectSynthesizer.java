@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import static com.github.dakusui.osynth.core.utils.MethodUtils.*;
@@ -46,14 +45,20 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
    * Returns a "lenient" method matcher by signature.
    * The returned matcher checks if
    *
-   * 1. The name of a method to be tested is equal to the `targetMethodSignature`.
+   * 1. The name of a method to be tested if it is matching the name of the `targetMethodSignature` as a regular expression.
    * 2. Every parameter types of the method to be tested is equal to or more special than the corresponding parameter type in the `signature`.
+   *
+   * If the signature doesn't have any parameter types, it matches a method without
+   * any parameters.
+   * In case you want to create a matcher that matches a method with a specific name but
+   * doesn't care any parameter types, use {@link ObjectSynthesizer#nameMatchingRegex(String)}
+   * or {@link ObjectSynthesizer#nameMatchingExactly(String)}.
    *
    * @param signature The method signature that matches a returned matcher.
    * @return A method matcher by signature.
    */
   public static MethodMatcher matchingLeniently(MethodSignature signature) {
-    return nameMatchingRegex(signature.name()).and(parameterTypesMatchingLeniently(signature.parameterTypes()));
+    return MethodMatcher.overrideToString(mm -> ("matchingLeniently:" + mm.toString()), nameMatchingRegex(signature.name()).and(parameterTypesMatchingLeniently(signature.parameterTypes())));
   }
 
   public static MethodMatcher nameMatchingExactly(String methodName) {
@@ -89,15 +94,16 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
   }
 
   public static <A extends Annotation> MethodMatcher annotatedWith(Class<A> annotationClass) {
-    return annotatedWith(annotationClass, predicateOverrideToString(p -> "true", v -> true));
+    return matching(
+        m -> "annotatedWith(@" + simpleClassNameOf(annotationClass) + ")",
+        method -> method.isAnnotationPresent(annotationClass));
   }
 
-  public static <A extends Annotation> MethodMatcher annotatedWith(Class<A> annotationClass, Predicate<A> annotation) {
-    return matching(
-        (mm) -> format("and(has annotation %s, %s)", simpleClassNameOf(annotationClass), toStringOrCompose(annotation)),
-        ((Predicate<Method>) method -> method.isAnnotationPresent(annotationClass)).and(
-            method -> annotation.test(method.getAnnotation(annotationClass)))
-    );
+  public static <A extends Annotation> MethodMatcher annotatedWith(Class<A> annotationClass, Predicate<A> annotationPredicate) {
+    return annotatedWith(annotationClass).and(
+        matching(
+            m -> "satisfying:" + toSlightlyPrettierStringUnlessToStringOverridden(m),
+            m -> annotationPredicate.test(m.getAnnotation(annotationClass))));
   }
 
   public static MethodMatcher matching(Function<MethodMatcher, String> nameComposer, Predicate<Method> p) {

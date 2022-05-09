@@ -29,8 +29,14 @@ public class VariationTest extends UtBase {
     System.out.println(output);
     assertThat(output, transform(
         findString("Hello!").andThen(
-            findString("{methodHandlers=[").andThen(
-                findString("(matcher:aMethod(String),"))))
-        .check(isNotNull()));
+                findString("{").andThen(
+                    findString("methodHandlers=[").andThen(
+                        findString("matchingExactly").andThen(
+                            findString("name").andThen(
+                                findString("aMethod").andThen(
+                                    findString("parameterTypes").andThen(
+                                        findString("String")
+                                    ))))))))
+            .check(isNotNull()));
   }
 }
