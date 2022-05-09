@@ -4,10 +4,10 @@ import com.github.dakusui.osynth.ObjectSynthesizer;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.function.Function;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.forms.Matchers.matcherFor;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class DelegationTest {
@@ -60,26 +60,48 @@ public class DelegationTest {
     TestInterface object = new ObjectSynthesizer()
         .addInterface(TestInterface.class)
         .handle(methodCall("testMethod0").delegatingTo(new TestInterface.Impl()))
-        .handle(methodCall("testMethod1",String.class).with((sobj, args) -> "methodHandler:testMethod1:" + Arrays.toString(args)))
+        .handle(methodCall("testMethod1", String.class).with((sobj, args) -> "methodHandler:testMethod1:" + Arrays.toString(args)))
         .synthesize()
         .castTo(TestInterface.class);
 
-    String out = object.testMethod0();
-
-    System.out.println(out);
+    System.out.println(object);
 
     assertThat(
         object,
         allOf(
             isNotNull(),
-            transform(TestInterface::testMethod0).check(
-                allOf(
-                    isNotNull(),
-                    equalTo("implementationObject:testMethod0:<>"))),
-            transform((Function<TestInterface, String>) testInterface -> testInterface.testMethod1("string1")).check(
-                allOf(
-                    isNotNull(),
-                    equalTo("methodHandler:testMethod1:<>")))
-        ));
+            matcherFor(TestInterface.class)
+                .name("testMethod0")
+                .transformBy(TestInterface::testMethod0)
+                .thenVerifyWith(
+                    allOf(
+                        isNotNull(),
+                        equalTo("implementationObject:testMethod0:<>")
+                    )),
+            matcherFor(TestInterface.class)
+                .name("testMethod1[String]")
+                .transformBy(v -> v.testMethod1("testMethod1:arg1"))
+                .thenVerifyWith(
+                    allOf(
+                        isNotNull(),
+                        equalTo("methodHandler:testMethod1:[testMethod1:arg1]")
+                    ))));
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void given$whenDoDelegation$thenDelegatedObjectTakesControl2() {
+    TestInterface object = new ObjectSynthesizer()
+        .addInterface(TestInterface.class)
+        .handle(methodCall("testMethod0").delegatingTo(new TestInterface.Impl()))
+        .handle(methodCall("testMethod1", String.class).with((sobj, args) -> "methodHandler:testMethod1:" + Arrays.toString(args)))
+        .synthesize()
+        .castTo(TestInterface.class);
+
+    try {
+      System.out.println(object.testMethod2("testMethod2:arg1", "testMethod2:arg2"));
+    } catch (UnsupportedOperationException e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }
