@@ -9,6 +9,7 @@ import org.junit.Test;
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Functions.findString;
+import static com.github.dakusui.pcond.forms.Matchers.findSubstrings;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class VariationTest extends UtBase {
@@ -27,16 +28,9 @@ public class VariationTest extends UtBase {
         .synthesize();
     String output = object.castTo(A.class).aMethod("Hello!");
     System.out.println(output);
-    assertThat(output, transform(
-        findString("Hello!").andThen(
-                findString("{").andThen(
-                    findString("methodHandlers=[").andThen(
-                        findString("matchingExactly").andThen(
-                            findString("name").andThen(
-                                findString("aMethod").andThen(
-                                    findString("parameterTypes").andThen(
-                                        findString("String")
-                                    ))))))))
-            .check(isNotNull()));
+    assertThat(output, findSubstrings(
+        "Hello!",
+        "methodHandlers=[",
+        "nameMatchingExactly[aMethod],"));
   }
 }

@@ -1,8 +1,7 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.compat.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.pcond.forms.Functions;
+import com.github.dakusui.osynth.compat.utils.UtBase;
 import org.junit.Test;
 
 import java.util.LinkedList;
@@ -10,9 +9,8 @@ import java.util.List;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.forms.Functions.elementAt;
-import static com.github.dakusui.pcond.forms.Matchers.matcherForListOf;
-import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.pcond.forms.Matchers.findElements;
+import static com.github.dakusui.pcond.forms.Predicates.isEqualTo;
 
 public class AutoLoggingTest extends UtBase {
   static class TestException extends RuntimeException {
@@ -56,10 +54,10 @@ public class AutoLoggingTest extends UtBase {
       out.forEach(System.err::println);
       assertThat(
           out,
-          allOf(
-              matcherForListOf(String.class).transformBy(elementAt(0)).thenVerifyWith(isEqualTo("handler:aMethod")),
-              matcherForListOf(String.class).transformBy(elementAt(1)).thenVerifyWith(isEqualTo("default:bMethod")),
-              matcherForListOf(String.class).transformBy(elementAt(2)).thenVerifyWith(isEqualTo("fallback:cMethod"))
+          findElements(
+              isEqualTo("handler:aMethod"),
+              isEqualTo("default:bMethod"),
+              isEqualTo("fallback:cMethod")
           ));
       throw e;
     }
@@ -86,10 +84,10 @@ public class AutoLoggingTest extends UtBase {
       out.forEach(System.err::println);
       assertThat(
           out,
-          allOf(
-              matcherForListOf(String.class).transformBy(elementAt(0)).thenVerifyWith(isEqualTo("handler:aMethod")),
-              matcherForListOf(String.class).transformBy(elementAt(1)).thenVerifyWith(isEqualTo("default:bMethod")),
-              matcherForListOf(String.class).transformBy(elementAt(2)).thenVerifyWith(isEqualTo("fallback:cMethod!"))
+          findElements(
+              isEqualTo("handler:aMethod"),
+              isEqualTo("default:bMethod"),
+              isEqualTo("fallback:cMethod")
           ));
       throw e;
     }

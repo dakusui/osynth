@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.compat.utils.UtBase;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -10,7 +11,7 @@ import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Matchers.matcherFor;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
-public class DelegationTest {
+public class DelegationTest extends UtBase {
   interface TestInterface {
     String testMethod0();
 
