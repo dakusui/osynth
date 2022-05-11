@@ -10,6 +10,8 @@ import java.util.List;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.forms.Functions.elementAt;
+import static com.github.dakusui.pcond.forms.Matchers.matcherForListOf;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class AutoLoggingTest extends UtBase {
@@ -55,9 +57,9 @@ public class AutoLoggingTest extends UtBase {
       assertThat(
           out,
           allOf(
-              transform(Functions.elementAt(0)).check(isEqualTo("handler:aMethod")),
-              transform(Functions.elementAt(1)).check(isEqualTo("default:bMethod")),
-              transform(Functions.elementAt(2)).check(isEqualTo("fallback:cMethod"))
+              matcherForListOf(String.class).transformBy(elementAt(0)).thenVerifyWith(isEqualTo("handler:aMethod")),
+              matcherForListOf(String.class).transformBy(elementAt(1)).thenVerifyWith(isEqualTo("default:bMethod")),
+              matcherForListOf(String.class).transformBy(elementAt(2)).thenVerifyWith(isEqualTo("fallback:cMethod"))
           ));
       throw e;
     }
@@ -85,9 +87,9 @@ public class AutoLoggingTest extends UtBase {
       assertThat(
           out,
           allOf(
-              transform(Functions.elementAt(0)).check(isEqualTo("handler:aMethod")),
-              transform(Functions.elementAt(1)).check(isEqualTo("default:bMethod")),
-              transform(Functions.elementAt(2)).check(isEqualTo("fallback:cMethod"))
+              matcherForListOf(String.class).transformBy(elementAt(0)).thenVerifyWith(isEqualTo("handler:aMethod")),
+              matcherForListOf(String.class).transformBy(elementAt(1)).thenVerifyWith(isEqualTo("default:bMethod")),
+              matcherForListOf(String.class).transformBy(elementAt(2)).thenVerifyWith(isEqualTo("fallback:cMethod!"))
           ));
       throw e;
     }

@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.core.utils;
 
 import com.github.dakusui.osynth.core.*;
-import com.github.dakusui.pcond.forms.Printables;
+import com.github.dakusui.pcond.internals.InternalUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -13,7 +13,11 @@ import java.util.stream.Stream;
 import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
 import static com.github.dakusui.pcond.forms.Functions.call;
 import static com.github.dakusui.pcond.forms.Functions.parameter;
+import static com.github.dakusui.pcond.forms.Matchers.matcherForString;
+import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.callp;
+import static com.github.dakusui.pcond.forms.Printables.function;
+import static com.github.dakusui.pcond.forms.Printables.predicate;
 import static java.util.stream.Collectors.toList;
 
 public enum AssertionUtils {
@@ -35,17 +39,6 @@ public enum AssertionUtils {
     return call(instanceMethod(parameter(), "interfaces"));
   }
 
-  public static Function<List<MethodHandlerEntry>, Collection<MethodMatcher>> methodHandlerEntryListToMethodMatcherCollection(Object value) {
-    return convertList(Printables.function("methodHandlerEntryToMethodMatcher", MethodHandlerEntry::matcher));
-  }
-
-  private static <I, O> Function<List<I>, Collection<O>> convertList(Function<I, O> conversionFunction) {
-    return Printables.function("convertToMethodMatcherList",
-        methodHandlerEntries -> methodHandlerEntries.stream()
-            .map(conversionFunction)
-            .collect(toList()));
-  }
-
   public static Predicate<Object> collectionContainsValue(Collection<?> targetSet, Object value) {
     return callp(instanceMethod(targetSet, "contains", value));
   }
@@ -55,7 +48,7 @@ public enum AssertionUtils {
   }
 
   public static <E> Function<Collection<E>, List<E>> collectionDuplicatedElements() {
-    return Printables.function("duplicatedElements", AssertionUtils::duplicatedElementsIn);
+    return function("duplicatedElements", AssertionUtils::duplicatedElementsIn);
   }
 
   public static <E> List<E> duplicatedElementsIn(Collection<E> collection) {
@@ -67,14 +60,6 @@ public enum AssertionUtils {
   }
 
   public static <T> Predicate<Class<T>> classIsInterface() {
-    return Printables.predicate("isInterface", Class::isInterface);
-  }
-
-  public static Function<Stream<MethodHandlerEntry>, Stream<MethodMatcher>> methodHandlerEntryStreamToMethodMatcherStream() {
-    return Printables.function("methodHandlerEntryStreamToMethodMatcherStream", methodHandlerEntryStream -> methodHandlerEntryStream.map(MethodHandlerEntry::matcher));
-  }
-
-  public static Function<Stream<?>, Stream<MethodHandlerEntry>> streamToMethodHandlerEntryStream() {
-    return Printables.function("streamToMethodHandlerEntryStream", stream -> stream.map(e -> (MethodHandlerEntry) e));
+    return predicate("isInterface", Class::isInterface);
   }
 }
