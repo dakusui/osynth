@@ -29,7 +29,7 @@ public class ObjectSynthesizerWrapper {
     this.objectSynthesizer = objectSynthesizer;
   }
 
-  public static MethodHandlerEntry createMethodHandler(int numArgs, MethodType methodType, ExceptionType exceptionType) {
+  public static MethodHandlerEntry createMethodHandlerEntry(int numArgs, MethodType methodType, ExceptionType exceptionType) {
     Class<?>[] argTypes = new Class[numArgs];
     for (int i = 0; i < numArgs; i++)
       argTypes[i] = int.class;
@@ -57,7 +57,7 @@ public class ObjectSynthesizerWrapper {
     for (MethodHandlerEntry each : methodHandlersRegisteredAlways)
       objectSynthesizer.handle(each);
     for (int i = 0; i < numMethodHandlers; i++) {
-      requireNonNull(objectSynthesizer.handle(createMethodHandler(targetMethodDef.getNumArgs(), targetMethodDef.getMethodType(), targetMethodDef.getExceptionType())));
+      requireNonNull(objectSynthesizer.handle(createMethodHandlerEntry(targetMethodDef.getNumArgs(), targetMethodDef.getMethodType(), targetMethodDef.getExceptionType())));
       objectSynthesizer.handle(methodHandlersForEachInterface[i]);
     }
     return this;
@@ -69,7 +69,7 @@ public class ObjectSynthesizerWrapper {
 
   private static void example() {
     Object obj = new LegacyObjectSynthesizer()
-        .handle(ObjectSynthesizerWrapper.createMethodHandler(1, MethodType.NORMAL, null))
+        .handle(ObjectSynthesizerWrapper.createMethodHandlerEntry(1, MethodType.NORMAL, null))
         .fallbackTo(new Object())
         .addInterface(I1N.class)
         .addInterface(I2N.class)

@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.compat.perf;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;

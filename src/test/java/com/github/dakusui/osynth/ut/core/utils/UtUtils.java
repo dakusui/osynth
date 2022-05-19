@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.compat.utils;
+package com.github.dakusui.osynth.ut.core.utils;
 
 
 import com.github.dakusui.thincrest_pcond.functions.Printable;

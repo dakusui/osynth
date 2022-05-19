@@ -13,10 +13,11 @@ import com.github.dakusui.osynth.compat.comb.model.ExceptionType;
 import com.github.dakusui.osynth.compat.comb.model.MethodType;
 import com.github.dakusui.osynth.compat.comb.model.ObjectSynthesizerWrapper;
 import com.github.dakusui.osynth.compat.comb.model.TargetMethodDef;
-import com.github.dakusui.osynth.compat.utils.UtBase;
-import com.github.dakusui.osynth.compat.utils.UtUtils;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtUtils;
 import com.github.dakusui.osynth.exceptions.OsynthException;
 import org.junit.ComparisonFailure;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -249,7 +250,8 @@ public class JCUnitBasedTest extends UtBase {
     });
   }
 
-  @Test
+//  @Test
+  @Ignore // A test methodology issue. What does method handlers (entries) are equal mean needs to be clarified first.
   public void testEquals(@From("auto") boolean auto,
       @From("numMethodHandlers") int numMethodHandlers,
       @From("numInterfaces") int numInterfaces,

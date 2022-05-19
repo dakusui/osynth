@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.compat.ut.issues;
 
 import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;

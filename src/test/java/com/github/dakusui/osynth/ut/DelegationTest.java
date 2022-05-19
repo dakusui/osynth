@@ -1,14 +1,14 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import org.junit.Test;
 
 import java.util.Arrays;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.pcond.Fluents.whenInstanceOf;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.forms.Matchers.matcherFor;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class DelegationTest extends UtBase {
@@ -58,35 +58,31 @@ public class DelegationTest extends UtBase {
 
   @Test
   public void given$whenDoDelegation$thenDelegatedObjectTakesControl() {
-    TestInterface object = new ObjectSynthesizer()
+    TestInterface givenObject = new ObjectSynthesizer()
         .addInterface(TestInterface.class)
         .handle(methodCall("testMethod0").delegatingTo(new TestInterface.Impl()))
         .handle(methodCall("testMethod1", String.class).with((sobj, args) -> "methodHandler:testMethod1:" + Arrays.toString(args)))
         .synthesize()
         .castTo(TestInterface.class);
 
-    System.out.println(object);
+    System.out.println(givenObject);
 
     assertThat(
-        object,
+        givenObject,
         allOf(
             isNotNull(),
-            matcherFor(TestInterface.class)
-                .name("testMethod0")
-                .transformBy(TestInterface::testMethod0)
-                .thenVerifyWith(
-                    allOf(
-                        isNotNull(),
-                        equalTo("implementationObject:testMethod0:<>")
-                    )),
-            matcherFor(TestInterface.class)
-                .name("testMethod1[String]")
-                .transformBy(v -> v.testMethod1("testMethod1:arg1"))
-                .thenVerifyWith(
-                    allOf(
-                        isNotNull(),
-                        equalTo("methodHandler:testMethod1:[testMethod1:arg1]")
-                    ))));
+            whenInstanceOf(TestInterface.class)
+                .applyFunction("invoke[testMethod0]", TestInterface::testMethod0)
+                .thenAsString()
+                .isNotNull()
+                .isEqualTo("implementationObject:testMethod0:<>")
+                .verify(),
+            whenInstanceOf(TestInterface.class)
+                .applyFunction("invoke[testMethod1](arg1)", v -> v.testMethod1("testMethod1:arg1"))
+                .thenAsString()
+                .isNotNull()
+                .isEqualTo("methodHandler:testMethod1:[testMethod1:arg1]")
+                .verify()));
   }
 
   @Test(expected = UnsupportedOperationException.class)

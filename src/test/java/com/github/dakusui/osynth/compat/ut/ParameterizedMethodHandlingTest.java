@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.compat.ut;
 
 import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import org.junit.Test;
 
 import java.util.Arrays;

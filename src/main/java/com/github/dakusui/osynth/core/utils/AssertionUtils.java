@@ -1,24 +1,20 @@
 package com.github.dakusui.osynth.core.utils;
 
-import com.github.dakusui.osynth.core.*;
-import com.github.dakusui.pcond.internals.InternalUtils;
+import com.github.dakusui.osynth.core.MethodHandlerEntry;
+import com.github.dakusui.osynth.core.SynthesizedObject;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
 import static com.github.dakusui.pcond.forms.Functions.call;
 import static com.github.dakusui.pcond.forms.Functions.parameter;
-import static com.github.dakusui.pcond.forms.Matchers.matcherForString;
-import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.callp;
 import static com.github.dakusui.pcond.forms.Printables.function;
 import static com.github.dakusui.pcond.forms.Printables.predicate;
-import static java.util.stream.Collectors.toList;
 
 public enum AssertionUtils {
   ;
@@ -52,10 +48,15 @@ public enum AssertionUtils {
   }
 
   public static <E> List<E> duplicatedElementsIn(Collection<E> collection) {
+    HashSet<E> appeared = new HashSet<>();
     LinkedHashSet<E> duplication = new LinkedHashSet<>();
-    collection.stream()
-        .filter(each -> !duplication.contains(each))
-        .forEach(duplication::add);
+    collection.forEach(each -> {
+      if (!appeared.contains(each))
+        appeared.add(each);
+      else {
+        duplication.add(each);
+      }
+    });
     return new ArrayList<>(duplication);
   }
 

@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.compat.utils;
+package com.github.dakusui.osynth.ut.core.utils;
 
 import org.junit.After;
 import org.junit.Before;

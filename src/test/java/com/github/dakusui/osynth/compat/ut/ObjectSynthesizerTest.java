@@ -2,8 +2,8 @@ package com.github.dakusui.osynth.compat.ut;
 
 import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.AssertionInCatchClauseFinished;
-import com.github.dakusui.osynth.compat.utils.UtBase;
-import com.github.dakusui.osynth.compat.utils.UtUtils;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 

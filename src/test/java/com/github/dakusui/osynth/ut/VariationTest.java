@@ -1,16 +1,13 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.core.SynthesizedObject;
-import com.github.dakusui.pcond.forms.Functions;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.forms.Functions.findString;
-import static com.github.dakusui.pcond.forms.Matchers.findSubstrings;
-import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.pcond.forms.Predicates.findSubstrings;
 
 public class VariationTest extends UtBase {
   public interface A {

@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.exceptions.OsynthException;

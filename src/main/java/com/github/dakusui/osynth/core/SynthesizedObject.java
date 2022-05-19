@@ -116,19 +116,16 @@ public interface SynthesizedObject {
         return false;
       }
       Descriptor another = (Descriptor) anotherObject;
-      Set<MethodHandlerEntry> collect = methodHandlers.stream()
-          .filter(each -> each.handler().isBuiltIn())
+      Set<MethodHandlerEntry> methodHandlerSet = this.methodHandlers.stream()
+          .filter(each -> !each.handler().isBuiltIn())
           .collect(toSet());
-      Set<MethodHandlerEntry> collect1 = another.methodHandlers.stream()
-          .filter(each -> each.handler().isBuiltIn())
+      Set<MethodHandlerEntry> methodHandlerSetFromAnother = another.methodHandlers.stream()
+          .filter(each -> !each.handler().isBuiltIn())
           .collect(toSet());
       return Objects.equals(fallbackObject, another.fallbackObject) &&
           Objects.equals(methodHandlerDecorator, another.methodHandlerDecorator) &&
           Objects.equals(interfaces, another.interfaces) &&
-          Objects.equals(
-              collect,
-              collect1
-          );
+          Objects.equals(methodHandlerSet, methodHandlerSetFromAnother);
     }
 
     @Override

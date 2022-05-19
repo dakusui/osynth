@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.ut;
 
 
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import org.junit.Test;
 

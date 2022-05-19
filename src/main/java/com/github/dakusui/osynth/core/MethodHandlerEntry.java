@@ -1,5 +1,7 @@
 package com.github.dakusui.osynth.core;
 
+import java.util.Objects;
+
 import static com.github.dakusui.osynth.core.utils.MethodUtils.createMethodHandlerDelegatingToObject;
 import static com.github.dakusui.pcond.Preconditions.requireNonNull;
 
@@ -25,6 +27,22 @@ public interface MethodHandlerEntry {
       @Override
       public String toString() {
         return String.format("(%s,%s)", matcher, handler);
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hashCode(this.matcher());
+      }
+
+      @Override
+      public boolean equals(Object anotherObject) {
+        if (anotherObject == this)
+          return true;
+        if (!(anotherObject instanceof MethodHandlerEntry))
+          return false;
+        MethodHandlerEntry another = (MethodHandlerEntry) anotherObject;
+        return Objects.equals(this.matcher(), another.matcher())
+            && Objects.equals(this.handler(), another.handler());
       }
     };
   }

@@ -1,6 +1,6 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.compat.utils.UtBase;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.MethodHandlerDecorator;
@@ -11,6 +11,8 @@ import org.junit.Test;
 import java.io.Serializable;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.pcond.Fluents.value;
+import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
@@ -74,7 +76,7 @@ public class ValidationTest extends UtBase {
           .addInterface(Serializable.class)
           .synthesize();
       System.out.println(synthesizedObject);
-    } catch (RuntimeException e) {
+    } catch (ValidationException e) {
       e.printStackTrace();
       assertThat(e.getMessage(), allOf(
           containsString("violated"),
@@ -84,6 +86,26 @@ public class ValidationTest extends UtBase {
       ));
       throw e;
     }
+  }
+
+  public interface TestInterface {
+    default String testMethod(String message) {
+      return "testMethod[" + message + "]";
+    }
+  }
+
+  @Test
+  public void givenDuplicationCheckEnabled$whenNoSameIFRegisteredTwice$thenPass() {
+    SynthesizedObject synthesizedObject = new ObjectSynthesizer()
+        .fallbackTo(new Object())
+        .enableDuplicatedInterfaceCheck()
+        .addInterface(TestInterface.class)
+        .synthesize();
+    assertThat(synthesizedObject.castTo(TestInterface.class),
+        when((TestInterface)value()).applyFunction(v -> v.testMethod("Hello!"))
+            .thenAsString()
+            .isEqualTo("testMethod[Hello!]")
+            .verify());
   }
 
   private static MethodHandler createNewDescriptorReturningHandler() {

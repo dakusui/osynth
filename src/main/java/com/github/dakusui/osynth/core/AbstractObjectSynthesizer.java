@@ -42,7 +42,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   private                Validator                                     validator;
   private                Preprocessor                                  preprocessor;
   private                ClassLoader                                   classLoader;
-  private       InvocationControllerFactory                   invocationControllerFactory;
+  private                InvocationControllerFactory                   invocationControllerFactory;
 
   public AbstractObjectSynthesizer() {
     this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(DEFAULT_FALLBACK_OBJECT);
@@ -56,32 +56,32 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   @SuppressWarnings("unchecked")
   public O addInterface(Class<?> interfaceClass) {
     descriptorBuilder.addInterface(interfaceClass);
-    return (O)this;
+    return (O) this;
   }
 
   @SuppressWarnings("unchecked")
   public O classLoader(ClassLoader classLoader) {
     this.classLoader = classLoader;
-    return (O)this;
+    return (O) this;
   }
 
   @SuppressWarnings("unchecked")
   public O fallbackTo(Object fallbackObject) {
     this.descriptorBuilder.fallbackObject(fallbackObject);
-    return (O)this;
+    return (O) this;
   }
 
   @SuppressWarnings("unchecked")
   public O handle(MethodHandlerEntry handlerEntry) {
     requireNonNull(handlerEntry);
     this.descriptorBuilder.addMethodHandler(handlerEntry);
-    return (O)this;
+    return (O) this;
   }
 
   @SuppressWarnings("unchecked")
   public O validateWith(Validator validator) {
     this.validator = requireNonNull(validator);
-    return (O)this;
+    return (O) this;
   }
 
   public O enableDuplicatedInterfaceCheck() {
@@ -96,7 +96,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   @SuppressWarnings("unchecked")
   public O preprocessWith(Preprocessor preprocessor) {
     this.preprocessor = requireNonNull(preprocessor);
-    return (O)this;
+    return (O) this;
   }
 
   public O includeInterfacesFromFallbackObject() {
@@ -110,13 +110,13 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   @SuppressWarnings("unchecked")
   public O createInvocationControllerWith(InvocationControllerFactory factory) {
     this.invocationControllerFactory = requireNonNull(factory);
-    return (O)this;
+    return (O) this;
   }
 
   @SuppressWarnings("unchecked")
   public O methodHandlerDecorator(MethodHandlerDecorator methodHandlerDecorator) {
     this.descriptorBuilder.methodHandlerDecorator(requireNonNull(methodHandlerDecorator));
-    return (O)this;
+    return (O) this;
   }
 
   public O disableMethodHandlerDecorator() {
@@ -213,8 +213,10 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
     return entry -> {
       out.accept(InternalUtils.formatLogEntry(entry));
       if (entry.type() == AutoLogger.Entry.Type.EXCEPTION) {
-        assert entry.value() instanceof Throwable;
-        ((Throwable) entry.value()).printStackTrace(InternalUtils.toPrintStream(out));
+        require(entry.value(), isInstanceOf(Throwable.class));
+        try (PrintStream ps = InternalUtils.toPrintStream(out)) {
+          ((Throwable) entry.value()).printStackTrace(ps);
+        }
       }
     };
   }
@@ -315,8 +317,8 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
 
   interface Validator extends Stage {
     Validator DEFAULT = toNamed("defaultValidator", (objectSynthesizer, descriptor) -> {
-      assert that(objectSynthesizer, isNotNull());
-      assert that(descriptor, isNotNull());
+      require(objectSynthesizer, isNotNull());
+      require(descriptor, isNotNull());
       validateValue(
           descriptor,
           withMessage(
@@ -328,8 +330,8 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
     });
 
     Validator ENFORCE_NO_DUPLICATION = toNamed("noDuplicationEnforcingValidator", (objectSynthesizer, descriptor) -> {
-      assert that(objectSynthesizer, isNotNull());
-      assert that(descriptor, isNotNull());
+      require(objectSynthesizer, isNotNull());
+      require(descriptor, isNotNull());
       validateValue(descriptor, transform(descriptorInterfaces().andThen(AssertionUtils.collectionDuplicatedElements())).check(isEmpty()));
       return descriptor;
     });
