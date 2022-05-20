@@ -2,33 +2,39 @@ package com.github.dakusui.osynth.ut.core;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandlerDecorator;
-import com.github.dakusui.osynth.utils.TestForms;
 import com.github.dakusui.pcond.forms.Predicates;
 import org.junit.Test;
 
+import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPredefinedMethods;
+import static com.github.dakusui.osynth.utils.TestForms.*;
 import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.thincrest_pcond.functions.Printable.function;
 
 public class MethodHandlerDecoratorTest {
   @Test
-  public void examineEqualsMethod() {
-    MethodHandlerDecorator decorator = new ObjectSynthesizer().methodHandlerDecorator();
-    assertThat(decorator, TestForms.objectIsEqualTo(decorator));
+  public void examineEqualsMethodForFilteringOutPredefinedMethods() {
+    MethodHandlerDecorator decorator = filterOutPredefinedMethods(new ObjectSynthesizer().methodHandlerDecorator());
+    assertThat(decorator, objectIsEqualTo(decorator));
   }
 
   @Test
-  public void examineHashCodeMethod() {
-    MethodHandlerDecorator decorator = new ObjectSynthesizer().methodHandlerDecorator();
+  public void examineEqualsMethodForFilteringOutPredefinedMethodsIfObjectIsNotDecorator() {
+    MethodHandlerDecorator decorator = filterOutPredefinedMethods(new ObjectSynthesizer().methodHandlerDecorator());
+    assertThat(decorator, objectIsEqualTo("").negate());
+  }
+
+  @Test
+  public void examineHashCodeMethodForFilteringOutPredefinedMethods() {
+    MethodHandlerDecorator decorator = filterOutPredefinedMethods(new ObjectSynthesizer().methodHandlerDecorator());
     assertThat(
         decorator,
         when()
-            .applyFunction(function("objectHashCode", Object::hashCode))
-            .applyFunction(function("objectToString", Object::toString))
-            .applyFunction(function("integerParseInt", Integer::parseInt))
+            .applyFunction(objectHashCode())
+            .applyFunction(objectToString())
+            .applyFunction(integerParseInt())
             .then()
             .asInteger()
-            .testPredicate(Predicates.alwaysTrue())
-        .verify());
+            .testPredicate(Predicates.alwaysTrue()) // Whatever the integer, it's okay
+            .verify());
   }
 }

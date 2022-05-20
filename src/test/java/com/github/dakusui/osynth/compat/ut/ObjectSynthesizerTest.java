@@ -14,11 +14,10 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
-import static com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.TestUtils.objectSynthesizerIsDescriptorFinalized;
+import static com.github.dakusui.osynth.utils.TestForms.objectSynthesizerIsDescriptorFinalized;
 import static com.github.dakusui.pcond.Fluents.value;
 import static com.github.dakusui.pcond.Fluents.when;
 import static org.junit.Assert.assertNotNull;
@@ -377,12 +376,15 @@ public class ObjectSynthesizerTest extends UtBase {
             .testPredicate(objectSynthesizerIsDescriptorFinalized().negate())
             .verify());
   }
-
-  enum TestUtils {
-    ;
-
-    public static Predicate<ObjectSynthesizer> objectSynthesizerIsDescriptorFinalized() {
-      return predicate("objectSynthesizerIsDescriptorFinalized", ObjectSynthesizer::isDescriptorFinalized);
-    }
+  @Test
+  public void givenDescriptorIsFinalized$whenQueried$thenTrue() {
+    ObjectSynthesizer osynth = new ObjectSynthesizer().fallbackTo(new Object());
+    osynth.synthesize();
+    TestAssertions.assertThat(
+        osynth,
+        when().castTo((ObjectSynthesizer) value())
+            .then()
+            .testPredicate(objectSynthesizerIsDescriptorFinalized())
+            .verify());
   }
 }

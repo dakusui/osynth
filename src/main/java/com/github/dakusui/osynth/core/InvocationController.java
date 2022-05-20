@@ -13,20 +13,11 @@ public interface InvocationController extends InvocationHandler {
 
   @Override
   default Object invoke(Object proxy, Method method, Object[] args) {
-    assert proxy instanceof SynthesizedObject;
     InvocationContext.Impl.contextWith(method);
     return execute(() -> methodHandlerFor(method).handle((SynthesizedObject) proxy, toEmptyArrayIfNull(args)));
   }
 
-  default MethodHandler methodHandlerFor(Method method) {
-    return figuredOutMethodHandlerAndApplyDecorator(method);
-  }
-
-  default MethodHandler figuredOutMethodHandlerAndApplyDecorator(Method method) {
-    return descriptor()
-        .methodHandlerDecorator()
-        .apply(method, figuredOutMethodHandlerFor(method));
-  }
+  MethodHandler methodHandlerFor(Method method);
 
   MethodHandler figuredOutMethodHandlerFor(Method invokedMethod);
 
@@ -43,7 +34,7 @@ public interface InvocationController extends InvocationHandler {
      * Default implementation of this method returns a new {@link ConcurrentHashMap}
      * object.
      * Assign the returned map of this method to a field returned by
-     * {@link this#cache()} method.
+     * {@link InvocationController.WithCache#cache()} method.
      *
      * @return A new map for method handler cache.
      */
@@ -60,6 +51,12 @@ public interface InvocationController extends InvocationHandler {
 
     default MethodHandler methodHandlerFor(Method method) {
       return cache().computeIfAbsent(method, this::figuredOutMethodHandlerAndApplyDecorator);
+    }
+
+    default MethodHandler figuredOutMethodHandlerAndApplyDecorator(Method method) {
+      return descriptor()
+          .methodHandlerDecorator()
+          .apply(method, figuredOutMethodHandlerFor(method));
     }
   }
 
