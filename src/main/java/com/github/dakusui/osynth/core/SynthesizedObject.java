@@ -1,5 +1,6 @@
 package com.github.dakusui.osynth.core;
 
+import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth.annotations.ReservedByOSynth;
 import com.github.dakusui.osynth.core.utils.AssertionUtils;
@@ -186,7 +187,6 @@ public interface SynthesizedObject {
       public Descriptor build() {
         return new Descriptor(this.interfaces, this.methodHandlers, this.methodHandlerDecorator, this.fallbackObject);
       }
-
     }
   }
 }

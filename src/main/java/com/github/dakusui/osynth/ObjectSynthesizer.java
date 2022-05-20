@@ -1,9 +1,6 @@
 package com.github.dakusui.osynth;
 
-import com.github.dakusui.osynth.core.AbstractObjectSynthesizer;
-import com.github.dakusui.osynth.core.MethodHandlerEntry;
-import com.github.dakusui.osynth.core.MethodMatcher;
-import com.github.dakusui.osynth.core.MethodSignature;
+import com.github.dakusui.osynth.core.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -23,6 +20,12 @@ import static java.lang.String.format;
 public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesizer> {
 
   public ObjectSynthesizer() {
+    super(new SynthesizedObject.Descriptor.Builder()
+        .fallbackObject(DEFAULT_FALLBACK_OBJECT));
+  }
+
+  public ObjectSynthesizer(SynthesizedObject.Descriptor descriptor) {
+    super(new SynthesizedObject.Descriptor.Builder(descriptor));
   }
 
   public static MethodHandlerEntry.Builder methodCall(String methodName, Class<?>... parameterTypes) {
@@ -44,10 +47,10 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
   /**
    * Returns a "lenient" method matcher by signature.
    * The returned matcher checks if
-   *
+   * <p>
    * 1. The name of a method to be tested if it is matching the name of the `targetMethodSignature` as a regular expression.
    * 2. Every parameter types of the method to be tested is equal to or more special than the corresponding parameter type in the `signature`.
-   *
+   * <p>
    * If the signature doesn't have any parameter types, it matches a method without
    * any parameters.
    * In case you want to create a matcher that matches a method with a specific name but

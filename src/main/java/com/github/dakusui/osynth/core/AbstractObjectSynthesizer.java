@@ -9,7 +9,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -24,7 +23,6 @@ import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPre
 import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHODS;
 import static com.github.dakusui.osynth.core.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
-import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.Postconditions.ensure;
 import static com.github.dakusui.pcond.Preconditions.*;
 import static com.github.dakusui.pcond.forms.Predicates.*;
@@ -44,8 +42,8 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   private                ClassLoader                                   classLoader;
   private                InvocationControllerFactory                   invocationControllerFactory;
 
-  public AbstractObjectSynthesizer() {
-    this.descriptorBuilder = new SynthesizedObject.Descriptor.Builder().fallbackObject(DEFAULT_FALLBACK_OBJECT);
+  public AbstractObjectSynthesizer(SynthesizedObject.Descriptor.Builder builder) {
+    this.descriptorBuilder = builder;
     this.classLoader(this.getClass().getClassLoader())
         .handleMethodsWithSignatureMatching()
         .validateWith(Validator.DEFAULT)
@@ -124,11 +122,11 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   }
 
   public O enableAutoLogging() {
-    return enableAutoLoggingWritingTo(System.out::println);
+    return enableAutoLoggingWritingTo(System.err::println);
   }
 
   /**
-   * Note that this method is using {@link this#defaultLogEntryPrinter(Consumer)},
+   * Note that this method is using `defaultLogEntryPrinter(Consumer)`,
    * which is not meant for production usages.
    * This method should also not be used in the production.
    *
@@ -315,7 +313,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   interface Stage extends BiFunction<AbstractObjectSynthesizer<?>, SynthesizedObject.Descriptor, SynthesizedObject.Descriptor> {
   }
 
-  interface Validator extends Stage {
+  public interface Validator extends Stage {
     Validator DEFAULT = toNamed("defaultValidator", (objectSynthesizer, descriptor) -> {
       require(objectSynthesizer, isNotNull());
       require(descriptor, isNotNull());

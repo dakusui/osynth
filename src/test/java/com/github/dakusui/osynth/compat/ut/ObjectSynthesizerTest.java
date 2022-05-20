@@ -1,9 +1,11 @@
 package com.github.dakusui.osynth.compat.ut;
 
+import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import com.github.dakusui.osynth.compat.utils.AssertionInCatchClauseFinished;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ut.core.utils.UtUtils;
+import com.github.dakusui.pcond.TestAssertions;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -12,9 +14,13 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import static com.github.dakusui.crest.Crest.*;
 import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.TestUtils.objectSynthesizerIsDescriptorFinalized;
+import static com.github.dakusui.pcond.Fluents.value;
+import static com.github.dakusui.pcond.Fluents.when;
 import static org.junit.Assert.assertNotNull;
 
 public class ObjectSynthesizerTest extends UtBase {
@@ -360,5 +366,23 @@ public class ObjectSynthesizerTest extends UtBase {
         .castTo(B.class);
     System.out.println(b.bMethod());
     assertThat(b.bMethod(), asString().equalTo("bMethod in lambda (test10) was called.").$());
+  }
+
+  @Test
+  public void givenDescriptorIsNotFinalized$whenQueried$thenFalse() {
+    TestAssertions.assertThat(
+        new ObjectSynthesizer(),
+        when().castTo((ObjectSynthesizer) value())
+            .then()
+            .testPredicate(objectSynthesizerIsDescriptorFinalized().negate())
+            .verify());
+  }
+
+  enum TestUtils {
+    ;
+
+    public static Predicate<ObjectSynthesizer> objectSynthesizerIsDescriptorFinalized() {
+      return predicate("objectSynthesizerIsDescriptorFinalized", ObjectSynthesizer::isDescriptorFinalized);
+    }
   }
 }

@@ -2,15 +2,15 @@ package com.github.dakusui.osynth.core;
 
 import java.lang.reflect.Method;
 
+import static java.util.Objects.requireNonNull;
+
 public interface InvocationContext {
   ThreadLocal<InvocationContext> CONTEXT_THREAD_LOCAL = new ThreadLocal<>();
 
   Method invokedMethod();
 
   static InvocationContext forCurrentThread() {
-    InvocationContext ret = CONTEXT_THREAD_LOCAL.get();
-    assert ret != null;
-    return ret;
+    return requireNonNull(CONTEXT_THREAD_LOCAL.get());
   }
 
   class Impl implements InvocationContext {

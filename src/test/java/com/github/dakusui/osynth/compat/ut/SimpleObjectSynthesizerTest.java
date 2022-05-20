@@ -150,17 +150,6 @@ public class SimpleObjectSynthesizerTest extends UtBase {
     );
   }
 
-  @Test
-  public void thenPass() {
-    Y y = createY();
-    Y y1 = createProxyFor(Y.class, y);
-    Y y2 = createProxyFor(Y.class, y);
-    System.out.println(y1);
-    System.out.println(y2);
-    System.out.println(y1.equals(y2));
-    assertThat(y1, asObject().equalTo(y2).$());
-  }
-
   private static <T> T createProxyFor(@SuppressWarnings("SameParameterValue") Class<T> klass, T obj) {
     return SimpleObjectSynthesizer.create(klass).fallbackTo(obj).synthesize(klass).castTo(klass);
   }
