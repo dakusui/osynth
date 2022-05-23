@@ -9,6 +9,7 @@ import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPre
 import static com.github.dakusui.osynth.utils.TestForms.*;
 import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.forms.Predicates.alwaysTrue;
 
 public class MethodHandlerDecoratorTest {
   @Test
@@ -28,13 +29,13 @@ public class MethodHandlerDecoratorTest {
     MethodHandlerDecorator decorator = filterOutPredefinedMethods(new ObjectSynthesizer().methodHandlerDecorator());
     assertThat(
         decorator,
-        when()
-            .applyFunction(objectHashCode())
-            .applyFunction(objectToString())
-            .applyFunction(integerParseInt())
+        when().asObject()
+            .exercise(objectHashCode())
+            .exercise(objectToString())
+            .exercise(integerParseInt())
             .then()
             .asInteger()
-            .testPredicate(Predicates.alwaysTrue()) // Whatever the integer, it's okay
+            .testPredicate(alwaysTrue()) // Whatever the integer, it's okay
             .verify());
   }
 }

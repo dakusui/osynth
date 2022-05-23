@@ -102,8 +102,9 @@ public class ValidationTest extends UtBase {
         .addInterface(TestInterface.class)
         .synthesize();
     assertThat(synthesizedObject.castTo(TestInterface.class),
-        when((TestInterface)value()).applyFunction(v -> v.testMethod("Hello!"))
-            .thenAsString()
+        when((TestInterface) value()).asObject()
+            .exercise(v -> v.testMethod("Hello!"))
+            .then()
             .isEqualTo("testMethod[Hello!]")
             .verify());
   }

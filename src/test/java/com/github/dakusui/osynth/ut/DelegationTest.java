@@ -7,9 +7,10 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.Fluents.whenInstanceOf;
+import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.thincrest_pcond.functions.Printable.function;
 
 public class DelegationTest extends UtBase {
   interface TestInterface {
@@ -71,15 +72,15 @@ public class DelegationTest extends UtBase {
         givenObject,
         allOf(
             isNotNull(),
-            whenInstanceOf(TestInterface.class)
-                .applyFunction("invoke[testMethod0]", TestInterface::testMethod0)
-                .thenAsString()
+            when().asValueOfClass(TestInterface.class)
+                .exercise(function("invoke[testMethod0]", TestInterface::testMethod0))
+                .then().asString()
                 .isNotNull()
                 .isEqualTo("implementationObject:testMethod0:<>")
                 .verify(),
-            whenInstanceOf(TestInterface.class)
-                .applyFunction("invoke[testMethod1](arg1)", v -> v.testMethod1("testMethod1:arg1"))
-                .thenAsString()
+            when().asValueOfClass(TestInterface.class)
+                .exercise(function("invoke[testMethod1](arg1)", v -> v.testMethod1("testMethod1:arg1")))
+                .then().asString()
                 .isNotNull()
                 .isEqualTo("methodHandler:testMethod1:[testMethod1:arg1]")
                 .verify()));

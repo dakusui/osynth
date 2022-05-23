@@ -4,6 +4,7 @@
 
 The Figure <<synthesizedObjectStructure>> shows how each synthesized object is structured.
 [plantuml]
+
 ----
 testdot
 ----

@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth.utils;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.exceptions.OsynthException;
 import com.github.dakusui.pcond.forms.Printables;
 
 import java.util.List;
@@ -35,5 +36,17 @@ public enum TestForms {
 
   public static Function<Object, Integer> objectHashCode() {
     return function("objectHashCode", Object::hashCode);
+  }
+
+  public static Function<? super Throwable, ? extends Throwable> throwableGetCause() {
+    return Printables.function("throwableGetCause", Throwable::getCause);
+  }
+
+  public static Predicate<Throwable> objectIsSameReferenceAs(Object object) {
+    return Printables.predicate("isSameObject[System.identityHash:" + System.identityHashCode(object) + "]", v -> v == object);
+  }
+
+  public static Function<Throwable, String> throwableGetMessage() {
+    return Printables.function("throwableGetMessage", Throwable::getMessage);
   }
 }

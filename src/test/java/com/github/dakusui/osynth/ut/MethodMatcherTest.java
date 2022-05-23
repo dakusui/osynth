@@ -15,6 +15,7 @@ import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Functions.findString;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.pcond.forms.Printables.function;
 
 @RunWith(Enclosed.class)
 public class MethodMatcherTest {
@@ -120,19 +121,19 @@ public class MethodMatcherTest {
       assertThat(
           testObject,
           allOf(
-              when((TestInterface) value())
-                  .applyFunction(Printables.function("aMethod", TestInterface::aMethod))
-                  .thenAsString()
+              when().as((TestInterface) value())
+                  .exercise(function("aMethod", TestInterface::aMethod))
+                  .then().asString()
                   .isEqualTo("handledMethodIsCalled")
                   .verify(),
-              when((TestInterface) value())
-                  .applyFunction(Printables.function("bMethod", TestInterface::bMethod))
-                  .thenAsString()
+              when().as((TestInterface) value())
+                  .exercise(function("bMethod", TestInterface::bMethod))
+                  .then().asString()
                   .isEqualTo("handledMethodIsCalled")
                   .verify(),
-              when((TestInterface) value())
-                  .applyFunction(Printables.function("cMethod", TestInterface::cMethod))
-                  .thenAsString()
+              when().as((TestInterface) value())
+                  .exercise(function("cMethod", TestInterface::cMethod))
+                  .then().asString()
                   .isEqualTo("defaultMethod:cMethod")
                   .verify()
           )
@@ -153,19 +154,19 @@ public class MethodMatcherTest {
       assertThat(
           testObject,
           allOf(
-              when((TestInterface) value())
-                  .applyFunction(Printables.function("aMethod", TestInterface::aMethod))
-                  .thenAsString()
+              when().as((TestInterface) value())
+                  .exercise(function("aMethod", TestInterface::aMethod))
+                  .then()
                   .isEqualTo("defaultMethod:aMethod")
                   .verify(),
-              when((TestInterface) value())
-                  .applyFunction(Printables.function("bMethod", TestInterface::bMethod))
-                  .thenAsString()
+              when().as((TestInterface) value())
+                  .exercise(function("bMethod", TestInterface::bMethod))
+                  .then().asString()
                   .isEqualTo("handledMethodIsCalled")
                   .verify(),
-              when((TestInterface) value())
-                  .applyFunction(Printables.function("cMethod", TestInterface::cMethod))
-                  .thenAsString()
+              when().as((TestInterface) value())
+                  .exercise(function("cMethod", TestInterface::cMethod))
+                  .then().asString()
                   .isEqualTo("handledMethodIsCalled")
                   .verify()
           )

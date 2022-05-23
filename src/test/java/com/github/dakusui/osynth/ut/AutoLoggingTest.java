@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
+import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.listJoinByLinBreak;
 import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.objectToString;
 import static com.github.dakusui.osynth.utils.TestForms.joinByLineBreak;
 import static com.github.dakusui.pcond.Fluents.*;
@@ -75,13 +76,12 @@ public class AutoLoggingTest extends UtBase {
     printTestObjectAndCurrentOutputToErr(aobj);
 
     assertThat(list(aobj, out), allOf(
-        whenValueAt(0)
-            .asObject(v -> (A) v)
+        when().valueAt(0).as((A) value())
             .applyFunction(A::aMethod)
-            .thenAsString()
+            .then().asString()
             .isEqualTo("handler:aMethod")
             .verify(),
-        whenValueAt(1)
+        when().valueAt(1)
             .asListOf((String) value())
             .then()
             .findElementsInorderBy(startsWith("ENTER"), startsWith("LEAVE"))
@@ -134,12 +134,13 @@ public class AutoLoggingTest extends UtBase {
     assertThat(
         list(aobj, out),
         allOf(
-            whenValueAt(0).applyFunction(objectToString())
+            when().valueAt(0)
+                .exercise(objectToString())
                 .then()
                 .isEqualTo("HELLO")
                 .verify(),
-            whenValueAt(1)
-                .thenAsString(TestFunctions.listJoinByLinBreak())
+            when().valueAt(1)
+                .then().asListOf((String) value()).intoStringWith(listJoinByLinBreak())
                 .isEmpty()
                 .verify()));
   }
@@ -158,7 +159,7 @@ public class AutoLoggingTest extends UtBase {
     }
 
     @SuppressWarnings("unchecked")
-    public static Function<Object, String> listJoinByLinBreak() {
+    public static <T> Function<List<T>, String> listJoinByLinBreak() {
       return function("joinByLineBreak", v -> joinByLineBreak((List<String>) v));
     }
 
@@ -206,11 +207,11 @@ public class AutoLoggingTest extends UtBase {
     assertThat(
         list(givenObject, out),
         allOf(
-            whenValueAt(0, (A) value()).
+            when().valueAt(0, (A) value()).
                 applyFunction(A::aMethod)
-                .thenAsString()
+                .then().asString()
                 .isEqualTo("handler:aMethod").verify(),
-            whenValueAt(1, (List<String>) value())
+            when().valueAt(1, (List<String>) value())
                 .then().allOf(
                     transform(size()).check(isEqualTo(3)),
                     Predicates.findElements(

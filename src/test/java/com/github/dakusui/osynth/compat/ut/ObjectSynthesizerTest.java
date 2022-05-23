@@ -371,7 +371,7 @@ public class ObjectSynthesizerTest extends UtBase {
   public void givenDescriptorIsNotFinalized$whenQueried$thenFalse() {
     TestAssertions.assertThat(
         new ObjectSynthesizer(),
-        when().castTo((ObjectSynthesizer) value())
+        when().asObject().castTo((ObjectSynthesizer) value())
             .then()
             .testPredicate(objectSynthesizerIsDescriptorFinalized().negate())
             .verify());
@@ -382,7 +382,8 @@ public class ObjectSynthesizerTest extends UtBase {
     osynth.synthesize();
     TestAssertions.assertThat(
         osynth,
-        when().castTo((ObjectSynthesizer) value())
+        when().asObject()
+            .castTo((ObjectSynthesizer) value())
             .then()
             .testPredicate(objectSynthesizerIsDescriptorFinalized())
             .verify());
