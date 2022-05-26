@@ -31,13 +31,9 @@ public enum MethodUtils {
   public static MethodHandler createMethodHandlerDelegatingToObject(Object object, MethodSignature methodSignature) {
     assert object != null;
     return (synthesizedObject, args) -> execute(() -> {
-      try {
-        Method method = object.getClass().getMethod(methodSignature.name(), methodSignature.parameterTypes());
-        method.setAccessible(true);
-        return method.invoke(object, args);
-      } catch (NoSuchMethodException e) {
-        throw new UnsupportedOperationException(messageForMissingMethodHandler(methodSignature, synthesizedObject, e), e);
-      }
+      Method method = getMethodFromClass(synthesizedObject, object.getClass(), methodSignature.name(), methodSignature.parameterTypes());
+      method.setAccessible(true);
+      return method.invoke(object, args);
     });
   }
 
@@ -104,10 +100,18 @@ public enum MethodUtils {
   }
 
   public static boolean isToStringOverridden(Class<?> aClass) {
+    return !getMethodFromClass(aClass, "toString").getDeclaringClass().equals(Object.class);
+  }
+
+  public static Method getMethodFromClass(Class<?> aClass, String methodName, Class<?>... parameterTypes) {
+    return getMethodFromClass(aClass, aClass, methodName, parameterTypes);
+  }
+
+  private static Method getMethodFromClass(Object objectForErrorMessageFormatting, Class<?> aClass, String methodName, Class<?>... parameterTypes) {
     try {
-      return !aClass.getMethod("toString").getDeclaringClass().equals(Object.class);
+      return aClass.getMethod(methodName, parameterTypes);
     } catch (NoSuchMethodException e) {
-      throw new AssertionError(e);
+      throw new UnsupportedOperationException(messageForMissingMethodHandler(methodName, parameterTypes, objectForErrorMessageFormatting, e), e);
     }
   }
 

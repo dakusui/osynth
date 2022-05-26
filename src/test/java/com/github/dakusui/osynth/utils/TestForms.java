@@ -1,6 +1,7 @@
 package com.github.dakusui.osynth.utils;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.exceptions.OsynthException;
 import com.github.dakusui.pcond.forms.Printables;
 
@@ -48,5 +49,9 @@ public enum TestForms {
 
   public static Function<Throwable, String> throwableGetMessage() {
     return Printables.function("throwableGetMessage", Throwable::getMessage);
+  }
+
+  public static <T> Function<SynthesizedObject, T> synthesizedObjectCastTo(Class<T> classInUse) {
+    return Printables.function("castTo[" + classInUse.getCanonicalName() + "]", v -> v.castTo(classInUse));
   }
 }

@@ -47,17 +47,17 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
   /**
    * Returns a "lenient" method matcher by signature.
    * The returned matcher checks if
-   * <p>
+   *
    * 1. The name of a method to be tested if it is matching the name of the `targetMethodSignature` as a regular expression.
    * 2. Every parameter types of the method to be tested is equal to or more special than the corresponding parameter type in the `signature`.
-   * <p>
+   *
    * If the signature doesn't have any parameter types, it matches a method without
    * any parameters.
    * In case you want to create a matcher that matches a method with a specific name but
    * doesn't care any parameter types, use {@link ObjectSynthesizer#nameMatchingRegex(String)}
    * or {@link ObjectSynthesizer#nameMatchingExactly(String)}.
    *
-   * @param signature The method signature that matches a returned matcher.
+   * ,@param signature The method signature that matches a returned matcher.
    * @return A method matcher by signature.
    */
   public static MethodMatcher matchingLeniently(MethodSignature signature) {
@@ -90,7 +90,7 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
         method -> {
           AtomicInteger i = new AtomicInteger(0);
           return parameterTypes.length == method.getParameterTypes().length &&
-              Arrays.stream(parameterTypes)
+              Arrays.stream(method.getParameterTypes())
                   .allMatch(type -> type.isAssignableFrom(parameterTypes[i.getAndIncrement()]));
         }
     );

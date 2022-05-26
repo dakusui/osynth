@@ -15,6 +15,10 @@ public interface MethodSignature {
     return create(method.getName(), method.getParameterTypes());
   }
 
+  static String formatSignature(String methodName, Class<?>[] parameterTypess) {
+    return String.format("%s(%s)", methodName, Arrays.stream(parameterTypess).map(Class::getSimpleName).collect(joining(",")));
+  }
+
   String name();
 
   Class<?>[] parameterTypes();
@@ -43,6 +47,7 @@ public interface MethodSignature {
     public int hashCode() {
       return this.name.hashCode();
     }
+
     @Override
     public boolean equals(Object anotherObject) {
       if (!(anotherObject instanceof MethodSignature))
@@ -53,7 +58,7 @@ public interface MethodSignature {
 
     @Override
     public String toString() {
-      return String.format("%s(%s)", this.name, Arrays.stream(this.parameterTypes).map(Class::getSimpleName).collect(joining(",")));
+      return formatSignature(this.name, this.parameterTypes);
     }
   }
 }

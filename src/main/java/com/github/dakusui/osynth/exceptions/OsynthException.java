@@ -19,11 +19,13 @@ public class OsynthException extends RuntimeException {
     if (e instanceof Error)
       throw (Error) e;
     if (e instanceof InvocationTargetException)
+      // False-missing coverage because of JaCoCo limitation
       throw from(customMessage, ((InvocationTargetException) e).getTargetException());
     else if (e instanceof OsynthException)
       if (e.getCause() == null)
         throw (OsynthException) e;
       else
+        // False-missing coverage because of JaCoCo limitation
         throw from(customMessage, e.getCause());
     else if (e instanceof RuntimeException)
       throw (RuntimeException)e;

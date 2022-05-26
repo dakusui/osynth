@@ -11,14 +11,11 @@ import static java.util.stream.Collectors.joining;
 public enum MessageUtils {
   ;
 
-  public static String messageForInstantiationFailure(Class<?> anInterface) {
-    return format(
-        "Failed to create a method handles lookup for interface:'%s'. Probably, it is prohibited for the interface by your platform.",
-        anInterface.getCanonicalName());
+  public static String messageForMissingMethodHandler(MethodSignature methodSignature, Object object, NoSuchMethodException e) {
+    return format("An appropriate method handler/implementation for '%s' was not found in '%s': %s", methodSignature, object, e.getMessage());
   }
-
-  public static String messageForMissingMethodHandler(MethodSignature methodSignature, SynthesizedObject synthesizedObject, NoSuchMethodException e) {
-    return format("An appropriate method handler/implementation for '%s' was not found in '%s': %s", methodSignature, synthesizedObject, e.getMessage());
+  public static String messageForMissingMethodHandler(String methodName, Class<?>[] parameterTypes, Object object, NoSuchMethodException e) {
+    return messageForMissingMethodHandler(MethodSignature.create(methodName, parameterTypes), object, e);
   }
 
   public static <T> String messageForAttemptToCastToUnavailableInterface(Class<T> classInUse, List<Class<?>> interfaces) {

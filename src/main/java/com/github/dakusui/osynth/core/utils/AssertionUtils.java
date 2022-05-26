@@ -35,10 +35,6 @@ public enum AssertionUtils {
     return call(instanceMethod(parameter(), "interfaces"));
   }
 
-  public static Predicate<Object> collectionContainsValue(Collection<?> targetSet, Object value) {
-    return callp(instanceMethod(targetSet, "contains", value));
-  }
-
   public static Predicate<Method> methodIsAnnotationPresent(Class<? extends Annotation> annotation) {
     return callp(instanceMethod(parameter(), "isAnnotationPresent", annotation));
   }

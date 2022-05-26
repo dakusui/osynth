@@ -128,9 +128,7 @@ public class AutoLoggingTest extends UtBase {
   @Test
   public void givenAutoLoggingEnabledOverridingBuiltInMethod$whenToString$thenNotLoggedAndDoesntBreak() {
     A aobj = autologgingEnabledTestObject(
-        methodCall("toString").with((v, args) -> "HELLO")
-    );
-
+        methodCall("toString").with((v, args) -> "HELLO"));
     assertThat(
         list(aobj, out),
         allOf(
@@ -162,7 +160,6 @@ public class AutoLoggingTest extends UtBase {
     public static <T> Function<List<T>, String> listJoinByLinBreak() {
       return function("joinByLineBreak", v -> joinByLineBreak((List<String>) v));
     }
-
   }
 
   private A autologgingEnabledTestObject(MethodHandlerEntry aMethod) {
