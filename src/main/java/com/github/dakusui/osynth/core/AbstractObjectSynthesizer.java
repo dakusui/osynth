@@ -371,7 +371,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
         SynthesizedObject.Descriptor descriptor);
   }
 
-  interface Preprocessor {
+  public interface Preprocessor {
     Preprocessor INCLUDE_BUILTIN_METHOD_HANDLERS = toNamed("builtInMethodHandlers", ((objectSynthesizer, descriptor) -> {
       SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);
       createMethodHandlersForBuiltInMethods(objectSynthesizer::finalizedDescriptor)
@@ -399,6 +399,12 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
     });
 
     Preprocessor PASS_THROUGH = toNamed("passThrough", (objectSynthesizer, descriptor) -> descriptor);
+
+    static Preprocessor importDescriptorFromAnotherSynthesizedObject(SynthesizedObject.Descriptor descriptor) {
+      return toNamed(
+          "importDescriptorFromAnotherSynthesizedObject",
+          (objectSynthesizer, descriptorFromThisSynthesizer) -> SynthesizedObject.Descriptor.merge(descriptorFromThisSynthesizer, descriptor));
+    }
 
 
     SynthesizedObject.Descriptor apply(

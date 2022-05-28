@@ -40,10 +40,8 @@ public @interface BuiltInHandlerFactory {
             MethodSignature targetMethodSignature = MethodSignature.create(eachMethod);
             return MethodHandlerEntry.create(
                 MethodMatcher.create(mm -> String.format("builtInFor:%s%s", eachMethod.getName(), Arrays.toString(eachMethod.getParameterTypes())),
-                    (Method candidate) ->
-                        Objects.equals(targetMethodSignature.name(), candidate.getName()) &&
-                            Arrays.equals(targetMethodSignature.parameterTypes(), candidate.getParameterTypes())),
-                createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier));
+                    (Method candidate) -> targetMethodSignature.equals(MethodSignature.create(candidate))),
+                createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier), true);
           });
     }
 

@@ -24,15 +24,6 @@ public interface MethodHandler {
    */
   Object handle(SynthesizedObject synthesizedObject, Object[] args) throws Throwable;
 
-  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  default boolean isBuiltIn() {
-    return false;
-  }
-
   interface BuiltIn extends MethodHandler {
-    @Override
-    default boolean isBuiltIn() {
-      return true;
-    }
   }
 }

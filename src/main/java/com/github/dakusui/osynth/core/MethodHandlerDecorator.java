@@ -29,6 +29,12 @@ public interface MethodHandlerDecorator extends BiFunction<Method, MethodHandler
     }
   });
 
+  static MethodHandlerDecorator chainMethodHandlerDecorators(MethodHandlerDecorator methodHandlerDecorator, MethodHandlerDecorator methodHandlerDecorator1) {
+    return methodHandlerDecorator == null ?
+        methodHandlerDecorator1 :
+        methodHandlerDecorator.andThen(methodHandlerDecorator1);
+  }
+
   default MethodHandlerDecorator compose(MethodHandlerDecorator before) {
     return (method, methodHandler) -> MethodHandlerDecorator.this.apply(method, before.apply(method, methodHandler));
   }

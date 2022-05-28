@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import static com.github.dakusui.osynth.core.AbstractObjectSynthesizer.Preprocessor.importDescriptorFromAnotherSynthesizedObject;
 import static com.github.dakusui.osynth.core.utils.MethodUtils.*;
 import static java.lang.String.format;
 
@@ -58,6 +59,7 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
    * or {@link ObjectSynthesizer#nameMatchingExactly(String)}.
    *
    * ,@param signature The method signature that matches a returned matcher.
+   *
    * @return A method matcher by signature.
    */
   public static MethodMatcher matchingLeniently(MethodSignature signature) {
@@ -105,11 +107,18 @@ public class ObjectSynthesizer extends AbstractObjectSynthesizer<ObjectSynthesiz
   public static <A extends Annotation> MethodMatcher annotatedWith(Class<A> annotationClass, Predicate<A> annotationPredicate) {
     return annotatedWith(annotationClass).and(
         matching(
-            m -> "satisfying:" + toSlightlyPrettierStringUnlessToStringOverridden(m),
+            m -> "satisfying:" + prettierToString(m),
             m -> annotationPredicate.test(m.getAnnotation(annotationClass))));
   }
 
   public static MethodMatcher matching(Function<MethodMatcher, String> nameComposer, Predicate<Method> p) {
     return MethodMatcher.create(nameComposer, p);
+  }
+
+  public static ObjectSynthesizer from(SynthesizedObject.Descriptor descriptor) {
+    ObjectSynthesizer ret;
+    return (ret = new ObjectSynthesizer()).preprocessWith(Preprocessor.sequence(
+        importDescriptorFromAnotherSynthesizedObject(descriptor),
+        ret.preprocessor()));
   }
 }

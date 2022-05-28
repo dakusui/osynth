@@ -24,7 +24,7 @@ public enum MethodUtils {
   ;
 
   public static MethodHandler createMethodHandlerFromFallbackObject(final Object fallbackObject, MethodSignature methodSignature) {
-    assert fallbackObject != null;
+    assert that(fallbackObject, isNotNull());
     return createMethodHandlerDelegatingToObject(fallbackObject, methodSignature);
   }
 
@@ -134,7 +134,7 @@ public enum MethodUtils {
         m.map(v -> ":declared in " + v).orElse("");
   }
 
-  public static String toSlightlyPrettierStringUnlessToStringOverridden(Object object) {
+  public static String prettierToString(Object object) {
     if (object == null)
       return "null";
     Class<?> aClass = object.getClass();

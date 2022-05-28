@@ -10,6 +10,7 @@ import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ut.core.utils.UtUtils;
 import com.github.dakusui.pcond.TestAssertions;
+import com.github.dakusui.pcond.forms.Predicates;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -26,6 +27,8 @@ import static com.github.dakusui.osynth.ObjectSynthesizer.*;
 import static com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer.methodCall;
 import static com.github.dakusui.osynth.utils.TestForms.*;
 import static com.github.dakusui.pcond.Fluents.*;
+import static com.github.dakusui.pcond.forms.Predicates.isEqualTo;
+import static com.github.dakusui.thincrest_pcond.functions.Predicates.startsWith;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.Assert.assertNotNull;
 
@@ -479,7 +482,7 @@ public class ObjectSynthesizerTest extends UtBase {
   }
 
   static Function<MethodHandler, MethodHandlerEntry> builderForLenientHandlerEntry(String methodName, Class<?>... parameterTypes) {
-    return methodHandler -> MethodHandlerEntry.create(matchingLeniently(MethodSignature.create(methodName, parameterTypes)), methodHandler);
+    return methodHandler -> MethodHandlerEntry.create(matchingLeniently(MethodSignature.create(methodName, parameterTypes)), methodHandler, false);
   }
 
   private <T> SynthesizedObject synthesizeObject(Object fallbackObject, Class<T> interfaceClass, MethodHandlerEntry... handlerEntries) {
@@ -563,5 +566,52 @@ public class ObjectSynthesizerTest extends UtBase {
         .addInterface(interfaceClass)
         .handle(methodCall(annotatedWith(TestAnnotation.class, annotation -> Objects.equals(annotation.value(), "WORLD"))).with(methodHandlingFunction))
         .synthesize();
+  }
+
+  @Test
+  public void notGivenAnyObjectForFallback$whenSynthesizeAndCallMethod$thenDoesntBreak() {
+    SynthesizedObject so = new ObjectSynthesizer().synthesize();
+    System.out.println(so.toString());
+    TestAssertions.assertThat(so.toString(), startsWith("osynth(SynthesizedObject"));
+  }
+
+
+  @Test
+  public void givenSynthesizedFromAnotherSynthesized$whenCallMethod$thenLetsSee() {
+    SynthesizedObject so = ObjectSynthesizer.from(
+        new ObjectSynthesizer()
+            .addInterface(TestInterface4.class)
+            .fallbackTo((TestInterface4) var -> "overriddenMethod1(String=" + var + ")")
+            .synthesize()
+            .descriptor()).synthesize();
+
+    TestAssertions.assertThat(
+        so.castTo(TestInterface4.class).method1("hello"),
+        isEqualTo("overriddenMethod1(String=hello)"));
+  }
+
+  @Test
+  public void equalness$differentInterfaces() {
+    SynthesizedObject so1 = new ObjectSynthesizer().addInterface(TestInterface4.class).synthesize();
+    SynthesizedObject so2 = new ObjectSynthesizer().synthesize();
+
+    TestAssertions.assertThat(so1.descriptor(), isEqualTo(so2.descriptor()).negate());
+  }
+
+  @Test
+  public void equalness$differentMethodHandlers() {
+    SynthesizedObject so1 = new ObjectSynthesizer().handle(methodCall("m").with((obj, args) -> "world")).synthesize();
+    SynthesizedObject so2 = new ObjectSynthesizer().handle(methodCall("n").with((obj, args) -> "hello")).synthesize();
+
+    TestAssertions.assertThat(so1.descriptor(), isEqualTo(so2.descriptor()).negate());
+  }
+
+  @Test
+  public void equalness$differentSameMethodHandlers() {
+    MethodHandlerEntry m = methodCall("m").with((obj, args) -> "world");
+    SynthesizedObject so1 = new ObjectSynthesizer().handle(m).synthesize();
+    SynthesizedObject so2 = new ObjectSynthesizer().handle(m).synthesize();
+
+    TestAssertions.assertThat(so1.descriptor(), isEqualTo(so2.descriptor()));
   }
 }

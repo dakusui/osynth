@@ -8,7 +8,9 @@ public interface MethodHandlerEntry {
 
   MethodHandler handler();
 
-  static MethodHandlerEntry create(MethodMatcher matcher, MethodHandler handler) {
+  boolean isBuiltIn();
+
+  static MethodHandlerEntry create(MethodMatcher matcher, MethodHandler handler, boolean isBuiltIn) {
     requireNonNull(matcher);
     requireNonNull(handler);
     return new MethodHandlerEntry() {
@@ -20,6 +22,11 @@ public interface MethodHandlerEntry {
       @Override
       public MethodHandler handler() {
         return handler;
+      }
+
+      @Override
+      public boolean isBuiltIn() {
+        return isBuiltIn;
       }
 
       @Override
@@ -47,7 +54,7 @@ public interface MethodHandlerEntry {
     }
 
     public MethodHandlerEntry build() {
-      return create(this.matcher, handler);
+      return create(this.matcher, handler, false);
     }
 
     public MethodHandlerEntry with(MethodHandler handler) {

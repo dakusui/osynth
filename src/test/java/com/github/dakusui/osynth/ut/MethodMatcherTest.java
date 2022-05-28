@@ -3,12 +3,9 @@ package com.github.dakusui.osynth.ut;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.*;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
-import com.github.dakusui.pcond.forms.Printables;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
-
-import java.lang.reflect.Method;
 
 import static com.github.dakusui.pcond.Fluents.value;
 import static com.github.dakusui.pcond.Fluents.when;
@@ -114,7 +111,7 @@ public class MethodMatcherTest {
           .handle(MethodHandlerEntry.create(
               ((MethodMatcher) m -> m.getName().equals("aMethod"))
                   .or(m -> m.getName().equals("bMethod")),
-              (synthesizedObject, args) -> "handledMethodIsCalled"))
+              (synthesizedObject, args) -> "handledMethodIsCalled", false))
           .synthesize()
           .castTo(TestInterface.class);
 
@@ -147,7 +144,8 @@ public class MethodMatcherTest {
           .handle(MethodHandlerEntry.create(
               ((MethodMatcher) m -> m.getName().equals("aMethod"))
                   .negate().and(m -> m.getName().endsWith("Method")),
-              (synthesizedObject, args) -> "handledMethodIsCalled"))
+              (synthesizedObject, args) -> "handledMethodIsCalled",
+              false))
           .synthesize()
           .castTo(TestInterface.class);
 

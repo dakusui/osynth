@@ -49,17 +49,27 @@ public interface AutoLogger {
 
     Object value();
 
+    /**
+     * A default implementation of this method is provided to save implementation
+     * effort for entries not need arguments.
+     *
+     * @return An argument array passed this entry when this represents a method entry.
+     */
     default Object[] arguments() {
       throw new UnsupportedOperationException();
     }
 
+    /**
+     * A default implementation of this method is provided to save implementation
+     * effort for entries not need exception.
+     *
+     * @return An exception detected during method execution.
+     */
     default Throwable exception() {
       throw new UnsupportedOperationException();
     }
 
-    default Object returnedValue() {
-      throw new UnsupportedOperationException();
-    }
+    ;
 
     static Entry enter(Object object, Method method, Object[] args) {
       return new Entry() {
@@ -109,11 +119,6 @@ public interface AutoLogger {
 
         @Override
         public Object value() {
-          return returnedValue();
-        }
-
-        @Override
-        public Object returnedValue() {
           return returnedValue;
         }
       };
@@ -138,7 +143,7 @@ public interface AutoLogger {
 
         @Override
         public Object value() {
-          return exception;
+          return exception();
         }
 
         @Override

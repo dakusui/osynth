@@ -1,6 +1,5 @@
 package com.github.dakusui.osynth.core;
 
-import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.annotations.BuiltInHandlerFactory;
 import com.github.dakusui.osynth.annotations.ReservedByOSynth;
 import com.github.dakusui.osynth.core.utils.AssertionUtils;
@@ -9,12 +8,16 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static com.github.dakusui.osynth.core.AbstractObjectSynthesizer.DEFAULT_FALLBACK_OBJECT;
+import static com.github.dakusui.osynth.core.MethodHandlerDecorator.chainMethodHandlerDecorators;
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.builtIndMethodSignatures;
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.reservedMethodSignatures;
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForAttemptToCastToUnavailableInterface;
 import static com.github.dakusui.pcond.Preconditions.require;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public interface SynthesizedObject {
@@ -88,6 +91,28 @@ public interface SynthesizedObject {
       this.methodHandlerDecorator = Objects.requireNonNull(methodHandlerDecorator);
     }
 
+    public static List<MethodHandlerEntry> nonBuiltInMethodHandlerEntriesOf(Descriptor b) {
+      return b.methodHandlerEntries().stream().filter(methodHandlerEntry -> !methodHandlerEntry.isBuiltIn()).collect(toList());
+    }
+
+    /**
+     * Returns a new descriptor merging two descriptors.
+     * The merge happens in a manner, where "a overrides b".
+     *
+     * @param a A descriptor to merge.
+     * @param b Another descriptor to merge.
+     * @return A merged new descriptor object.
+     */
+    public static Descriptor merge(Descriptor a, Descriptor b) {
+      Builder builder = a.toBuilder();
+      if (a.fallbackObject() == DEFAULT_FALLBACK_OBJECT)
+        builder.fallbackObject(b.fallbackObject());
+      nonBuiltInMethodHandlerEntriesOf(b).forEach(builder::addMethodHandler);
+      b.interfaces().forEach(builder::addInterface);
+      builder.methodHandlerDecorator(chainMethodHandlerDecorators(a.methodHandlerDecorator(), b.methodHandlerDecorator()));
+      return builder.build();
+    }
+
     public List<Class<?>> interfaces() {
       return unmodifiableList(this.interfaces);
     }
@@ -117,12 +142,8 @@ public interface SynthesizedObject {
         return false;
       }
       Descriptor another = (Descriptor) anotherObject;
-      Set<MethodHandlerEntry> methodHandlerSet = this.methodHandlers.stream()
-          .filter(each -> !each.handler().isBuiltIn())
-          .collect(toSet());
-      Set<MethodHandlerEntry> methodHandlerSetFromAnother = another.methodHandlers.stream()
-          .filter(each -> !each.handler().isBuiltIn())
-          .collect(toSet());
+      Set<MethodHandlerEntry> methodHandlerSet = new HashSet<>(nonBuiltInMethodHandlerEntriesOf(this));
+      Set<MethodHandlerEntry> methodHandlerSetFromAnother = new HashSet<>(nonBuiltInMethodHandlerEntriesOf(another));
       return Objects.equals(fallbackObject, another.fallbackObject) &&
           Objects.equals(methodHandlerDecorator, another.methodHandlerDecorator) &&
           Objects.equals(interfaces, another.interfaces) &&
@@ -131,10 +152,21 @@ public interface SynthesizedObject {
 
     @Override
     public String toString() {
-      return String.format("{methodHandlers=%s,interfaces=%s,fallback:%s}",
-          this.methodHandlerEntries(),
+      return format("{methodHandlers=%s,interfaces=%s,fallback:%s}",
+          nonBuiltInMethodHandlerEntriesOf(this),
           this.interfaces(),
           this.fallbackObject());
+    }
+
+    public Descriptor.Builder toBuilder() {
+      return new Descriptor.Builder() {
+        {
+          Descriptor.this.interfaces().forEach(this::addInterface);
+          this.fallbackObject = Descriptor.this.fallbackObject;
+          this.methodHandlerDecorator = Descriptor.this.methodHandlerDecorator();
+          this.methodHandlers.addAll(nonBuiltInMethodHandlerEntriesOf(this.build()));
+        }
+      }.fallbackObject(this.fallbackObject());
     }
 
     public static class Builder {
