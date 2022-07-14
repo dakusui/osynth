@@ -121,19 +121,16 @@ public class MethodMatcherTest {
               when().as((TestInterface) value())
                   .exercise(function("aMethod", TestInterface::aMethod))
                   .then().asString()
-                  .isEqualTo("handledMethodIsCalled")
-                  .verify(),
+                  .isEqualTo("handledMethodIsCalled"),
               when().as((TestInterface) value())
                   .exercise(function("bMethod", TestInterface::bMethod))
                   .then().asString()
-                  .isEqualTo("handledMethodIsCalled")
-                  .verify(),
+                  .isEqualTo("handledMethodIsCalled"),
               when().as((TestInterface) value())
                   .exercise(function("cMethod", TestInterface::cMethod))
                   .then().asString()
                   .isEqualTo("defaultMethod:cMethod")
-                  .verify()
-          )
+              )
       );
     }
 
@@ -155,20 +152,15 @@ public class MethodMatcherTest {
               when().as((TestInterface) value())
                   .exercise(function("aMethod", TestInterface::aMethod))
                   .then()
-                  .isEqualTo("defaultMethod:aMethod")
-                  .verify(),
+                  .isEqualTo("defaultMethod:aMethod"),
               when().as((TestInterface) value())
                   .exercise(function("bMethod", TestInterface::bMethod))
                   .then().asString()
-                  .isEqualTo("handledMethodIsCalled")
-                  .verify(),
+                  .isEqualTo("handledMethodIsCalled"),
               when().as((TestInterface) value())
                   .exercise(function("cMethod", TestInterface::cMethod))
                   .then().asString()
-                  .isEqualTo("handledMethodIsCalled")
-                  .verify()
-          )
-      );
+                  .isEqualTo("handledMethodIsCalled")));
     }
   }
 }

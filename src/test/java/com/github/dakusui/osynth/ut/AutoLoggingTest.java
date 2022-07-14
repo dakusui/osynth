@@ -1,11 +1,14 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
+import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.MethodHandlerEntry;
+import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
-import com.github.dakusui.pcond.forms.Predicates;
+import com.github.dakusui.pcond.MoreFluents;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
@@ -14,12 +17,14 @@ import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.listJoinByLinBreak;
 import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.objectToString;
 import static com.github.dakusui.osynth.utils.TestForms.joinByLineBreak;
-import static com.github.dakusui.pcond.Fluents.*;
+import static com.github.dakusui.pcond.MoreFluents.*;
+import static com.github.dakusui.pcond.MoreFluents.valueOf;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.core.printable.ExplainablePredicate.explainableStringIsEqualTo;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.forms.Printables.function;
 import static com.github.dakusui.thincrest_pcond.functions.Functions.size;
+import static java.util.Arrays.asList;
 
 public class AutoLoggingTest extends UtBase {
 
@@ -75,18 +80,10 @@ public class AutoLoggingTest extends UtBase {
 
     printTestObjectAndCurrentOutputToErr(aobj);
 
-    assertThat(list(aobj, out), allOf(
-        when().valueAt(0).as((A) value())
-            .applyFunction(A::aMethod)
-            .then().asString()
-            .isEqualTo("handler:aMethod")
-            .verify(),
-        when().valueAt(1)
-            .asListOf((String) value())
-            .then()
-            .findElementsInorderBy(startsWith("ENTER"), startsWith("LEAVE"))
-            .verify()
-    ));
+    assertWhen(
+        valueOf(aobj).asObject().exercise(A::aMethod).then().asString().isEqualTo("handler:aMethod"),
+        valueOf(out).asListOf((String) MoreFluents.value()).then().findElementsInOrderBy(asList(startsWith("ENTER"), startsWith("LEAVE")))
+    );
   }
 
   private void printTestObjectAndCurrentOutputToErr(A aobj) {
@@ -129,18 +126,14 @@ public class AutoLoggingTest extends UtBase {
   public void givenAutoLoggingEnabledOverridingBuiltInMethod$whenToString$thenNotLoggedAndDoesntBreak() {
     A aobj = autologgingEnabledTestObject(
         methodCall("toString").with((v, args) -> "HELLO"));
-    assertThat(
-        list(aobj, out),
-        allOf(
-            when().valueAt(0)
-                .exercise(objectToString())
-                .then()
-                .isEqualTo("HELLO")
-                .verify(),
-            when().valueAt(1)
-                .then().asListOf((String) value()).intoStringWith(listJoinByLinBreak())
-                .isEmpty()
-                .verify()));
+    assertWhen(
+        valueOf(aobj)
+            .exercise(objectToString())
+            .then()
+            .isEqualTo("HELLO"),
+        valueOf(out)
+            .then().intoStringWith(listJoinByLinBreak())
+            .isEmpty());
   }
 
   private A autologgingEnabledTestObject() {
@@ -166,8 +159,7 @@ public class AutoLoggingTest extends UtBase {
     return new ObjectSynthesizer()
         //        /*
         .enableAutoLoggingWritingTo(s -> {
-          System.out.println(s);
-          out.add(s);
+          loggingToStdoutAndOutList(out, s);
         })
         //         */
         //        .enableAutoLogging()
@@ -178,45 +170,42 @@ public class AutoLoggingTest extends UtBase {
         .castTo(A.class);
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   public void modifyAutoLoggingBehaviorBy$compose$_thenModifiedBehaviorObserved() {
     List<String> out = new LinkedList<>();
     ObjectSynthesizer osynth = new ObjectSynthesizer()
-        .enableAutoLoggingWritingTo(s -> {
-          System.out.println(s);
-          out.add(s);
-        })
+        .enableAutoLoggingWritingTo(s -> loggingToStdoutAndOutList(out, s))
         .handle(methodCall("aMethod").with((synthesizedObject, args) -> "handler:aMethod"))
         .fallbackTo(newObjectImplementingAForFallback())
         .addInterface(A.class);
-    osynth.methodHandlerDecorator(osynth.methodHandlerDecorator()
-        .compose((method, methodHandler) -> (synthesizedObject, args) -> {
-          String message = "returnType:" + method.getReturnType().getSimpleName();
-          System.out.println(message);
-          out.add(message);
-          return methodHandler.handle(synthesizedObject, args);
-        }));
+    osynth.methodHandlerDecorator(osynth
+        .methodHandlerDecorator()
+        .compose((method, methodHandler) -> (synthesizedObject, args) -> handleMethodWithLoggingReturnTypeToStdoutAndOutList(synthesizedObject, method, args, methodHandler, out)));
     A givenObject = osynth
         .synthesize()
         .castTo(A.class);
-    //    System.out.println(givenObject.aMethod());
-    assertThat(
-        list(givenObject, out),
-        allOf(
-            when().valueAt(0, (A) value()).
-                applyFunction(A::aMethod)
-                .then().asString()
-                .isEqualTo("handler:aMethod").verify(),
-            when().valueAt(1, (List<String>) value())
-                .then().allOf(
-                    transform(size()).check(isEqualTo(3)),
-                    Predicates.findElements(
-                        startsWith("ENTER:"),
-                        explainableStringIsEqualTo("returnType:String"),
-                        startsWith("LEAVE:")
-                    )).verify()
-        ));
+    assertWhen(
+        valueOf(givenObject).applyFunction(function("A::aMethod", A::aMethod))
+            .then()
+            .asString()
+            .isEqualTo("handler:aMethod"),
+        valueOf(out)
+            .thenWith(allOf(
+                transform(size()).check(isEqualTo(3)),
+                findElements(startsWith("ENTER:"),
+                    explainableStringIsEqualTo("returnType:String"),
+                    startsWith("LEAVE:")))));
+  }
+
+  private static void loggingToStdoutAndOutList(List<String> out, String s) {
+    System.out.println(s);
+    out.add(s);
+  }
+
+  private static Object handleMethodWithLoggingReturnTypeToStdoutAndOutList(SynthesizedObject synthesizedObject, Method method, Object[] args, MethodHandler methodHandler, List<String> out) throws Throwable {
+    String message = "returnType:" + method.getReturnType().getSimpleName();
+    loggingToStdoutAndOutList(out, message);
+    return methodHandler.handle(synthesizedObject, args);
   }
 
   @Test

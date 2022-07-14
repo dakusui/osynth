@@ -2,6 +2,7 @@ package com.github.dakusui.osynth.ut.core.utils;
 
 import com.github.dakusui.osynth.core.utils.MethodUtils;
 import com.github.dakusui.osynth.exceptions.OsynthException;
+import com.github.dakusui.pcond.MoreFluents;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,7 +38,7 @@ public class MethodUtilsTest extends UtBase {
     } catch (UnsupportedOperationException e) {
       e.printStackTrace();
       assertThat(e,
-          when().as((UnsupportedOperationException) value())
+          when().asObject().castTo((UnsupportedOperationException) MoreFluents.value())
               .exercise(Throwable::getMessage)
               .then().asString()
               .isEqualTo("An appropriate method handler/implementation for 'toString(String)' was not found in 'class java.lang.Object': java.lang.Object.toString(java.lang.String)"));

@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import static com.github.dakusui.osynth.utils.TestForms.*;
 import static com.github.dakusui.pcond.Fluents.*;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Printables.predicate;
 
 public class OsynthExceptionTest extends UtBase {
@@ -32,15 +33,15 @@ public class OsynthExceptionTest extends UtBase {
     } catch (OsynthException e) {
       e.printStackTrace();
       assertThat(e,
-          when().asObject().allOf(
-              $().asValueOfClass(Throwable.class)
+          when().asObject().thenWith(allOf(
+              valueOfClass(Throwable.class).asObject()
                   .exercise(throwableGetCause())
                   .then()
-                  .with(objectIsSameReferenceAs(original)),
-              $().asValueOfClass(Throwable.class)
+                  .verifyWith(objectIsSameReferenceAs(original)),
+              valueOfClass(Throwable.class).asObject()
                   .exercise(throwableGetMessage())
                   .then().asString()
-                  .isEqualTo(new IOException().toString()))); // By definition of Throwable#<init>(Throwable), this is the expected string.
+                  .isEqualTo(new IOException().toString())))); // By definition of Throwable#<init>(Throwable), this is the expected string.
     }
   }
 
@@ -52,7 +53,7 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from("helloWorld", new InvocationTargetException(new TestException()));
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(e, when().as((OsynthException) value())
+      assertThat(e, when().asObject().cast(OsynthException.class)
           .exercise(Throwable::getCause)
           .then()
           .isInstanceOf(TestException.class));
@@ -68,7 +69,7 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from("helloWorld", new OsynthException(new TestException()));
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(e, when().as((OsynthException) value())
+      assertThat(e, when().asObject().cast(OsynthException.class)
           .exercise(Throwable::getCause)
           .then()
           .isInstanceOf(TestException.class));

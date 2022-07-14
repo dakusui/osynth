@@ -102,11 +102,10 @@ public class ValidationTest extends UtBase {
         .addInterface(TestInterface.class)
         .synthesize();
     assertThat(synthesizedObject.castTo(TestInterface.class),
-        when((TestInterface) value()).asObject()
+        when().asObject().castTo((TestInterface) value())
             .exercise(v -> v.testMethod("Hello!"))
             .then()
-            .isEqualTo("testMethod[Hello!]")
-            .verify());
+            .isEqualTo("testMethod[Hello!]"));
   }
 
   private static MethodHandler createNewDescriptorReturningHandler() {
@@ -114,9 +113,5 @@ public class ValidationTest extends UtBase {
         .fallbackObject(new Object())
         .methodHandlerDecorator(MethodHandlerDecorator.IDENTITY)
         .build();
-  }
-
-  private static MethodHandler createCastingWithoutCheckHandler() {
-    return (sobj, objects) -> ((Class<?>) objects[0]).cast(sobj);
   }
 }

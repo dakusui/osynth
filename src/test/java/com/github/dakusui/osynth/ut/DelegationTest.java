@@ -76,14 +76,12 @@ public class DelegationTest extends UtBase {
                 .exercise(function("invoke[testMethod0]", TestInterface::testMethod0))
                 .then().asString()
                 .isNotNull()
-                .isEqualTo("implementationObject:testMethod0:<>")
-                .verify(),
+                .isEqualTo("implementationObject:testMethod0:<>"),
             when().asValueOfClass(TestInterface.class)
                 .exercise(function("invoke[testMethod1](arg1)", v -> v.testMethod1("testMethod1:arg1")))
                 .then().asString()
                 .isNotNull()
-                .isEqualTo("methodHandler:testMethod1:[testMethod1:arg1]")
-                .verify()));
+                .isEqualTo("methodHandler:testMethod1:[testMethod1:arg1]")));
   }
 
   @Test(expected = UnsupportedOperationException.class)

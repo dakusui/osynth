@@ -35,7 +35,6 @@ public class MethodHandlerDecoratorTest {
             .exercise(integerParseInt())
             .then()
             .asInteger()
-            .testPredicate(alwaysTrue()) // Whatever the integer, it's okay
-            .verify());
+            .testPredicate(alwaysTrue())); // Whatever the integer, it's okay
   }
 }
