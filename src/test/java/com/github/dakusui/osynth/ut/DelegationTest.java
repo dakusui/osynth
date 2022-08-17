@@ -7,8 +7,8 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.fluent.Fluents.when;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.thincrest_pcond.functions.Printable.function;
 

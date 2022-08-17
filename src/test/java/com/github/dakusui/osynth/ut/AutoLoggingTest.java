@@ -5,7 +5,7 @@ import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.MethodHandlerEntry;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
-import com.github.dakusui.pcond.MoreFluents;
+import com.github.dakusui.pcond.fluent.MoreFluents;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -17,10 +17,10 @@ import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.listJoinByLinBreak;
 import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.objectToString;
 import static com.github.dakusui.osynth.utils.TestForms.joinByLineBreak;
-import static com.github.dakusui.pcond.MoreFluents.*;
-import static com.github.dakusui.pcond.MoreFluents.valueOf;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.core.printable.ExplainablePredicate.explainableStringIsEqualTo;
+import static com.github.dakusui.pcond.fluent.MoreFluents.assertWhen;
+import static com.github.dakusui.pcond.fluent.MoreFluents.valueOf;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.forms.Printables.function;
 import static com.github.dakusui.thincrest_pcond.functions.Functions.size;
@@ -190,7 +190,9 @@ public class AutoLoggingTest extends UtBase {
             .asString()
             .isEqualTo("handler:aMethod"),
         valueOf(out)
-            .thenWith(allOf(
+            .asListOfClass(String.class)
+            .then()
+            .verifyWith(allOf(
                 transform(size()).check(isEqualTo(3)),
                 findElements(startsWith("ENTER:"),
                     explainableStringIsEqualTo("returnType:String"),

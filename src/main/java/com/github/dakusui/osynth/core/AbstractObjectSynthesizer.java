@@ -3,7 +3,7 @@ package com.github.dakusui.osynth.core;
 import com.github.dakusui.osynth.core.utils.AssertionUtils;
 import com.github.dakusui.osynth.exceptions.ValidationException;
 import com.github.dakusui.osynth.invocationcontrollers.StandardInvocationController;
-import com.github.dakusui.pcond.Validations;
+import com.github.dakusui.pcond.Validates;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,8 +23,8 @@ import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPre
 import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHODS;
 import static com.github.dakusui.osynth.core.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
-import static com.github.dakusui.pcond.Postconditions.ensure;
-import static com.github.dakusui.pcond.Preconditions.*;
+import static com.github.dakusui.pcond.Ensures.ensure;
+import static com.github.dakusui.pcond.Requires.*;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.internals.InternalUtils.formatObject;
 
@@ -245,7 +245,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
     }
 
     static <V> void validateValue(V value, Predicate<V> predicate) {
-      Validations.validate(
+      Validates.validate(
           value,
           predicate,
           s -> {

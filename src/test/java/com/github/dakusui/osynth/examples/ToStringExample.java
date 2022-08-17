@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.util.function.Supplier;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.Preconditions.require;
+import static com.github.dakusui.pcond.Requires.require;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 
 @SuppressWarnings("NewClassNamingConvention")

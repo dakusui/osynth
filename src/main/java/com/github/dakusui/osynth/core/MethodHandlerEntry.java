@@ -1,7 +1,7 @@
 package com.github.dakusui.osynth.core;
 
 import static com.github.dakusui.osynth.core.utils.MethodUtils.createMethodHandlerDelegatingToObject;
-import static com.github.dakusui.pcond.Preconditions.requireNonNull;
+import static com.github.dakusui.pcond.Requires.requireNonNull;
 
 public interface MethodHandlerEntry {
   MethodMatcher matcher();

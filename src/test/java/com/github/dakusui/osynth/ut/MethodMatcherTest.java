@@ -7,9 +7,9 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
-import static com.github.dakusui.pcond.Fluents.value;
-import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.when;
 import static com.github.dakusui.pcond.forms.Functions.findString;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.forms.Printables.function;

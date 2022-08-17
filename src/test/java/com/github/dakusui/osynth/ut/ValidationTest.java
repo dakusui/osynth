@@ -11,9 +11,9 @@ import org.junit.Test;
 import java.io.Serializable;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.Fluents.value;
-import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.when;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
 import static java.lang.String.format;

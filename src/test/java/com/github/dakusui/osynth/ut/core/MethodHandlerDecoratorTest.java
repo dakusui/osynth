@@ -7,8 +7,8 @@ import org.junit.Test;
 
 import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPredefinedMethods;
 import static com.github.dakusui.osynth.utils.TestForms.*;
-import static com.github.dakusui.pcond.Fluents.when;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.fluent.Fluents.when;
 import static com.github.dakusui.pcond.forms.Predicates.alwaysTrue;
 
 public class MethodHandlerDecoratorTest {

@@ -8,8 +8,9 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import static com.github.dakusui.osynth.utils.TestForms.*;
-import static com.github.dakusui.pcond.Fluents.*;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.fluent.Fluents.valueOfClass;
+import static com.github.dakusui.pcond.fluent.Fluents.when;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Printables.predicate;
 
@@ -32,16 +33,19 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from(null, original);
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(e,
-          when().asObject().thenWith(allOf(
-              valueOfClass(Throwable.class).asObject()
-                  .exercise(throwableGetCause())
-                  .then()
-                  .verifyWith(objectIsSameReferenceAs(original)),
-              valueOfClass(Throwable.class).asObject()
-                  .exercise(throwableGetMessage())
-                  .then().asString()
-                  .isEqualTo(new IOException().toString())))); // By definition of Throwable#<init>(Throwable), this is the expected string.
+      assertThat(
+          e,
+          when().asValueOfClass(Throwable.class)
+              .then()
+              .verifyWith(allOf(
+                  valueOfClass(Throwable.class).asObject()
+                      .exercise(throwableGetCause())
+                      .then()
+                      .verifyWith(objectIsSameReferenceAs(original)),
+                  valueOfClass(Throwable.class).asObject()
+                      .exercise(throwableGetMessage())
+                      .then().asString()
+                      .isEqualTo(new IOException().toString())))); // By definition of Throwable#<init>(Throwable), this is the expected string.
     }
   }
 
