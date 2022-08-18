@@ -1,0 +1,68 @@
+[plantuml]
+----
+class SynthesizeObject {
+  List<MethodHandler> methodHandlers()
+  List<Interfaces>    interfaces()
+  Optional<Object>    fallbackObject()
+}
+
+class A2 extends SynthesizedObject {
+}
+
+object "a2Object:A2" as a2 {
+}
+
+firstObject::SynthesizedObject *--> SynthesizedObject
+
+SynthesizedObject *--> SynthesizedObject
+----
+
+When a method invocation request is received,
+
+1. Try to find the narrowest possible matching method handler from `methodHandlers()`.
+2. Try to find the matching default implementation in the `interfaces()`.
+3. If a `fallbackObject` is present, a method invocation will be attempted on it.
+
+Note that the `fallbackObject` can be another synthesized object.
+
+== Inside a `MethodHandler`
+
+How to make a call within the same synthesized object.
+
+== Methods in `java.lang.Object` class
+
+Methods declared in `java.lang.Object` are always available for all the objects in Java.
+Therefore, for the proxy objects synthesized by our `osynth` library, you can also call them.
+
+[text]
+.Methods defined in `java.lang.Object`.
+----
++-------- public
+|+------- protected
+||+------ private
+|||
+|||  +--- final
+|||  |+-- native
+|||  ||+- static
+|||  |||
+X    XX  getClass []
+X    XX  notify []
+X    XX  notifyAll []
+X    X   wait [long, int]
+X    XX  wait [long]
+X    X   wait []
+X     X  hashCode []
+X        equals [class java.lang.Object]
+X        toString []
+ X    X  clone []
+ X       finalize []
+  X   XX registerNatives []
+----
+
+Some methods defined in `java.lang.Object` are treated by the dynamic proxy mechanism of Java's core API<<Proxy>>.
+When they are called, the method call request is intercepted by the dynamic proxy mechanism and passed to your invocation handler.
+This allows us to customize the behaviors of these methods but at the same time we need appropriately to take care of situations , where such method calls are made from inside the invocation handler itself.
+Otherwise, the call makes another call on the same method, which results in the infinite recursive call and `StackOverflow` error.
+More notably, such a specification is defined for `hashCode()`, `equals(Object)`, and `toString()` methods, which are called implicitly.
+
+The `osynth` library has its own built-in method handlers for those methods, which serve as default behaviors for a synthesized object.

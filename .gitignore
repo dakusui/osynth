@@ -1,6 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Maven template
 target/
+
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -12,6 +13,14 @@ buildNumber.properties
 
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
+
+# BEGIN: Asciidoctor related
+**/.asciidoctor/
+**/package-info.java
+diag-*.png
+generated/
+# END:   Asciidoctor related
+
 ### Java template
 # Compiled class file
 *.class

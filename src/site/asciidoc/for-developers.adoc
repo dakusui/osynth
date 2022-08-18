@@ -1,0 +1,7 @@
+
+== For IntelliJ Users
+
+Please disable "Generate "<p>" on empty lines"!
+
+image:../resources/images/code-style-image-1.png[]]
+
