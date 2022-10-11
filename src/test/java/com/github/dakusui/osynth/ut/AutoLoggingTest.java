@@ -5,7 +5,6 @@ import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.MethodHandlerEntry;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
-import com.github.dakusui.pcond.fluent.MoreFluents;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
@@ -19,8 +18,8 @@ import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.objectT
 import static com.github.dakusui.osynth.utils.TestForms.joinByLineBreak;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.core.printable.ExplainablePredicate.explainableStringIsEqualTo;
-import static com.github.dakusui.pcond.fluent.MoreFluents.assertWhen;
-import static com.github.dakusui.pcond.fluent.MoreFluents.valueOf;
+import static com.github.dakusui.pcond.fluent.Fluents.assertAll;
+import static com.github.dakusui.pcond.fluent.Fluents.value;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.forms.Printables.function;
 import static com.github.dakusui.thincrest_pcond.functions.Functions.size;
@@ -80,9 +79,9 @@ public class AutoLoggingTest extends UtBase {
 
     printTestObjectAndCurrentOutputToErr(aobj);
 
-    assertWhen(
-        valueOf(aobj).asObject().exercise(A::aMethod).then().asString().isEqualTo("handler:aMethod"),
-        valueOf(out).asListOf((String) MoreFluents.value()).then().findElementsInOrderBy(asList(startsWith("ENTER"), startsWith("LEAVE")))
+    assertAll(
+        value(aobj).asObject().exercise(A::aMethod).then().asString().isEqualTo("handler:aMethod"),
+        value(out).asListOf((String) value()).then().findElementsInOrderBy(asList(startsWith("ENTER"), startsWith("LEAVE")))
     );
   }
 
@@ -126,12 +125,12 @@ public class AutoLoggingTest extends UtBase {
   public void givenAutoLoggingEnabledOverridingBuiltInMethod$whenToString$thenNotLoggedAndDoesntBreak() {
     A aobj = autologgingEnabledTestObject(
         methodCall("toString").with((v, args) -> "HELLO"));
-    assertWhen(
-        valueOf(aobj)
+    assertAll(
+        value(aobj)
             .exercise(objectToString())
             .then()
             .isEqualTo("HELLO"),
-        valueOf(out)
+        value(out)
             .then().intoStringWith(listJoinByLinBreak())
             .isEmpty());
   }
@@ -158,9 +157,7 @@ public class AutoLoggingTest extends UtBase {
   private A autologgingEnabledTestObject(MethodHandlerEntry aMethod) {
     return new ObjectSynthesizer()
         //        /*
-        .enableAutoLoggingWritingTo(s -> {
-          loggingToStdoutAndOutList(out, s);
-        })
+        .enableAutoLoggingWritingTo(s -> loggingToStdoutAndOutList(out, s))
         //         */
         //        .enableAutoLogging()
         .handle(aMethod)
@@ -184,13 +181,12 @@ public class AutoLoggingTest extends UtBase {
     A givenObject = osynth
         .synthesize()
         .castTo(A.class);
-    assertWhen(
-        valueOf(givenObject).applyFunction(function("A::aMethod", A::aMethod))
+    assertAll(
+        value(givenObject).applyFunction(function("A::aMethod", A::aMethod))
             .then()
             .asString()
             .isEqualTo("handler:aMethod"),
-        valueOf(out)
-            .asListOfClass(String.class)
+        value(out).asListOfClass(String.class)
             .then()
             .verifyWith(allOf(
                 transform(size()).check(isEqualTo(3)),

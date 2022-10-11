@@ -2,13 +2,13 @@ package com.github.dakusui.osynth.ut.core;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandlerDecorator;
-import com.github.dakusui.pcond.forms.Predicates;
+import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPredefinedMethods;
 import static com.github.dakusui.osynth.utils.TestForms.*;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.when;
+import static com.github.dakusui.pcond.fluent.Fluents.value;
 import static com.github.dakusui.pcond.forms.Predicates.alwaysTrue;
 
 public class MethodHandlerDecoratorTest {
@@ -27,9 +27,8 @@ public class MethodHandlerDecoratorTest {
   @Test
   public void examineHashCodeMethodForFilteringOutPredefinedMethods() {
     MethodHandlerDecorator decorator = filterOutPredefinedMethods(new ObjectSynthesizer().methodHandlerDecorator());
-    assertThat(
-        decorator,
-        when().asObject()
+    Fluents.assertThat(
+        value(decorator).asObject()
             .exercise(objectHashCode())
             .exercise(objectToString())
             .exercise(integerParseInt())

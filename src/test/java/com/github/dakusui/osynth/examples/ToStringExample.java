@@ -34,7 +34,7 @@ class ToStringExample {
     require(obj, isNotNull());
     require(descriptionComposer, isNotNull());
     return new ObjectSynthesizer()
-        .handle(methodCall("toString").with((sobj, args) -> descriptionComposer.get()))
+        .handle(methodCall("toString").with((SynthesizedObject sobj, Object[] args) -> descriptionComposer.get()))
         .includeInterfacesFromFallbackObject()
         .fallbackTo(obj)
         .synthesize();

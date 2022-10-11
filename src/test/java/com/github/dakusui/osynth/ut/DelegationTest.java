@@ -2,13 +2,14 @@ package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
+import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 
 import java.util.Arrays;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.when;
+import static com.github.dakusui.pcond.fluent.Fluents.value;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.thincrest_pcond.functions.Printable.function;
 
@@ -68,20 +69,19 @@ public class DelegationTest extends UtBase {
 
     System.out.println(givenObject);
 
-    assertThat(
-        givenObject,
-        allOf(
-            isNotNull(),
-            when().asValueOfClass(TestInterface.class)
-                .exercise(function("invoke[testMethod0]", TestInterface::testMethod0))
-                .then().asString()
-                .isNotNull()
-                .isEqualTo("implementationObject:testMethod0:<>"),
-            when().asValueOfClass(TestInterface.class)
-                .exercise(function("invoke[testMethod1](arg1)", v -> v.testMethod1("testMethod1:arg1")))
-                .then().asString()
-                .isNotNull()
-                .isEqualTo("methodHandler:testMethod1:[testMethod1:arg1]")));
+    Fluents.assertAll(
+        value(givenObject)
+            .asValueOfClass(TestInterface.class)
+            .exercise(function("invoke[testMethod0]", TestInterface::testMethod0))
+            .then()
+            .isNotNull()
+            .isEqualTo("implementationObject:testMethod0:<>"),
+        value(givenObject)
+            .asValueOfClass(TestInterface.class)
+            .exercise(function("invoke[testMethod1](arg1)", v -> v.testMethod1("testMethod1:arg1")))
+            .then().asString()
+            .isNotNull()
+            .isEqualTo("methodHandler:testMethod1:[testMethod1:arg1]"));
   }
 
   @Test(expected = UnsupportedOperationException.class)
