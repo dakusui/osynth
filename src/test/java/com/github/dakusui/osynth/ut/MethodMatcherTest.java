@@ -1,15 +1,18 @@
 package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
-import com.github.dakusui.osynth.core.*;
+import com.github.dakusui.osynth.core.MethodHandlerEntry;
+import com.github.dakusui.osynth.core.MethodMatcher;
+import com.github.dakusui.osynth.core.MethodSignature;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
+import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
+import static com.github.dakusui.pcond.fluent.Fluents.assertAll;
 import static com.github.dakusui.pcond.fluent.Fluents.value;
-import static com.github.dakusui.pcond.fluent.Fluents.when;
 import static com.github.dakusui.pcond.forms.Functions.findString;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.forms.Printables.function;
@@ -115,23 +118,19 @@ public class MethodMatcherTest {
           .synthesize()
           .castTo(TestInterface.class);
 
-      assertThat(
-          testObject,
-          allOf(
-              when().as((TestInterface) value())
-                  .exercise(function("aMethod", TestInterface::aMethod))
-                  .then().asString()
-                  .isEqualTo("handledMethodIsCalled"),
-              when().as((TestInterface) value())
-                  .exercise(function("bMethod", TestInterface::bMethod))
-                  .then().asString()
-                  .isEqualTo("handledMethodIsCalled"),
-              when().as((TestInterface) value())
-                  .exercise(function("cMethod", TestInterface::cMethod))
-                  .then().asString()
-                  .isEqualTo("defaultMethod:cMethod")
-              )
-      );
+      assertAll(
+          value(testObject).as((TestInterface) value())
+              .exercise(function("aMethod", TestInterface::aMethod))
+              .then().asString()
+              .isEqualTo("handledMethodIsCalled"),
+          value(testObject).as((TestInterface) value())
+              .exercise(function("bMethod", TestInterface::bMethod))
+              .then().asString()
+              .isEqualTo("handledMethodIsCalled"),
+          value(testObject).as((TestInterface) value())
+              .exercise(function("cMethod", TestInterface::cMethod))
+              .then().asString()
+              .isEqualTo("defaultMethod:cMethod"));
     }
 
     @Test
@@ -146,21 +145,19 @@ public class MethodMatcherTest {
           .synthesize()
           .castTo(TestInterface.class);
 
-      assertThat(
-          testObject,
-          allOf(
-              when().as((TestInterface) value())
-                  .exercise(function("aMethod", TestInterface::aMethod))
-                  .then()
-                  .isEqualTo("defaultMethod:aMethod"),
-              when().as((TestInterface) value())
-                  .exercise(function("bMethod", TestInterface::bMethod))
-                  .then().asString()
-                  .isEqualTo("handledMethodIsCalled"),
-              when().as((TestInterface) value())
-                  .exercise(function("cMethod", TestInterface::cMethod))
-                  .then().asString()
-                  .isEqualTo("handledMethodIsCalled")));
+      assertAll(
+          value(testObject).as((TestInterface) value())
+              .exercise(function("aMethod", TestInterface::aMethod))
+              .then()
+              .isEqualTo("defaultMethod:aMethod"),
+          value(testObject).as((TestInterface) value())
+              .exercise(function("bMethod", TestInterface::bMethod))
+              .then().asString()
+              .isEqualTo("handledMethodIsCalled"),
+          value(testObject).as((TestInterface) value())
+              .exercise(function("cMethod", TestInterface::cMethod))
+              .then().asString()
+              .isEqualTo("handledMethodIsCalled"));
     }
   }
 }

@@ -2,6 +2,7 @@ package com.github.dakusui.osynth.ut;
 
 import com.github.dakusui.osynth.exceptions.OsynthException;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
+import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -9,9 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import static com.github.dakusui.osynth.utils.TestForms.*;
 import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.valueOfClass;
-import static com.github.dakusui.pcond.fluent.Fluents.when;
-import static com.github.dakusui.pcond.forms.Predicates.allOf;
+import static com.github.dakusui.pcond.fluent.Fluents.value;
 import static com.github.dakusui.pcond.forms.Printables.predicate;
 
 public class OsynthExceptionTest extends UtBase {
@@ -33,19 +32,15 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from(null, original);
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(
-          e,
-          when().asValueOfClass(Throwable.class)
+      Fluents.assertAll(
+          value(e).asValueOfClass(Throwable.class)
+              .exercise(throwableGetCause())
               .then()
-              .verifyWith(allOf(
-                  valueOfClass(Throwable.class).asObject()
-                      .exercise(throwableGetCause())
-                      .then()
-                      .verifyWith(objectIsSameReferenceAs(original)),
-                  valueOfClass(Throwable.class).asObject()
-                      .exercise(throwableGetMessage())
-                      .then().asString()
-                      .isEqualTo(new IOException().toString())))); // By definition of Throwable#<init>(Throwable), this is the expected string.
+              .verifyWith(objectIsSameReferenceAs(original)),
+          value(e).asObject()
+              .exercise(throwableGetMessage())
+              .then().asString()
+              .isEqualTo(new IOException().toString())); // By definition of Throwable#<init>(Throwable), this is the expected string.
     }
   }
 
@@ -57,10 +52,12 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from("helloWorld", new InvocationTargetException(new TestException()));
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(e, when().asObject().cast(OsynthException.class)
-          .exercise(Throwable::getCause)
-          .then()
-          .isInstanceOf(TestException.class));
+      Fluents.assertThat(
+          value(e).asObject()
+              .cast(OsynthException.class)
+              .exercise(Throwable::getCause)
+              .then()
+              .isInstanceOf(TestException.class));
       throw e;
     }
   }
@@ -73,10 +70,12 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from("helloWorld", new OsynthException(new TestException()));
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(e, when().asObject().cast(OsynthException.class)
-          .exercise(Throwable::getCause)
-          .then()
-          .isInstanceOf(TestException.class));
+      Fluents.assertThat(
+          value(e).asObject()
+              .cast(OsynthException.class)
+              .exercise(Throwable::getCause)
+              .then()
+              .isInstanceOf(TestException.class));
       throw e;
     }
   }
