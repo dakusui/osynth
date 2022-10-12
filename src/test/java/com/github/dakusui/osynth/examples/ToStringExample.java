@@ -11,12 +11,12 @@ import static com.github.dakusui.pcond.Requires.require;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 
 @SuppressWarnings("NewClassNamingConvention")
-public
-class ToStringExample {
+public class ToStringExample {
   interface Hello {
     String hello();
   }
 
+  @SuppressWarnings("UnnecessaryToStringCall")
   @Test
   public void test() {
     class Impl implements Hello {
@@ -28,6 +28,7 @@ class ToStringExample {
     Hello hello = ToStringExample.create(() -> "Hello, world", new Impl()).castTo(Hello.class);
     System.out.println(hello.hello());
     System.out.println(hello);
+    System.out.println(hello.toString());
   }
 
   static SynthesizedObject create(Supplier<String> descriptionComposer, Object obj) {

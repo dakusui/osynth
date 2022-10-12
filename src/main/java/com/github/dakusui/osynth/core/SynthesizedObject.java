@@ -20,9 +20,22 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+/**
+ * An interface that describes an object synthesized by `osynth`.
+ */
 public interface SynthesizedObject {
   Set<Method> RESERVED_METHODS = reservedMethodSignatures();
   Set<Method> BUILT_IN_METHODS = builtIndMethodSignatures();
+
+  /**
+   * A shorthand method to return  a "fallback object".
+   *
+   * @return A fallback object.
+   */
+  @ReservedByOSynth
+  default Object fallbackObject() {
+    return descriptor().fallbackObject();
+  }
 
   @BuiltInHandlerFactory(BuiltInHandlerFactory.ForDescriptor.class)
   @ReservedByOSynth

@@ -1,5 +1,46 @@
 = The design of the `osynth` library
 
+It is a weak-point of Java language, where it is very difficult to reuse an object.
+Because the language is designed to reuse a "class" and an "interface", not an "object".
+
+"Reuse", I mean here is to create another entity from a given entity with a certain customization.
+You can create a new class from an existing one by inheritance and customize it by overriding methods.
+However, once an object is created, how are you going to create another modifying a method's behavior?
+
+What `osynth` does for you is this.
+
+Following is the first example of this library.
+
+[source, java]
+----
+public class HelloExample {
+  interface Hello {
+    String hello();
+  }
+
+  @Test
+  public void overrideHelloMethodAfterInstantiation() {
+    Hello helloFallback = () -> "Hello!";
+    Hello hello = new ObjectSynthesizer()
+        .handle(methodCall("hello").with((SynthesizedObject sobj, Object[] args) -> "Hello, world"))
+        .fallbackTo(helloFallback)
+        .synthesize()
+        .castTo(Hello.class);
+    // This prints "Hello, world", not "Hello!".
+    System.out.println(hello.hello());
+  }
+}
+
+----
+
+This prints:
+----
+Hello world
+----
+
+Not `Hello!`, given as an implementation of the `Hello` interface.
+All the other things fallback to the original object (`helloFallback`).
+
 == The structure of a "synthesized object"
 
 The Figure <<synthesizedObjectStructure>> shows how each synthesized object is structured.
@@ -49,7 +90,7 @@ package "inside a synthesized object" as inside <<Rectangle>> {
     }
     class "java.lang.reflect.Proxy" as proxy {
     }
-    object actualObject
+    object returnedObject
 }
 package "another fallback object" <<Rectangle>> {
     class "Object" as obj3 {
@@ -67,10 +108,10 @@ InvocationHandler "1" -down-> "1" so1
 so2 "1" .right..> "*" ms2
 so2 "1" -right-> "*" mh2
 so2 "1" -left-> "*" cl2: interfaces
-actualObject .up.> so2
-actualObject -up-> proxy
-actualObject .up.> int1
-actualObject .up.> int2
+returnedObject .up.> so2
+returnedObject -up-> proxy
+returnedObject .up.> int1
+returnedObject .up.> int2
 so2 "1" --down--> "1" obj3: fallbackObject
 
 note as N1
@@ -80,7 +121,7 @@ end note
 N1 .up. inside
 N1 .right. obj3
 note as N2
-An actual object extends/implements Proxy,
+An object returned from the object synthesizer extends/implements Proxy,
 SynthesizedObject, and interfaces held by
 SynthesizedObject
 end note
@@ -96,11 +137,13 @@ Once the control goes into a fallback object, it will not go out from the object
 === `ObjectSynthesizer` class
 
 A builder class to synthesize an object from given method handlers, interfaces, and a fallback object.
-(t.b.d.)
 
 === `SynthesizedObject` interface
 
-(t.b.d.)
+An interface implemented by all the synthesized objects.
+This interface provides basic methods to access meta-information about the object how the object was synthesized, etc.
+
+When you need to access a method implementation defined in a fallback object from inside a method handler, you can use `descriptor().fallbackObject()` (or its shorthand, `fallbackObject()`).
 
 === `MethodHandler` interface
 
@@ -108,7 +151,7 @@ A builder class to synthesize an object from given method handlers, interfaces, 
 
 === `MethodSignature` class
 
-(t.b.d.)
+An interface to identify a method.
 
 === Important Core Java API classes
 
@@ -145,10 +188,6 @@ A `MethodHandler` class is extending a `BiFunction<SynthesizedObject, Object[], 
 `SynthesizedObject` is a proxy object which the `osynth` library forces every synthesized object to implement.
 It has some convenient methods to access the framework level information, such as `interfaces()`, `fallbackObject()`, and `methodHandlers`.
 
-=== `default` methods
-
-(t.b.d.)
-
 === The fall-backing mechanism
 
 When no appropriate way to handle a method call is found in the current synthesized object, the `osynth` delegates the procedure to its "fallback object".
@@ -158,4 +197,4 @@ The current synthesized object tries to find a method by name and parameter type
 
 == References
 
-- [[Proxy, 1]] "Proxy (Java Platform SE 8)" https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Proxy.html
+- [[Proxy, 1]] https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Proxy.html[Proxy (Java Platform SE 8)]

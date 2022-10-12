@@ -1,4 +1,4 @@
-package com.github.dakusui.osynth.compat;
+package com.github.dakusui.osynth.examples;
 
 import com.github.dakusui.osynth.compat.testwrappers.LegacyObjectSynthesizer;
 import org.junit.Test;
