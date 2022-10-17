@@ -14,11 +14,11 @@ import java.util.Optional;
 import static com.github.dakusui.osynth.utils.InternalFunctions.listOf;
 import static com.github.dakusui.osynth.utils.InternalPredicates.*;
 import static com.github.dakusui.osynth.utils.Messages.notAnInterface;
-import static com.github.dakusui.pcond.Preconditions.*;
-import static com.github.dakusui.pcond.functions.Experimentals.nest;
-import static com.github.dakusui.pcond.functions.Experimentals.toContextPredicate;
-import static com.github.dakusui.pcond.functions.Functions.stream;
-import static com.github.dakusui.pcond.functions.Predicates.*;
+import static com.github.dakusui.pcond.Requires.*;
+import static com.github.dakusui.pcond.forms.Experimentals.nest;
+import static com.github.dakusui.pcond.forms.Experimentals.toContextPredicate;
+import static com.github.dakusui.pcond.forms.Functions.stream;
+import static com.github.dakusui.pcond.forms.Predicates.*;
 
 public class ObjectSynthesizer {
   enum ValidationMode {

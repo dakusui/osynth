@@ -2,15 +2,18 @@ package com.github.dakusui.osynth.utils;
 
 import com.github.dakusui.pcond.core.currying.CurriedFunction;
 import com.github.dakusui.pcond.core.printable.ParameterizedPredicateFactory;
-import com.github.dakusui.pcond.functions.Experimentals;
-import com.github.dakusui.pcond.functions.Printables;
+import com.github.dakusui.pcond.forms.Printables;
+import com.github.dakusui.pcond.forms.Experimentals;
+import com.github.dakusui.pcond.forms.Printables;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static com.github.dakusui.pcond.functions.Functions.curry;
-import static com.github.dakusui.pcond.functions.Printables.predicate;
+import static com.github.dakusui.pcond.forms.Functions.curry;
+import static com.github.dakusui.pcond.forms.Printables.predicate;
+import static com.github.dakusui.pcond.forms.Functions.curry;
+import static com.github.dakusui.pcond.forms.Printables.predicate;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
@@ -69,7 +72,6 @@ public enum InternalPredicates {
           .factory(args -> testedClass -> testedClass.isAssignableFrom((Class<?>) args.get(0)));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static ParameterizedPredicateFactory<List<?>> matchesAnyOfPredicateFactory() {
       return (ParameterizedPredicateFactory<List<?>>) Experimentals.<List<?>>parameterizedPredicate("(dummy)")
           .formatterFactory(args -> () -> format("matchesAnyOf[%s,%s]", args.get(0), args.get(1)))
