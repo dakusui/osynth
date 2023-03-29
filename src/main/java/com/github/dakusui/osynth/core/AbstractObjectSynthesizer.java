@@ -3,7 +3,6 @@ package com.github.dakusui.osynth.core;
 import com.github.dakusui.osynth.core.utils.AssertionUtils;
 import com.github.dakusui.osynth.exceptions.ValidationException;
 import com.github.dakusui.osynth.invocationcontrollers.StandardInvocationController;
-import com.github.dakusui.pcond.Validates;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,10 +22,12 @@ import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPre
 import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHODS;
 import static com.github.dakusui.osynth.core.utils.AssertionUtils.*;
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
-import static com.github.dakusui.pcond.Ensures.ensure;
-import static com.github.dakusui.pcond.Requires.*;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.pcond.forms.Printables.predicate;
 import static com.github.dakusui.pcond.internals.InternalUtils.formatObject;
+import static com.github.dakusui.valid8j.Ensures.ensure;
+import static com.github.dakusui.valid8j.Requires.*;
+import static com.github.dakusui.valid8j.Validates.validate;
 
 public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesizer<O>> {
   protected static final Object                                        DEFAULT_FALLBACK_OBJECT = new Object() {
@@ -188,7 +189,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
   private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
     requireState(this.validator, isNotNull());
     SynthesizedObject.Descriptor ret = this.validator.apply(this, descriptor);
-    ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
+    ensure(ret, predicate("Validation must not change the content of the descriptor.", allOf(
         transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
         transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),
         transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));
@@ -245,7 +246,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
     }
 
     static <V> void validateValue(V value, Predicate<V> predicate) {
-      Validates.validate(
+      validate(
           value,
           predicate,
           s -> {
@@ -319,7 +320,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
       require(descriptor, isNotNull());
       validateValue(
           descriptor,
-          withMessage(
+          predicate(
               () -> messageForReservedMethodOverridingValidationFailure(InternalUtils.reservedMethodMisOverridings(descriptor.methodHandlerEntries())),
               transform(descriptorMethodHandlerEntries()
                   .andThen(AbstractObjectSynthesizer.InternalUtils::reservedMethodMisOverridings))
@@ -341,7 +342,7 @@ public abstract class AbstractObjectSynthesizer<O extends AbstractObjectSynthesi
         SynthesizedObject.Descriptor ret = descriptor;
         for (Validator each : validators) {
           ret = requireNonNull(each).apply(objectSynthesizer, descriptor);
-          ensure(ret, withMessage("Validation must not change the content of the descriptor.", allOf(
+          ensure(ret, predicate("Validation must not change the content of the descriptor.", allOf(
               transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),
               transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),
               transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));

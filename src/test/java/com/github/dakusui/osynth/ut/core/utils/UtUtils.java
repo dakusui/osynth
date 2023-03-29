@@ -6,6 +6,8 @@ import org.hamcrest.CoreMatchers;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
