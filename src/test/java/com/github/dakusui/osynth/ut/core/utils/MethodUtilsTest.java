@@ -30,7 +30,7 @@ public class MethodUtilsTest extends UtBase {
       throw e;
     }
   }
-  
+
   @Test(expected = UnsupportedOperationException.class)
   public void testGetMethodFromClass$whenMethodNotFound$thenUnsupportedOperationExceptionRethrown() {
     try {
@@ -46,12 +46,12 @@ public class MethodUtilsTest extends UtBase {
       throw e;
     }
   }
-  
+
   @Test
   public void givenAnonymousClassObject$whenPrettierToString$then_anonymous$$$_() {
     Object v = new Object() {
     };
-    
+
     System.out.println(MethodUtils.simpleClassNameOf(v.getClass()));
     
     assertStatement(
@@ -60,7 +60,7 @@ public class MethodUtilsTest extends UtBase {
             .then()
             .startsWith("anonymous:()@"));
   }
-  
+
   @Test
   public void givenObjectToStringOverridden$whenPrettierToString$thenOverridingMethdChosen() {
     Object v = new Object() {
@@ -69,7 +69,7 @@ public class MethodUtilsTest extends UtBase {
         return "HelloWorld";
       }
     };
-    
+
     System.out.println(MethodUtils.simpleClassNameOf(v.getClass()));
     
     assertStatement(
@@ -101,7 +101,7 @@ public class MethodUtilsTest extends UtBase {
             .then()
             .startsWith("lambda:(Function):declared in com.github.dakusui.osynth.ut.core.utils.MethodUtilsTest"));
   }
-  
+
   @Test
   public void givenLambdaInAnonymous$whenPrettierString$thenExplained() {
     AtomicReference<Object> atomicReference = new AtomicReference<>();
@@ -116,7 +116,7 @@ public class MethodUtilsTest extends UtBase {
     System.out.println((Function<Object, Object>) x -> v);
     System.out.println(v.toString());
     System.out.println(atomicReference.get());
-    
+
     assertThat(v.toString(), startsWith("lambda:(Function):declared in"));
   }
 }

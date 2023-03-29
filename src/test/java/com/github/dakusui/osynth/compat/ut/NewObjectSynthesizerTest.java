@@ -63,19 +63,19 @@ public class NewObjectSynthesizerTest extends UtBase {
             .then()
             .isEqualTo("helloWorldMethod"));
   }
-  
+
   interface TestInterface2 {
-    
+
     String helloMethod0();
-    
+
     String helloMethod1(Object var1);
-    
+
     String helloMethod2(Object var1, Number number);
-    
+
     String helloMethod4(String var1);
-    
+
   }
-  
+
   @Test
   public void givenSynthesizedObjectWithLenientMatchers$whenMethodWithMatchingHandlerInvoked$thenProperHandlerExecuted() {
     SynthesizedObject givenObject = synthesizeObject(
@@ -100,7 +100,7 @@ public class NewObjectSynthesizerTest extends UtBase {
                 .then()
                 .isEqualTo("helloWorldMethod2:HELLO:1").done()));
   }
-  
+
   @Test(expected = UnsupportedOperationException.class)
   public void givenSynthesizedObjectWithLenientMatchers$whenMethodWithNoMatchingHandlerInvoked$thenUnsupportedException() {
     SynthesizedObject givenObject = synthesizeObject(
@@ -112,7 +112,7 @@ public class NewObjectSynthesizerTest extends UtBase {
         builderForLenientHandlerEntry("helloMethod4", Integer.class).apply((v, args) -> {
           throw new AssertionError("SHOULD NOT MATCH BECAUSE OF PARAMETER TYPE:helloWorldMethod4(Integer)");
         }));
-    
+
     try {
       String v = givenObject.castTo(TestInterface2.class).helloMethod4("hello!");
       System.out.println(v);
@@ -121,7 +121,7 @@ public class NewObjectSynthesizerTest extends UtBase {
       throw e;
     }
   }
-  
+
   static Function<MethodHandler, MethodHandlerEntry> builderForLenientHandlerEntry(String methodName, Class<?>... parameterTypes) {
     return methodHandler -> MethodHandlerEntry.create(matchingLeniently(MethodSignature.create(methodName, parameterTypes)), methodHandler, false);
   }
@@ -183,7 +183,7 @@ public class NewObjectSynthesizerTest extends UtBase {
       throw e;
     }
   }
-  
+
   interface TestInterface4 {
     @TestAnnotation(value = "WORLD")
     String method1(String var);
@@ -225,34 +225,34 @@ public class NewObjectSynthesizerTest extends UtBase {
             .fallbackTo((TestInterface4) var -> "overriddenMethod1(String=" + var + ")")
             .synthesize()
             .descriptor()).synthesize();
-    
+
     assertThat(
         so.castTo(TestInterface4.class).method1("hello"),
         isEqualTo("overriddenMethod1(String=hello)"));
   }
-  
+
   @Test
   public void equalness$differentInterfaces() {
     SynthesizedObject so1 = new ObjectSynthesizer().addInterface(TestInterface4.class).synthesize();
     SynthesizedObject so2 = new ObjectSynthesizer().synthesize();
-    
+
     assertThat(so1.descriptor(), isEqualTo(so2.descriptor()).negate());
   }
-  
+
   @Test
   public void equalness$differentMethodHandlers() {
     SynthesizedObject so1 = new ObjectSynthesizer().handle(methodCall("m").with((obj, args) -> "world")).synthesize();
     SynthesizedObject so2 = new ObjectSynthesizer().handle(methodCall("n").with((obj, args) -> "hello")).synthesize();
-    
+
     assertThat(so1.descriptor(), isEqualTo(so2.descriptor()).negate());
   }
-  
+
   @Test
   public void equalness$differentSameMethodHandlers() {
     MethodHandlerEntry m = methodCall("m").with((obj, args) -> "world");
     SynthesizedObject so1 = new ObjectSynthesizer().handle(m).synthesize();
     SynthesizedObject so2 = new ObjectSynthesizer().handle(m).synthesize();
-    
+
     assertThat(so1.descriptor(), isEqualTo(so2.descriptor()));
   }
 }

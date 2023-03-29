@@ -1,5 +1,6 @@
 package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.MethodHandlerDecorator;
@@ -28,7 +29,7 @@ public class ValidationTest extends UtBase {
             .with(createNewDescriptorReturningHandler())).synthesize();
     System.out.println(synthesizedObject.descriptor());
   }
-  
+
   @Test(expected = ValidationException.class)
   public void givenValidationLeftDefault$whenOneReservedMethodTriedOverridden$thenExceptionThrown() {
     try {
@@ -46,7 +47,7 @@ public class ValidationTest extends UtBase {
       throw e;
     }
   }
-  
+
   @Test(expected = ValidationException.class)
   public void givenValidationLeftDefault$whenTwoReservedMethodsTriedOverridden$thenExceptionThrown() {
     try {
@@ -65,7 +66,7 @@ public class ValidationTest extends UtBase {
       throw e;
     }
   }
-  
+
   @Test(expected = ValidationException.class)
   public void givenDuplicationCheckEnabled$whenSameIFRegisteredTwice$thenExceptionThrown() {
     try {
@@ -87,13 +88,13 @@ public class ValidationTest extends UtBase {
       throw e;
     }
   }
-  
+
   public interface TestInterface {
     default String testMethod(String message) {
       return "testMethod[" + message + "]";
     }
   }
-  
+
   @Test
   public void givenDuplicationCheckEnabled$whenNoSameIFRegisteredTwice$thenPass() {
     SynthesizedObject synthesizedObject = new ObjectSynthesizer()
@@ -107,7 +108,7 @@ public class ValidationTest extends UtBase {
         .then()
         .isEqualTo("testMethod[Hello!]"));
   }
-  
+
   private static MethodHandler createNewDescriptorReturningHandler() {
     return (sobj, objects) -> new SynthesizedObject.Descriptor.Builder()
         .fallbackObject(new Object())

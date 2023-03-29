@@ -24,7 +24,7 @@ public class OsynthExceptionTest extends UtBase {
       assertThat(e, predicate("isSameObject[System.identityHash->" + System.identityHashCode(original) + "]", v -> v == original));
     }
   }
-  
+
   @Test
   public void whenFromMethodWithCheckedException$thenTheSameInstanceRethrown() {
     IOException original = new IOException();
@@ -42,7 +42,7 @@ public class OsynthExceptionTest extends UtBase {
                   .isEqualTo(new IOException().toString()).done())); // By definition of Throwable#<init>(Throwable), this is the expected string.
     }
   }
-  
+
   @Test(expected = OsynthException.class)
   public void givenInvocationTargetException$whenOsynthExceptionFromIsCalled$thenOsynthExceptionHoldingTargetExceptionIsThrown() {
     class TestException extends Exception {
@@ -59,7 +59,7 @@ public class OsynthExceptionTest extends UtBase {
       throw e;
     }
   }
-  
+
   @Test(expected = OsynthException.class)
   public void givenOsynthExceptionHoldingNonNullCause$whenOsynthExceptionFromIsCalled$thenOsynthExceptionHoldingOriginalCauseIsThrown() {
     class TestException extends Exception {

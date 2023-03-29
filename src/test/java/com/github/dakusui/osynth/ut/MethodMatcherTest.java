@@ -22,9 +22,9 @@ public class MethodMatcherTest {
     @Test
     public void givenNameMatchingExactly() {
       MethodMatcher mm = ObjectSynthesizer.nameMatchingExactly("helloMethod");
-      
+
       System.out.println(mm);
-      
+
       assertThat(mm.toString(), allOf(
           transform(
               findString("nameMatchingExactly").andThen(
@@ -32,11 +32,11 @@ public class MethodMatcherTest {
           ).check(isNotNull())
       ));
     }
-    
+
     @Test
     public void givenMatchingExactly() {
       MethodMatcher mm = ObjectSynthesizer.matchingExactly(MethodSignature.create("helloMethod", int.class));
-      
+
       System.out.println(mm);
       assertThat(mm.toString(), allOf(
           transform(
@@ -46,11 +46,11 @@ public class MethodMatcherTest {
           ).check(isNotNull())
       ));
     }
-    
+
     @Test
     public void givenNameMatchingLeniently() {
       MethodMatcher mm = ObjectSynthesizer.matchingLeniently(MethodSignature.create("helloMethod", int.class));
-      
+
       System.out.println(mm);
       assertThat(mm.toString(), allOf(
           transform(
@@ -60,7 +60,7 @@ public class MethodMatcherTest {
           ).check(isNotNull())
       ));
     }
-    
+
     @Test
     public void givenAnnotatedWith1() {
       MethodMatcher mm = ObjectSynthesizer.annotatedWith(Test.class);
@@ -72,7 +72,7 @@ public class MethodMatcherTest {
           ).check(isNotNull())
       ));
     }
-    
+
     @Test
     public void givenAnnotatedWith2() {
       MethodMatcher mm = ObjectSynthesizer.annotatedWith(Test.class, ann -> ann.expected().equals(Throwable.class));
@@ -90,22 +90,22 @@ public class MethodMatcherTest {
       ));
     }
   }
-  
+
   public static class CompositionTest {
     interface TestInterface {
       default String aMethod() {
         return "defaultMethod:aMethod";
       }
-      
+
       default String bMethod() {
         return "defaultMethod:bMethod";
       }
-      
+
       default String cMethod() {
         return "defaultMethod:cMethod";
       }
     }
-    
+
     @Test
     public void examineOr() {
       TestInterface testObject = new ObjectSynthesizer()
@@ -133,7 +133,7 @@ public class MethodMatcherTest {
           )
       );
     }
-    
+
     @Test
     public void examineNegateAndAnd() {
       TestInterface testObject = new ObjectSynthesizer()
