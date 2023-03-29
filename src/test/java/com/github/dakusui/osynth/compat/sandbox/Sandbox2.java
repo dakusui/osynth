@@ -9,8 +9,8 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static com.github.dakusui.osynth.compat.sandbox.Sandbox.createProxy;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
 
 @SuppressWarnings("NewClassNamingConvention")
 public class Sandbox2 {

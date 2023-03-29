@@ -8,11 +8,10 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import static com.github.dakusui.osynth.utils.TestForms.*;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.valueOfClass;
-import static com.github.dakusui.pcond.fluent.Fluents.when;
-import static com.github.dakusui.pcond.forms.Predicates.allOf;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Printables.predicate;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertStatement;
 
 public class OsynthExceptionTest extends UtBase {
   @Test
@@ -25,7 +24,7 @@ public class OsynthExceptionTest extends UtBase {
       assertThat(e, predicate("isSameObject[System.identityHash->" + System.identityHashCode(original) + "]", v -> v == original));
     }
   }
-
+  
   @Test
   public void whenFromMethodWithCheckedException$thenTheSameInstanceRethrown() {
     IOException original = new IOException();
@@ -33,22 +32,17 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from(null, original);
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(
-          e,
-          when().asValueOfClass(Throwable.class)
-              .then()
-              .verifyWith(allOf(
-                  valueOfClass(Throwable.class).asObject()
-                      .exercise(throwableGetCause())
-                      .then()
-                      .verifyWith(objectIsSameReferenceAs(original)),
-                  valueOfClass(Throwable.class).asObject()
-                      .exercise(throwableGetMessage())
-                      .then().asString()
-                      .isEqualTo(new IOException().toString())))); // By definition of Throwable#<init>(Throwable), this is the expected string.
+      assertStatement(
+          objectValue(e).toObject(v -> v)
+              .transform(tx -> tx.toObject(v -> (Throwable) v).toObject(throwableGetCause())
+                  .then()
+                  .checkWithPredicate(objectIsSameReferenceAs(original)).done())
+              .transform(tx -> tx.toObject(v -> (Throwable) v).toString(throwableGetMessage())
+                  .then()
+                  .isEqualTo(new IOException().toString()).done())); // By definition of Throwable#<init>(Throwable), this is the expected string.
     }
   }
-
+  
   @Test(expected = OsynthException.class)
   public void givenInvocationTargetException$whenOsynthExceptionFromIsCalled$thenOsynthExceptionHoldingTargetExceptionIsThrown() {
     class TestException extends Exception {
@@ -57,14 +51,15 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from("helloWorld", new InvocationTargetException(new TestException()));
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(e, when().asObject().cast(OsynthException.class)
-          .exercise(Throwable::getCause)
-          .then()
-          .isInstanceOf(TestException.class));
+      assertStatement(
+          objectValue(e)
+              .toObject(Throwable::getCause)
+              .then()
+              .isInstanceOf(TestException.class));
       throw e;
     }
   }
-
+  
   @Test(expected = OsynthException.class)
   public void givenOsynthExceptionHoldingNonNullCause$whenOsynthExceptionFromIsCalled$thenOsynthExceptionHoldingOriginalCauseIsThrown() {
     class TestException extends Exception {
@@ -73,8 +68,9 @@ public class OsynthExceptionTest extends UtBase {
       throw OsynthException.from("helloWorld", new OsynthException(new TestException()));
     } catch (OsynthException e) {
       e.printStackTrace();
-      assertThat(e, when().asObject().cast(OsynthException.class)
-          .exercise(Throwable::getCause)
+      assertStatement(objectValue(e)
+          .asObject().toObject(v -> (Throwable) v)
+          .toObject(Throwable::getCause)
           .then()
           .isInstanceOf(TestException.class));
       throw e;

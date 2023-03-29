@@ -12,9 +12,9 @@ import java.util.stream.Stream;
 import static com.github.dakusui.osynth.core.utils.AssertionUtils.methodIsAnnotationPresent;
 import static com.github.dakusui.osynth.core.utils.MethodUtils.execute;
 import static com.github.dakusui.osynth.core.utils.MethodUtils.withName;
-import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.and;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
+import static com.github.dakusui.valid8j.Assertions.that;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.stream.Collectors.joining;
 

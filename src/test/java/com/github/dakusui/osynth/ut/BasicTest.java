@@ -1,14 +1,14 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.exceptions.OsynthException;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
 
 public class BasicTest extends UtBase {
   public interface A {

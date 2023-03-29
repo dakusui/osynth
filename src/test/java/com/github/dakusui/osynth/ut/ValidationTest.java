@@ -1,21 +1,21 @@
 package com.github.dakusui.osynth.ut;
 
-import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.MethodHandlerDecorator;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.exceptions.ValidationException;
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import org.junit.Test;
 
 import java.io.Serializable;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
-import static com.github.dakusui.pcond.fluent.Fluents.when;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertStatement;
 import static java.lang.String.format;
 
 public class ValidationTest extends UtBase {
@@ -28,7 +28,7 @@ public class ValidationTest extends UtBase {
             .with(createNewDescriptorReturningHandler())).synthesize();
     System.out.println(synthesizedObject.descriptor());
   }
-
+  
   @Test(expected = ValidationException.class)
   public void givenValidationLeftDefault$whenOneReservedMethodTriedOverridden$thenExceptionThrown() {
     try {
@@ -46,7 +46,7 @@ public class ValidationTest extends UtBase {
       throw e;
     }
   }
-
+  
   @Test(expected = ValidationException.class)
   public void givenValidationLeftDefault$whenTwoReservedMethodsTriedOverridden$thenExceptionThrown() {
     try {
@@ -65,7 +65,7 @@ public class ValidationTest extends UtBase {
       throw e;
     }
   }
-
+  
   @Test(expected = ValidationException.class)
   public void givenDuplicationCheckEnabled$whenSameIFRegisteredTwice$thenExceptionThrown() {
     try {
@@ -87,13 +87,13 @@ public class ValidationTest extends UtBase {
       throw e;
     }
   }
-
+  
   public interface TestInterface {
     default String testMethod(String message) {
       return "testMethod[" + message + "]";
     }
   }
-
+  
   @Test
   public void givenDuplicationCheckEnabled$whenNoSameIFRegisteredTwice$thenPass() {
     SynthesizedObject synthesizedObject = new ObjectSynthesizer()
@@ -101,13 +101,13 @@ public class ValidationTest extends UtBase {
         .enableDuplicatedInterfaceCheck()
         .addInterface(TestInterface.class)
         .synthesize();
-    assertThat(synthesizedObject.castTo(TestInterface.class),
-        when().asObject().castTo((TestInterface) value())
-            .exercise(v -> v.testMethod("Hello!"))
-            .then()
-            .isEqualTo("testMethod[Hello!]"));
+    assertStatement(objectValue(synthesizedObject.castTo(TestInterface.class)).asObject()
+        .toObject(v -> (TestInterface) v)
+        .toObject(v -> v.testMethod("Hello!"))
+        .then()
+        .isEqualTo("testMethod[Hello!]"));
   }
-
+  
   private static MethodHandler createNewDescriptorReturningHandler() {
     return (sobj, objects) -> new SynthesizedObject.Descriptor.Builder()
         .fallbackObject(new Object())

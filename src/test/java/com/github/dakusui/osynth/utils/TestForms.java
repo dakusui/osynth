@@ -39,7 +39,7 @@ public enum TestForms {
     return function("objectHashCode", Object::hashCode);
   }
 
-  public static Function<? super Throwable, ? extends Throwable> throwableGetCause() {
+  public static Function<Throwable, ? extends Throwable> throwableGetCause() {
     return Printables.function("throwableGetCause", Throwable::getCause);
   }
 
