@@ -11,8 +11,8 @@ import java.io.PrintStream;
 import java.io.Serializable;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
 
 public class SynthesizedObjectTest {
   @Test

@@ -5,17 +5,16 @@ import com.github.dakusui.osynth.core.MethodHandlerEntry;
 import com.github.dakusui.osynth.core.MethodMatcher;
 import com.github.dakusui.osynth.core.MethodSignature;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
-import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.assertAll;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Functions.findString;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.forms.Printables.function;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertStatement;
 
 @RunWith(Enclosed.class)
 public class MethodMatcherTest {
@@ -117,20 +116,22 @@ public class MethodMatcherTest {
               (synthesizedObject, args) -> "handledMethodIsCalled", false))
           .synthesize()
           .castTo(TestInterface.class);
-
-      assertAll(
-          value(testObject).as((TestInterface) value())
-              .exercise(function("aMethod", TestInterface::aMethod))
-              .then().asString()
-              .isEqualTo("handledMethodIsCalled"),
-          value(testObject).as((TestInterface) value())
-              .exercise(function("bMethod", TestInterface::bMethod))
-              .then().asString()
-              .isEqualTo("handledMethodIsCalled"),
-          value(testObject).as((TestInterface) value())
-              .exercise(function("cMethod", TestInterface::cMethod))
-              .then().asString()
-              .isEqualTo("defaultMethod:cMethod"));
+      
+      assertStatement(objectValue(testObject)
+          .transform(tx -> tx.toObject(v -> v)
+              .toObject(function("aMethod", TestInterface::aMethod))
+              .then()
+              .isEqualTo("handledMethodIsCalled").done())
+          .transform(tx -> tx.toObject(v -> v)
+              .toObject(function("bMethod", TestInterface::bMethod))
+              .then()
+              .isEqualTo("handledMethodIsCalled").done())
+          .transform(tx -> tx.toObject(v -> v)
+              .toObject(function("cMethod", TestInterface::cMethod))
+              .then()
+              .isEqualTo("defaultMethod:cMethod").done()
+          )
+      );
     }
 
     @Test
@@ -144,20 +145,24 @@ public class MethodMatcherTest {
               false))
           .synthesize()
           .castTo(TestInterface.class);
-
-      assertAll(
-          value(testObject).as((TestInterface) value())
-              .exercise(function("aMethod", TestInterface::aMethod))
-              .then()
-              .isEqualTo("defaultMethod:aMethod"),
-          value(testObject).as((TestInterface) value())
-              .exercise(function("bMethod", TestInterface::bMethod))
-              .then().asString()
-              .isEqualTo("handledMethodIsCalled"),
-          value(testObject).as((TestInterface) value())
-              .exercise(function("cMethod", TestInterface::cMethod))
-              .then().asString()
-              .isEqualTo("handledMethodIsCalled"));
+      
+      assertStatement(
+          objectValue(testObject)
+              .transform(tx -> tx.toObject(v -> v)
+                  .toObject(function("aMethod", TestInterface::aMethod))
+                  .then()
+                  .isEqualTo("defaultMethod:aMethod")
+                  .done())
+              .transform(tx -> tx.toObject(v -> v)
+                  .toObject(function("bMethod", TestInterface::bMethod))
+                  .then()
+                  .isEqualTo("handledMethodIsCalled")
+                  .done())
+              .transform(tx -> tx.toObject(v -> v)
+                  .toObject(function("cMethod", TestInterface::cMethod))
+                  .then()
+                  .isEqualTo("handledMethodIsCalled")
+                  .done()));
     }
   }
 }

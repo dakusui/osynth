@@ -2,14 +2,14 @@ package com.github.dakusui.osynth.ut.core;
 
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandlerDecorator;
-import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 
 import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPredefinedMethods;
 import static com.github.dakusui.osynth.utils.TestForms.*;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Predicates.alwaysTrue;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertStatement;
 
 public class MethodHandlerDecoratorTest {
   @Test
@@ -27,13 +27,13 @@ public class MethodHandlerDecoratorTest {
   @Test
   public void examineHashCodeMethodForFilteringOutPredefinedMethods() {
     MethodHandlerDecorator decorator = filterOutPredefinedMethods(new ObjectSynthesizer().methodHandlerDecorator());
-    Fluents.assertThat(
-        value(decorator).asObject()
-            .exercise(objectHashCode())
-            .exercise(objectToString())
-            .exercise(integerParseInt())
+    assertStatement(
+        objectValue(decorator)
+            .toObject(v -> (Object)v)
+            .toObject(objectHashCode())
+            .toObject(objectToString())
+            .toObject(integerParseInt())
             .then()
-            .asInteger()
-            .testPredicate(alwaysTrue())); // Whatever the integer, it's okay
+            .checkWithPredicate(alwaysTrue())); // Whatever the integer, it's okay
   }
 }

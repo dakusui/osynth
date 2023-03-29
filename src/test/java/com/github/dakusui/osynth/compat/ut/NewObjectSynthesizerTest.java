@@ -6,7 +6,6 @@ import com.github.dakusui.osynth.core.MethodHandlerEntry;
 import com.github.dakusui.osynth.core.MethodSignature;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
-import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 
 import java.lang.annotation.Retention;
@@ -17,36 +16,37 @@ import java.util.function.Function;
 import static com.github.dakusui.crest.Crest.function;
 import static com.github.dakusui.osynth.ObjectSynthesizer.*;
 import static com.github.dakusui.osynth.utils.TestForms.*;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.assertAll;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Predicates.isEqualTo;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertStatement;
+import static com.github.dakusui.thincrest_pcond.functions.Functions.cast;
 import static com.github.dakusui.thincrest_pcond.functions.Predicates.startsWith;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 public class NewObjectSynthesizerTest extends UtBase {
   @Test
   public void givenDescriptorIsNotFinalized$whenQueried$thenFalse() {
-    Fluents.assertThat(
-        value(new ObjectSynthesizer()).asObject().castTo((ObjectSynthesizer) value())
+    assertStatement(
+        objectValue(new ObjectSynthesizer())
             .then()
-            .testPredicate(objectSynthesizerIsDescriptorFinalized().negate()));
+            .checkWithPredicate(objectSynthesizerIsDescriptorFinalized().negate()));
   }
-
+  
   @Test
   public void givenDescriptorIsFinalized$whenQueried$thenTrue() {
     ObjectSynthesizer osynth = new ObjectSynthesizer().fallbackTo(new Object());
     osynth.synthesize();
-    Fluents.assertThat(
-        value(osynth).asObject().castTo((ObjectSynthesizer) value())
+    assertStatement(
+        objectValue(osynth)
             .then()
-            .testPredicate(objectSynthesizerIsDescriptorFinalized()));
+            .checkWithPredicate(objectSynthesizerIsDescriptorFinalized()));
   }
-
+  
   interface TestInterface {
     String helloMethod();
   }
-
+  
   @Test
   public void test() {
     SynthesizedObject osynth = new ObjectSynthesizer()
@@ -54,11 +54,12 @@ public class NewObjectSynthesizerTest extends UtBase {
         .addInterface(TestInterface.class)
         .fallbackTo("HELLO_WORLD")
         .synthesize();
-
-    Fluents.assertThat(
-        value(osynth).asValueOfClass(SynthesizedObject.class)
-            .exercise((SynthesizedObject s) -> s.castTo(TestInterface.class))
-            .exercise(function("testInterfaceHelloMethod", TestInterface::helloMethod))
+    
+    assertStatement(
+        objectValue(osynth)
+            .toObject(o -> o)
+            .toObject((SynthesizedObject s) -> s.castTo(TestInterface.class))
+            .toObject(function("testInterfaceHelloMethod", TestInterface::helloMethod))
             .then()
             .isEqualTo("helloWorldMethod"));
   }
@@ -83,21 +84,21 @@ public class NewObjectSynthesizerTest extends UtBase {
         builderForLenientHandlerEntry("helloMethod0").apply((v1, args) -> "helloWorldMethod0"),
         builderForLenientHandlerEntry("helloMethod1", String.class).apply((v1, args) -> "helloWorldMethod1:" + args[0]),
         builderForLenientHandlerEntry("helloMethod2", String.class, Integer.class).apply((v1, args) -> "helloWorldMethod2:" + args[0] + ":" + args[1]));
-
-    assertAll(
-        value(givenObject).as((TestInterface2) value())
-            .exercise(TestInterface2::helloMethod0)
-            .then()
-            .isEqualTo("helloWorldMethod0"),
-
-        value(givenObject).as((TestInterface2) value())
-            .exercise(v -> v.helloMethod1("HELLO"))
-            .then()
-            .isEqualTo("helloWorldMethod1:HELLO"),
-        value(givenObject).as((TestInterface2) value())
-            .exercise(v -> v.helloMethod2("HELLO", 1))
-            .then()
-            .isEqualTo("helloWorldMethod2:HELLO:1"));
+    
+    assertStatement(
+        objectValue(givenObject)
+            .transform(tx -> tx.asObject().toObject(v -> (TestInterface2)v)
+                .toObject(TestInterface2::helloMethod0)
+                .then()
+                .isEqualTo("helloWorldMethod0").done())
+            .transform(tx -> tx.asObject().toObject(v -> (TestInterface2)v)
+                .toObject(v -> v.helloMethod1("HELLO"))
+                .then()
+                .isEqualTo("helloWorldMethod1:HELLO").done())
+            .transform(tx -> tx.asObject().toObject(v -> (TestInterface2)v)
+                .toObject(v -> v.helloMethod2("HELLO", 1))
+                .then()
+                .isEqualTo("helloWorldMethod2:HELLO:1").done()));
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -124,8 +125,8 @@ public class NewObjectSynthesizerTest extends UtBase {
   static Function<MethodHandler, MethodHandlerEntry> builderForLenientHandlerEntry(String methodName, Class<?>... parameterTypes) {
     return methodHandler -> MethodHandlerEntry.create(matchingLeniently(MethodSignature.create(methodName, parameterTypes)), methodHandler, false);
   }
-
-  private <T> SynthesizedObject synthesizeObject(@SuppressWarnings("SameParameterValue") Object fallbackObject, @SuppressWarnings("SameParameterValue") Class<T> interfaceClass, MethodHandlerEntry... handlerEntries) {
+  
+  private <T> SynthesizedObject synthesizeObject(Object fallbackObject, Class<T> interfaceClass, MethodHandlerEntry... handlerEntries) {
     return new ObjectSynthesizer() {{
       for (MethodHandlerEntry eachEntry : handlerEntries)
         this.handle(eachEntry);
@@ -134,18 +135,19 @@ public class NewObjectSynthesizerTest extends UtBase {
         .fallbackTo(fallbackObject)
         .synthesize();
   }
-
-
+  
+  
   @Retention(RUNTIME)
   @interface TestAnnotation {
     String value() default "world";
   }
-
+  
   interface TestInterface3 {
     @TestAnnotation
     String method1(String var);
   }
-
+  
+  @SuppressWarnings("unchecked")
   @Test
   public void testAnnotatedMethod() {
     MethodHandler methodHandlingFunction = (o, args) -> "annotatedWith:" + TestAnnotation.class.getSimpleName() + ":" + Arrays.toString(args);
@@ -153,14 +155,15 @@ public class NewObjectSynthesizerTest extends UtBase {
         .addInterface(TestInterface3.class)
         .handle(methodCall(annotatedWith(TestAnnotation.class)).with(methodHandlingFunction))
         .synthesize();
-    Fluents.assertThat(value(so)
-        .asValueOfClass(SynthesizedObject.class)
-        .exercise(synthesizedObjectCastTo(TestInterface3.class))
-        .exercise(v -> v.method1("Hello"))
-        .then().asString()
+    assertStatement(objectValue(so)
+        .asObject()
+        .toObject((Function<Object, SynthesizedObject>) cast(SynthesizedObject.class))
+        .toObject(synthesizedObjectCastTo(TestInterface3.class))
+        .toObject(v -> v.method1("Hello"))
+        .then()
         .isEqualTo("annotatedWith:TestAnnotation:[Hello]"));
   }
-
+  
   @Test(expected = UnsupportedOperationException.class)
   public void testAnnotatedMethod2() {
     SynthesizedObject so = synthesizeObjectForInterface(TestInterface3.class);
@@ -169,9 +172,9 @@ public class NewObjectSynthesizerTest extends UtBase {
       System.out.println(message);
     } catch (UnsupportedOperationException e) {
       e.printStackTrace();
-      Fluents.assertThat(value(e).as((UnsupportedOperationException) value())
-          .exercise(throwableGetMessage())
-          .then().asString()
+      assertStatement(objectValue(e)
+          .toString(throwableGetMessage())
+          .then()
           .findSubstrings(
               "An appropriate method handler/implementation for 'method1(String)' was not found",
               "osynth",
@@ -185,19 +188,19 @@ public class NewObjectSynthesizerTest extends UtBase {
     @TestAnnotation(value = "WORLD")
     String method1(String var);
   }
-
+  
   @Test
   public void testAnnotatedMethod3() {
     SynthesizedObject givenObject = synthesizeObjectForInterface(TestInterface4.class);
-
-    Fluents.assertThat(
-        value(givenObject).asValueOfClass(SynthesizedObject.class)
-            .exercise(synthesizedObjectCastTo(TestInterface4.class))
-            .exercise(v -> v.method1("Hello"))
-            .then().asString()
+    
+    assertStatement(
+        objectValue(givenObject)
+            .toObject(synthesizedObjectCastTo(TestInterface4.class))
+            .toObject(v -> v.method1("Hello"))
+            .then()
             .isEqualTo("annotatedWith:TestAnnotation:[Hello]"));
   }
-
+  
   private static <T> SynthesizedObject synthesizeObjectForInterface(Class<T> interfaceClass) {
     MethodHandler methodHandlingFunction = (o, args) -> "annotatedWith:" + TestAnnotation.class.getSimpleName() + ":" + Arrays.toString(args);
     return new ObjectSynthesizer()
@@ -205,15 +208,15 @@ public class NewObjectSynthesizerTest extends UtBase {
         .handle(methodCall(annotatedWith(TestAnnotation.class, annotation -> Objects.equals(annotation.value(), "WORLD"))).with(methodHandlingFunction))
         .synthesize();
   }
-
+  
   @Test
   public void notGivenAnyObjectForFallback$whenSynthesizeAndCallMethod$thenDoesntBreak() {
     SynthesizedObject so = new ObjectSynthesizer().synthesize();
     System.out.println(so.toString());
     assertThat(so.toString(), startsWith("osynth(SynthesizedObject"));
   }
-
-
+  
+  
   @Test
   public void givenSynthesizedFromAnotherSynthesized$whenCallMethod$thenLetsSee() {
     SynthesizedObject so = ObjectSynthesizer.from(

@@ -3,8 +3,8 @@ package com.github.dakusui.osynth.ut.core;
 import com.github.dakusui.osynth.core.MethodSignature;
 import org.junit.Test;
 
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
 
 public class MethodSignatureTest {
 

@@ -2,17 +2,17 @@ package com.github.dakusui.osynth.ut.core.utils;
 
 import com.github.dakusui.osynth.core.utils.MethodUtils;
 import com.github.dakusui.osynth.exceptions.OsynthException;
-import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import static com.github.dakusui.osynth.core.utils.MethodUtils.prettierToString;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Predicates.isInstanceOf;
 import static com.github.dakusui.pcond.forms.Predicates.startsWith;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertStatement;
 
 public class MethodUtilsTest extends UtBase {
   @Test(expected = OsynthException.class)
@@ -37,10 +37,11 @@ public class MethodUtilsTest extends UtBase {
       MethodUtils.getMethodFromClass(Object.class, "toString", String.class);
     } catch (UnsupportedOperationException e) {
       e.printStackTrace();
-      Fluents.assertThat(Fluents.value(e).asObject()
-          .castTo((UnsupportedOperationException) value())
-          .exercise(Throwable::getMessage)
-          .then().asString()
+      assertStatement(objectValue(e)
+          .asObject()
+          .toObject(v -> (UnsupportedOperationException) v)
+          .toObject(Throwable::getMessage)
+          .then()
           .isEqualTo("An appropriate method handler/implementation for 'toString(String)' was not found in 'class java.lang.Object': java.lang.Object.toString(java.lang.String)"));
       throw e;
     }
@@ -52,11 +53,11 @@ public class MethodUtilsTest extends UtBase {
     };
 
     System.out.println(MethodUtils.simpleClassNameOf(v.getClass()));
-
-    Fluents.assertThat(
-        value(v).asObject()
-            .exercise(MethodUtils::prettierToString)
-            .then().asString()
+    
+    assertStatement(
+        objectValue(v)
+            .toString(MethodUtils::prettierToString)
+            .then()
             .startsWith("anonymous:()@"));
   }
 
@@ -70,33 +71,34 @@ public class MethodUtilsTest extends UtBase {
     };
 
     System.out.println(MethodUtils.simpleClassNameOf(v.getClass()));
-
-    Fluents.assertThat(
-        value(v).asObject()
-            .exercise(MethodUtils::prettierToString)
-            .then().asString()
+    
+    assertStatement(
+        objectValue(v)
+            .toString(MethodUtils::prettierToString)
+            .then()
             .startsWith("HelloWorld"));
   }
-
+  
   @Test
   public void givenNull$whenPrettierToString$then_null_() {
     Object v = null;
-
-    Fluents.assertThat(
-        value(v).asObject()
-            .exercise(MethodUtils::prettierToString)
-            .then().asString()
+    
+    assertStatement(
+        objectValue(v)
+            .asObject()
+            .toString(MethodUtils::prettierToString)
+            .then()
             .isEqualTo("null"));
   }
-
+  
   @Test
   public void givenLambda$whenPrettierString$thenExplained() {
     Function<Object, Object> v = x -> x;
-    Fluents.assertThat(
-        value(v)
-            .asObject()
-            .exercise(MethodUtils::prettierToString)
-            .then().asString()
+    assertStatement(
+        objectValue(v)
+            .toString(MethodUtils::prettierToString)
+
+            .then()
             .startsWith("lambda:(Function):declared in com.github.dakusui.osynth.ut.core.utils.MethodUtilsTest"));
   }
 

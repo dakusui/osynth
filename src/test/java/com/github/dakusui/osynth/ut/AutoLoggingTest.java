@@ -16,43 +16,43 @@ import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
 import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.listJoinByLinBreak;
 import static com.github.dakusui.osynth.ut.AutoLoggingTest.TestFunctions.objectToString;
 import static com.github.dakusui.osynth.utils.TestForms.joinByLineBreak;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.core.printable.ExplainablePredicate.explainableStringIsEqualTo;
-import static com.github.dakusui.pcond.fluent.Fluents.assertAll;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Predicates.*;
 import static com.github.dakusui.pcond.forms.Printables.function;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertAll;
 import static com.github.dakusui.thincrest_pcond.functions.Functions.size;
 import static java.util.Arrays.asList;
 
 public class AutoLoggingTest extends UtBase {
-
+  
   static class TestException extends RuntimeException {
     TestException(String message) {
       super(message);
     }
   }
-
+  
   interface A {
     String aMethod();
-
+    
     default String bMethod() {
       return "default:bMethod";
     }
-
+    
     String cMethod();
-
+    
     default String eMethod() {
       throw new TestException("Hello, RuntimeException");
     }
   }
-
+  
   final List<String> out = new LinkedList<>();
-
+  
   @Test(expected = TestException.class)
   public void enableAutoLogging() {
     A aobj = autologgingEnabledTestObject();
-
+    
     List<String> out = new LinkedList<>();
     try {
       out.add(aobj.aMethod());
@@ -72,31 +72,32 @@ public class AutoLoggingTest extends UtBase {
       throw e;
     }
   }
-
+  
+  @SuppressWarnings("unchecked")
   @Test
   public void enableAutoLogging$whenNormalMethodA$thenDoesntBreak() {
     A aobj = autologgingEnabledTestObject();
-
+    
     printTestObjectAndCurrentOutputToErr(aobj);
-
+    
     assertAll(
-        value(aobj).asObject().exercise(A::aMethod).then().asString().isEqualTo("handler:aMethod"),
-        value(out).asListOf((String) value()).then().findElementsInOrderBy(asList(startsWith("ENTER"), startsWith("LEAVE")))
+        objectValue(aobj).asObject().toObject(v -> (A) v).toObject(A::aMethod).then().isEqualTo("handler:aMethod"),
+        objectValue(out).asObject().toList(v -> (List<String>) v).then().findElementsInOrderBy(asList(startsWith("ENTER"), startsWith("LEAVE")))
     );
   }
-
+  
   private void printTestObjectAndCurrentOutputToErr(A aobj) {
     System.err.println(aobj.aMethod());
     out.forEach(System.err::println);
   }
-
+  
   @Test
   public void givenAutoLoggingEnabled_whenDefaultMethod$bMethod$_thenDoesntBreak() {
     A aobj = autologgingEnabledTestObject();
-
+    
     System.err.println(aobj.bMethod());
     out.forEach(System.err::println);
-
+    
     assertThat(
         joinByLineBreak(out),
         findSubstrings(
@@ -105,13 +106,13 @@ public class AutoLoggingTest extends UtBase {
         )
     );
   }
-
+  
   @Test
   public void givenEnableAutoLogging_whenFallback$cMethod$_thenDoesntBreak() {
     A aobj = autologgingEnabledTestObject();
-
+    
     System.err.println(aobj.cMethod());
-
+    
     assertThat(
         joinByLineBreak(out),
         findSubstrings(
@@ -120,44 +121,47 @@ public class AutoLoggingTest extends UtBase {
         )
     );
   }
-
+  
   @Test
   public void givenAutoLoggingEnabledOverridingBuiltInMethod$whenToString$thenNotLoggedAndDoesntBreak() {
     A aobj = autologgingEnabledTestObject(
         methodCall("toString").with((v, args) -> "HELLO"));
     assertAll(
-        value(aobj)
-            .exercise(objectToString())
+        objectValue(aobj)
+            .toString(objectToString())
             .then()
             .isEqualTo("HELLO"),
-        value(out)
-            .then().intoStringWith(listJoinByLinBreak())
+        objectValue(out)
+            .toString(listJoinByLinBreak())
+            .then()
             .isEmpty());
   }
-
+  
   private A autologgingEnabledTestObject() {
     return autologgingEnabledTestObject(
         methodCall("aMethod")
             .with((synthesizedObject, args) -> "handler:aMethod"));
   }
-
+  
   public enum TestFunctions {
     ;
-
+    
     public static Function<Object, String> objectToString() {
       return function("toString", Object::toString);
     }
-
+    
     @SuppressWarnings("unchecked")
     public static <T> Function<List<T>, String> listJoinByLinBreak() {
       return function("joinByLineBreak", v -> joinByLineBreak((List<String>) v));
     }
   }
-
+  
   private A autologgingEnabledTestObject(MethodHandlerEntry aMethod) {
     return new ObjectSynthesizer()
         //        /*
-        .enableAutoLoggingWritingTo(s -> loggingToStdoutAndOutList(out, s))
+        .enableAutoLoggingWritingTo(s -> {
+          loggingToStdoutAndOutList(out, s);
+        })
         //         */
         //        .enableAutoLogging()
         .handle(aMethod)
@@ -166,7 +170,8 @@ public class AutoLoggingTest extends UtBase {
         .synthesize()
         .castTo(A.class);
   }
-
+  
+  @SuppressWarnings("unchecked")
   @Test
   public void modifyAutoLoggingBehaviorBy$compose$_thenModifiedBehaviorObserved() {
     List<String> out = new LinkedList<>();
@@ -182,30 +187,32 @@ public class AutoLoggingTest extends UtBase {
         .synthesize()
         .castTo(A.class);
     assertAll(
-        value(givenObject).applyFunction(function("A::aMethod", A::aMethod))
+        objectValue(givenObject)
+            .toObject(function("A::aMethod", A::aMethod))
             .then()
-            .asString()
             .isEqualTo("handler:aMethod"),
-        value(out).asListOfClass(String.class)
+        objectValue(out)
+            .asObject()
+            .toList(v -> (List<String>)v)
             .then()
-            .verifyWith(allOf(
+            .checkWithPredicate(allOf(
                 transform(size()).check(isEqualTo(3)),
                 findElements(startsWith("ENTER:"),
                     explainableStringIsEqualTo("returnType:String"),
                     startsWith("LEAVE:")))));
   }
-
+  
   private static void loggingToStdoutAndOutList(List<String> out, String s) {
     System.out.println(s);
     out.add(s);
   }
-
+  
   private static Object handleMethodWithLoggingReturnTypeToStdoutAndOutList(SynthesizedObject synthesizedObject, Method method, Object[] args, MethodHandler methodHandler, List<String> out) throws Throwable {
     String message = "returnType:" + method.getReturnType().getSimpleName();
     loggingToStdoutAndOutList(out, message);
     return methodHandler.handle(synthesizedObject, args);
   }
-
+  
   @Test
   public void modifyAutoLoggingBehaviorBy$andThen$_thenModifiedBehaviorObserved() {
     ObjectSynthesizer osynth = new ObjectSynthesizer()
@@ -223,7 +230,7 @@ public class AutoLoggingTest extends UtBase {
         .castTo(A.class);
     System.out.println(aobj.aMethod());
   }
-
+  
   @Test(expected = TestException.class)
   public void disableAutoLogging() {
     A aobj = new ObjectSynthesizer()
@@ -233,7 +240,7 @@ public class AutoLoggingTest extends UtBase {
         .addInterface(A.class)
         .synthesize()
         .castTo(A.class);
-
+    
     List<String> out = new LinkedList<>();
     try {
       out.add(aobj.aMethod());
@@ -253,15 +260,15 @@ public class AutoLoggingTest extends UtBase {
       throw e;
     }
   }
-
+  
   private static A newObjectImplementingAForFallback() {
     return new A() {
-
+      
       @Override
       public String aMethod() {
         throw new UnsupportedOperationException();
       }
-
+      
       @Override
       public String cMethod() {
         return "fallback:cMethod";

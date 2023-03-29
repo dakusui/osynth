@@ -1,6 +1,9 @@
 package com.github.dakusui.osynth.core.utils;
 
-import com.github.dakusui.osynth.core.*;
+import com.github.dakusui.osynth.core.InvocationController;
+import com.github.dakusui.osynth.core.MethodHandler;
+import com.github.dakusui.osynth.core.MethodSignature;
+import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.exceptions.OsynthException;
 
 import java.lang.invoke.MethodHandle;
@@ -15,9 +18,9 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForMissingMethodHandler;
-import static com.github.dakusui.pcond.Assertions.that;
 import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
 import static com.github.dakusui.pcond.forms.Predicates.transform;
+import static com.github.dakusui.valid8j.Assertions.that;
 import static java.util.stream.Collectors.joining;
 
 public enum MethodUtils {

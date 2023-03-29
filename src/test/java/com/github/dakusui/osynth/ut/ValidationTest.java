@@ -1,21 +1,22 @@
 package com.github.dakusui.osynth.ut;
 
+import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import com.github.dakusui.osynth.core.MethodHandler;
 import com.github.dakusui.osynth.core.MethodHandlerDecorator;
 import com.github.dakusui.osynth.core.SynthesizedObject;
 import com.github.dakusui.osynth.exceptions.ValidationException;
 import com.github.dakusui.osynth.ut.core.utils.UtBase;
-import com.github.dakusui.pcond.fluent.Fluents;
 import org.junit.Test;
 
 import java.io.Serializable;
 
 import static com.github.dakusui.osynth.ObjectSynthesizer.methodCall;
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
+import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
+import static com.github.dakusui.thincrest.TestFluents.assertStatement;
 import static java.lang.String.format;
 
 public class ValidationTest extends UtBase {
@@ -101,11 +102,11 @@ public class ValidationTest extends UtBase {
         .enableDuplicatedInterfaceCheck()
         .addInterface(TestInterface.class)
         .synthesize();
-    Fluents.assertThat(
-        value(synthesizedObject.castTo(TestInterface.class)).asObject().castTo((TestInterface) value())
-            .exercise(v -> v.testMethod("Hello!"))
-            .then()
-            .isEqualTo("testMethod[Hello!]"));
+    assertStatement(objectValue(synthesizedObject.castTo(TestInterface.class)).asObject()
+        .toObject(v -> (TestInterface) v)
+        .toObject(v -> v.testMethod("Hello!"))
+        .then()
+        .isEqualTo("testMethod[Hello!]"));
   }
 
   private static MethodHandler createNewDescriptorReturningHandler() {

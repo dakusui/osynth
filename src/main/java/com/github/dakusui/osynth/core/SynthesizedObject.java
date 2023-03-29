@@ -13,8 +13,8 @@ import static com.github.dakusui.osynth.core.MethodHandlerDecorator.chainMethodH
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.builtIndMethodSignatures;
 import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.reservedMethodSignatures;
 import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForAttemptToCastToUnavailableInterface;
-import static com.github.dakusui.pcond.Requires.require;
 import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.valid8j.Requires.require;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;

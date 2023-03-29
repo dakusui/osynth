@@ -5,9 +5,9 @@ import com.github.dakusui.osynth.ut.core.utils.UtBase;
 import com.github.dakusui.osynth.ObjectSynthesizer;
 import org.junit.Test;
 
-import static com.github.dakusui.pcond.TestAssertions.assertThat;
 import static com.github.dakusui.pcond.forms.Predicates.allOf;
 import static com.github.dakusui.pcond.forms.Predicates.containsString;
+import static com.github.dakusui.thincrest.TestAssertions.assertThat;
 
 public class InterfaceInclusionTest extends UtBase {
   interface F {
