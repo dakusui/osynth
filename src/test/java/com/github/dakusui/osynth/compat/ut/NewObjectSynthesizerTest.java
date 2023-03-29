@@ -17,7 +17,6 @@ import static com.github.dakusui.crest.Crest.function;
 import static com.github.dakusui.osynth.ObjectSynthesizer.*;
 import static com.github.dakusui.osynth.utils.TestForms.*;
 import static com.github.dakusui.pcond.fluent.Fluents.objectValue;
-import static com.github.dakusui.pcond.fluent.Fluents.value;
 import static com.github.dakusui.pcond.forms.Predicates.isEqualTo;
 import static com.github.dakusui.thincrest.TestAssertions.assertThat;
 import static com.github.dakusui.thincrest.TestFluents.assertStatement;
@@ -30,7 +29,6 @@ public class NewObjectSynthesizerTest extends UtBase {
   public void givenDescriptorIsNotFinalized$whenQueried$thenFalse() {
     assertStatement(
         objectValue(new ObjectSynthesizer())
-            .toObject(v -> (ObjectSynthesizer) v)
             .then()
             .checkWithPredicate(objectSynthesizerIsDescriptorFinalized().negate()));
   }
@@ -40,7 +38,7 @@ public class NewObjectSynthesizerTest extends UtBase {
     ObjectSynthesizer osynth = new ObjectSynthesizer().fallbackTo(new Object());
     osynth.synthesize();
     assertStatement(
-        objectValue(osynth).toObject(v -> (ObjectSynthesizer) v)
+        objectValue(osynth)
             .then()
             .checkWithPredicate(objectSynthesizerIsDescriptorFinalized()));
   }
@@ -197,7 +195,6 @@ public class NewObjectSynthesizerTest extends UtBase {
     
     assertStatement(
         objectValue(givenObject)
-            .toObject(v -> (SynthesizedObject) v)
             .toObject(synthesizedObjectCastTo(TestInterface4.class))
             .toObject(v -> v.method1("Hello"))
             .then()
