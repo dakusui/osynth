@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractObjectSynthesizer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.core</a> &gt; <span class="el_source">AbstractObjectSynthesizer.java</span></div><h1>AbstractObjectSynthesizer.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.core;
+
+import com.github.dakusui.osynth.core.utils.AssertionUtils;
+import com.github.dakusui.osynth.exceptions.ValidationException;
+import com.github.dakusui.osynth.invocationcontrollers.StandardInvocationController;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Proxy;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import static com.github.dakusui.osynth.annotations.BuiltInHandlerFactory.MethodHandlerFactory.createMethodHandlersForBuiltInMethods;
+import static com.github.dakusui.osynth.core.AbstractObjectSynthesizer.InternalUtils.validateValue;
+import static com.github.dakusui.osynth.core.MethodHandlerDecorator.filterOutPredefinedMethods;
+import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHODS;
+import static com.github.dakusui.osynth.core.utils.AssertionUtils.*;
+import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForReservedMethodOverridingValidationFailure;
+import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.pcond.forms.Printables.predicate;
+import static com.github.dakusui.pcond.internals.InternalUtils.formatObject;
+import static com.github.dakusui.valid8j.Ensures.ensure;
+import static com.github.dakusui.valid8j.Requires.*;
+import static com.github.dakusui.valid8j.Validates.validate;
+
+public abstract class AbstractObjectSynthesizer&lt;O extends AbstractObjectSynthesizer&lt;O&gt;&gt; {
+<span class="fc" id="L33">  protected static final Object                                        DEFAULT_FALLBACK_OBJECT = new Object() {</span>
+    @Override
+    public String toString() {
+<span class="fc" id="L36">      return &quot;autoCreated:&lt;&quot; + super.toString() + &quot;&gt;&quot;;</span>
+    }
+  };
+  protected final        SynthesizedObject.Descriptor.Builder          descriptorBuilder;
+<span class="fc" id="L40">  private final          AtomicReference&lt;SynthesizedObject.Descriptor&gt; finalizedDescriptor     = new AtomicReference&lt;&gt;(null);</span>
+  private                Validator                                     validator;
+  private                Preprocessor                                  preprocessor;
+  private                ClassLoader                                   classLoader;
+  private                InvocationControllerFactory                   invocationControllerFactory;
+
+<span class="fc" id="L46">  public AbstractObjectSynthesizer(SynthesizedObject.Descriptor.Builder builder) {</span>
+<span class="fc" id="L47">    this.descriptorBuilder = builder;</span>
+<span class="fc" id="L48">    this.classLoader(this.getClass().getClassLoader())</span>
+<span class="fc" id="L49">        .handleMethodsWithSignatureMatching()</span>
+<span class="fc" id="L50">        .validateWith(Validator.DEFAULT)</span>
+<span class="fc" id="L51">        .preprocessWith(Preprocessor.DEFAULT)</span>
+<span class="fc" id="L52">        .disableMethodHandlerDecorator();</span>
+<span class="fc" id="L53">  }</span>
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O addInterface(Class&lt;?&gt; interfaceClass) {
+<span class="fc" id="L57">    descriptorBuilder.addInterface(interfaceClass);</span>
+<span class="fc" id="L58">    return (O) this;</span>
+  }
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O classLoader(ClassLoader classLoader) {
+<span class="fc" id="L63">    this.classLoader = classLoader;</span>
+<span class="fc" id="L64">    return (O) this;</span>
+  }
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O fallbackTo(Object fallbackObject) {
+<span class="fc" id="L69">    this.descriptorBuilder.fallbackObject(fallbackObject);</span>
+<span class="fc" id="L70">    return (O) this;</span>
+  }
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O handle(MethodHandlerEntry handlerEntry) {
+<span class="fc" id="L75">    requireNonNull(handlerEntry);</span>
+<span class="fc" id="L76">    this.descriptorBuilder.addMethodHandler(handlerEntry);</span>
+<span class="fc" id="L77">    return (O) this;</span>
+  }
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O validateWith(Validator validator) {
+<span class="fc" id="L82">    this.validator = requireNonNull(validator);</span>
+<span class="fc" id="L83">    return (O) this;</span>
+  }
+
+  public O enableDuplicatedInterfaceCheck() {
+<span class="fc" id="L87">    return this.validateWith(Validator.sequence(this.validator(), Validator.ENFORCE_NO_DUPLICATION));</span>
+
+  }
+
+  public O disableValidation() {
+<span class="fc" id="L92">    return this.validateWith(Validator.PASS_THROUGH);</span>
+  }
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O preprocessWith(Preprocessor preprocessor) {
+<span class="fc" id="L97">    this.preprocessor = requireNonNull(preprocessor);</span>
+<span class="fc" id="L98">    return (O) this;</span>
+  }
+
+  public O includeInterfacesFromFallbackObject() {
+<span class="fc" id="L102">    return this.preprocessWith(Preprocessor.sequence(this.preprocessor(), Preprocessor.INCLUDE_INTERFACES_FROM_FALLBACK));</span>
+  }
+
+  public O disablePreprocessing() {
+<span class="fc" id="L106">    return this.preprocessWith(Preprocessor.PASS_THROUGH);</span>
+  }
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O createInvocationControllerWith(InvocationControllerFactory factory) {
+<span class="fc" id="L111">    this.invocationControllerFactory = requireNonNull(factory);</span>
+<span class="fc" id="L112">    return (O) this;</span>
+  }
+
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public O methodHandlerDecorator(MethodHandlerDecorator methodHandlerDecorator) {
+<span class="fc" id="L117">    this.descriptorBuilder.methodHandlerDecorator(requireNonNull(methodHandlerDecorator));</span>
+<span class="fc" id="L118">    return (O) this;</span>
+  }
+
+  public O disableMethodHandlerDecorator() {
+<span class="fc" id="L122">    return this.methodHandlerDecorator(MethodHandlerDecorator.IDENTITY);</span>
+  }
+
+  public O enableAutoLogging() {
+<span class="fc" id="L126">    return enableAutoLoggingWritingTo(System.err::println);</span>
+  }
+
+  /**
+   * Note that this method is using `defaultLogEntryPrinter(Consumer)`,
+   * which is not meant for production usages.
+   * This method should also not be used in the production.
+   *
+   * @param out A consumer to which log records are sent.
+   * @return This object.
+   */
+  public O enableAutoLoggingWritingTo(Consumer&lt;String&gt; out) {
+<span class="fc" id="L138">    return enableAutoLoggingWith(AbstractObjectSynthesizer.defaultLogEntryPrinter(out));</span>
+  }
+
+  public O enableAutoLoggingWith(AutoLogger autoLogger) {
+<span class="fc" id="L142">    return this.methodHandlerDecorator(AutoLogger.create(autoLogger));</span>
+  }
+
+  public O handleMethodsWithSignatureMatching() {
+<span class="fc" id="L146">    return this.createInvocationControllerWith(objectSynthesizer -&gt; new StandardInvocationController(objectSynthesizer.finalizedDescriptor()));</span>
+  }
+
+  public SynthesizedObject synthesize(Object fallbackObject) {
+<span class="fc" id="L150">    return this.fallbackTo(fallbackObject).synthesize();</span>
+  }
+
+  public SynthesizedObject synthesize() {
+<span class="fc" id="L154">    finalizeDescriptor(</span>
+<span class="fc" id="L155">        preprocessDescriptor(</span>
+<span class="fc" id="L156">            validateDescriptor(</span>
+<span class="fc" id="L157">                this.descriptorBuilder.methodHandlerDecorator(</span>
+<span class="fc" id="L158">                        filterOutPredefinedMethods(this.descriptorBuilder.methodHandlerDecorator()))</span>
+<span class="fc" id="L159">                    .build())));</span>
+<span class="fc" id="L160">    return (SynthesizedObject) InternalUtils.createProxy(this);</span>
+  }
+
+  public Preprocessor preprocessor() {
+<span class="fc" id="L164">    return this.preprocessor;</span>
+  }
+
+  public Validator validator() {
+<span class="fc" id="L168">    return this.validator;</span>
+  }
+
+  public MethodHandlerDecorator methodHandlerDecorator() {
+<span class="fc" id="L172">    return this.descriptorBuilder.methodHandlerDecorator();</span>
+  }
+
+  public SynthesizedObject.Descriptor finalizedDescriptor() {
+<span class="fc" id="L176">    return Optional.ofNullable(finalizedDescriptor.get())</span>
+<span class="fc" id="L177">        .orElseThrow(IllegalAccessError::new);</span>
+  }
+
+  public boolean isDescriptorFinalized() {
+<span class="fc bfc" id="L181" title="All 2 branches covered.">    return finalizedDescriptor.get() != null;</span>
+  }
+
+  private void finalizeDescriptor(SynthesizedObject.Descriptor descriptor) {
+<span class="fc" id="L185">    requireState(this.isDescriptorFinalized(), isFalse());</span>
+<span class="fc" id="L186">    this.finalizedDescriptor.set(descriptor);</span>
+<span class="fc" id="L187">  }</span>
+
+  private SynthesizedObject.Descriptor validateDescriptor(SynthesizedObject.Descriptor descriptor) {
+<span class="fc" id="L190">    requireState(this.validator, isNotNull());</span>
+<span class="fc" id="L191">    SynthesizedObject.Descriptor ret = this.validator.apply(this, descriptor);</span>
+<span class="fc" id="L192">    ensure(ret, predicate(&quot;Validation must not change the content of the descriptor.&quot;, allOf(</span>
+<span class="fc" id="L193">        transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),</span>
+<span class="fc" id="L194">        transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),</span>
+<span class="fc" id="L195">        transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));</span>
+<span class="fc" id="L196">    return ret;</span>
+  }
+
+  private SynthesizedObject.Descriptor preprocessDescriptor(SynthesizedObject.Descriptor descriptor) {
+<span class="fc" id="L200">    requireState(this.preprocessor, isNotNull());</span>
+<span class="fc" id="L201">    return ensure(this.preprocessor.apply(this, descriptor), isNotNull());</span>
+  }
+
+  /**
+   * Note that the {@link AutoLogger} instance returned by this method is meant
+   * only for demonstrating how the feature works, not for real-production usage.
+   *
+   * @param out A consumer log records sent to.
+   * @return A default log entry printer instance.
+   */
+  static AutoLogger defaultLogEntryPrinter(Consumer&lt;String&gt; out) {
+<span class="fc" id="L212">    return entry -&gt; {</span>
+<span class="fc" id="L213">      out.accept(InternalUtils.formatLogEntry(entry));</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">      if (entry.type() == AutoLogger.Entry.Type.EXCEPTION) {</span>
+<span class="fc" id="L215">        require(entry.value(), isInstanceOf(Throwable.class));</span>
+<span class="fc" id="L216">        try (PrintStream ps = InternalUtils.toPrintStream(out)) {</span>
+<span class="fc" id="L217">          ((Throwable) entry.value()).printStackTrace(ps);</span>
+        }
+      }
+<span class="fc" id="L220">    };</span>
+  }
+
+<span class="fc" id="L223">  enum InternalUtils {</span>
+    ;
+
+    static Object createProxy(AbstractObjectSynthesizer&lt;?&gt; objectSynthesizer) {
+<span class="fc" id="L227">      SynthesizedObject.Descriptor descriptor = objectSynthesizer.finalizedDescriptor();</span>
+<span class="fc" id="L228">      return Proxy.newProxyInstance(</span>
+<span class="fc" id="L229">          objectSynthesizer.classLoader,</span>
+<span class="fc" id="L230">          descriptor.interfaces().toArray(new Class[0]),</span>
+<span class="fc" id="L231">          objectSynthesizer.invocationControllerFactory.apply(objectSynthesizer));</span>
+    }
+
+    public static List&lt;Object&gt; reservedMethodMisOverridings(Collection&lt;MethodHandlerEntry&gt; methodHandlerEntries) {
+<span class="fc" id="L235">      return methodHandlerEntries</span>
+<span class="fc" id="L236">          .stream()</span>
+<span class="fc" id="L237">          .map((MethodHandlerEntry methodHandlerEntry) -&gt; new ReservedMethodViolation(</span>
+              methodHandlerEntry,
+              RESERVED_METHODS
+<span class="fc" id="L240">                  .stream()</span>
+<span class="fc" id="L241">                  .filter(method -&gt; methodHandlerEntry.matcher().test(method))</span>
+<span class="fc" id="L242">                  .map(MethodSignature::create)</span>
+<span class="fc" id="L243">                  .collect(Collectors.toList())))</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">          .filter(reservedMethodViolation -&gt; !reservedMethodViolation.violatedReservedMethods.isEmpty())</span>
+<span class="fc" id="L245">          .collect(Collectors.toList());</span>
+    }
+
+    static &lt;V&gt; void validateValue(V value, Predicate&lt;V&gt; predicate) {
+<span class="fc" id="L249">      validate(</span>
+          value,
+          predicate,
+          s -&gt; {
+<span class="fc" id="L253">            throw new ValidationException(s);</span>
+          }
+      );
+<span class="fc" id="L256">    }</span>
+
+    private static String formatLogEntry(AutoLogger.Entry logEntry) {
+<span class="fc" id="L259">      String valueType = logEntry.type().outputValueLabel();</span>
+
+<span class="fc" id="L261">      return String.format(</span>
+          &quot;%-10s class:&lt;%s&gt; method:&lt;%s&gt; object:&lt;%10s&gt;  %s:&lt;%s&gt;&quot;,
+<span class="fc" id="L263">          logEntry.type() + &quot;:&quot;,</span>
+<span class="fc" id="L264">          logEntry.method().getDeclaringClass().getSimpleName(),</span>
+<span class="fc" id="L265">          MethodSignature.create(logEntry.method()),</span>
+<span class="fc" id="L266">          formatObject(logEntry.object(), 20),</span>
+          valueType,
+<span class="fc" id="L268">          formatObject(logEntry.value(), 80));</span>
+    }
+
+    private static PrintStream toPrintStream(Consumer&lt;String&gt; out) {
+<span class="fc" id="L272">      return new PrintStream(new OutputStream() {</span>
+<span class="fc" id="L273">        final ByteArrayOutputStream bos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L274">        final char LINE_SEPARATOR_CHAR = String.format(&quot;%n&quot;).charAt(0);</span>
+
+        @Override
+        public void write(int b) {
+<span class="fc bfc" id="L278" title="All 2 branches covered.">          if (b == LINE_SEPARATOR_CHAR) {</span>
+<span class="fc" id="L279">            lineBreak();</span>
+          } else {
+<span class="fc" id="L281">            bos.write(b);</span>
+          }
+<span class="fc" id="L283">        }</span>
+
+        private void lineBreak() {
+<span class="fc" id="L286">          out.accept(bos.toString());</span>
+<span class="fc" id="L287">          bos.reset();</span>
+<span class="fc" id="L288">        }</span>
+
+        @Override
+        public void close() throws IOException {
+<span class="fc" id="L292">          super.close();</span>
+<span class="fc" id="L293">          lineBreak();</span>
+<span class="fc" id="L294">        }</span>
+      });
+    }
+
+    static class ReservedMethodViolation {
+      final List&lt;MethodSignature&gt; violatedReservedMethods;
+      final MethodHandlerEntry    violatingEntry;
+
+<span class="fc" id="L302">      ReservedMethodViolation(MethodHandlerEntry violatingEntry, List&lt;MethodSignature&gt; violatedReservedMethods) {</span>
+<span class="fc" id="L303">        this.violatedReservedMethods = violatedReservedMethods;</span>
+<span class="fc" id="L304">        this.violatingEntry = violatingEntry;</span>
+<span class="fc" id="L305">      }</span>
+
+      @Override
+      public String toString() {
+<span class="fc" id="L309">        return String.format(&quot;violation:entry:%s -&gt; %s&quot;, violatingEntry, violatedReservedMethods);</span>
+      }
+    }
+  }
+
+  interface Stage extends BiFunction&lt;AbstractObjectSynthesizer&lt;?&gt;, SynthesizedObject.Descriptor, SynthesizedObject.Descriptor&gt; {
+  }
+
+  public interface Validator extends Stage {
+<span class="fc" id="L318">    Validator DEFAULT = toNamed(&quot;defaultValidator&quot;, (objectSynthesizer, descriptor) -&gt; {</span>
+<span class="fc" id="L319">      require(objectSynthesizer, isNotNull());</span>
+<span class="fc" id="L320">      require(descriptor, isNotNull());</span>
+<span class="fc" id="L321">      validateValue(</span>
+          descriptor,
+<span class="fc" id="L323">          predicate(</span>
+<span class="fc" id="L324">              () -&gt; messageForReservedMethodOverridingValidationFailure(InternalUtils.reservedMethodMisOverridings(descriptor.methodHandlerEntries())),</span>
+<span class="fc" id="L325">              transform(descriptorMethodHandlerEntries()</span>
+<span class="fc" id="L326">                  .andThen(AbstractObjectSynthesizer.InternalUtils::reservedMethodMisOverridings))</span>
+<span class="fc" id="L327">                  .check(isEmpty())));</span>
+<span class="fc" id="L328">      return descriptor;</span>
+    });
+
+<span class="fc" id="L331">    Validator ENFORCE_NO_DUPLICATION = toNamed(&quot;noDuplicationEnforcingValidator&quot;, (objectSynthesizer, descriptor) -&gt; {</span>
+<span class="fc" id="L332">      require(objectSynthesizer, isNotNull());</span>
+<span class="fc" id="L333">      require(descriptor, isNotNull());</span>
+<span class="fc" id="L334">      validateValue(descriptor, transform(descriptorInterfaces().andThen(AssertionUtils.collectionDuplicatedElements())).check(isEmpty()));</span>
+<span class="fc" id="L335">      return descriptor;</span>
+    });
+
+<span class="fc" id="L338">    Validator PASS_THROUGH = toNamed(&quot;passThroughValidator&quot;, (objectSynthesizer, descriptor) -&gt; descriptor);</span>
+
+    static Validator sequence(Validator... validators) {
+<span class="fc" id="L341">      return toNamed(&quot;validatorSequence:&quot; + Arrays.toString(validators), (objectSynthesizer, descriptor) -&gt; {</span>
+<span class="fc" id="L342">        SynthesizedObject.Descriptor ret = descriptor;</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">        for (Validator each : validators) {</span>
+<span class="fc" id="L344">          ret = requireNonNull(each).apply(objectSynthesizer, descriptor);</span>
+<span class="fc" id="L345">          ensure(ret, predicate(&quot;Validation must not change the content of the descriptor.&quot;, allOf(</span>
+<span class="fc" id="L346">              transform(descriptorInterfaces()).check(isEqualTo(descriptor.interfaces())),</span>
+<span class="fc" id="L347">              transform(descriptorMethodHandlerEntries()).check(isEqualTo(descriptor.methodHandlerEntries())),</span>
+<span class="fc" id="L348">              transform(descriptorFallbackObject()).check(isEqualTo(descriptor.fallbackObject())))));</span>
+        }
+<span class="fc" id="L350">        return ret;</span>
+      });
+    }
+
+    static Validator toNamed(String name, Validator validator) {
+<span class="fc" id="L355">      require(name, isNotNull());</span>
+<span class="fc" id="L356">      require(validator, isNotNull());</span>
+<span class="fc" id="L357">      return new Validator() {</span>
+        @Override
+        public SynthesizedObject.Descriptor apply(AbstractObjectSynthesizer&lt;?&gt; objectSynthesizer, SynthesizedObject.Descriptor descriptor) {
+<span class="fc" id="L360">          return validator.apply(objectSynthesizer, descriptor);</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="fc" id="L365">          return name;</span>
+        }
+      };
+    }
+
+    SynthesizedObject.Descriptor apply(
+        AbstractObjectSynthesizer&lt;?&gt; objectSynthesizer,
+        SynthesizedObject.Descriptor descriptor);
+  }
+
+  public interface Preprocessor {
+<span class="fc" id="L376">    Preprocessor INCLUDE_BUILTIN_METHOD_HANDLERS = toNamed(&quot;builtInMethodHandlers&quot;, ((objectSynthesizer, descriptor) -&gt; {</span>
+<span class="fc" id="L377">      SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);</span>
+<span class="fc" id="L378">      createMethodHandlersForBuiltInMethods(objectSynthesizer::finalizedDescriptor)</span>
+<span class="fc" id="L379">          .forEach(builder::addMethodHandler);</span>
+<span class="fc" id="L380">      return builder.build();</span>
+    }));
+<span class="fc" id="L382">    Preprocessor INCLUDE_BUILTIN_INTERFACES      = toNamed(&quot;builtInInterfaces&quot;, ((objectSynthesizer, descriptor) -&gt; {</span>
+<span class="fc" id="L383">      SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">      if (!builder.interfaces().contains(SynthesizedObject.class))</span>
+<span class="fc" id="L385">        builder.addInterface(SynthesizedObject.class);</span>
+<span class="fc" id="L386">      return builder.build();</span>
+    }));
+
+<span class="fc" id="L389">    Preprocessor DEFAULT                          = toNamed(&quot;defaultPreprocessor&quot;, sequence(</span>
+        INCLUDE_BUILTIN_METHOD_HANDLERS,
+        INCLUDE_BUILTIN_INTERFACES
+    ));
+<span class="fc" id="L393">    Preprocessor INCLUDE_INTERFACES_FROM_FALLBACK = toNamed(&quot;interfacesFromFallback&quot;, (objectSynthesizer, descriptor) -&gt; {</span>
+<span class="fc" id="L394">      SynthesizedObject.Descriptor.Builder builder = new SynthesizedObject.Descriptor.Builder(descriptor);</span>
+<span class="fc" id="L395">      Set&lt;Class&lt;?&gt;&gt; interfacesInOriginalDescriptor = new HashSet&lt;&gt;(descriptor.interfaces());</span>
+<span class="fc" id="L396">      Arrays.stream(descriptor.fallbackObject().getClass().getInterfaces())</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">          .filter(eachInterfaceInFallback -&gt; !interfacesInOriginalDescriptor.contains(eachInterfaceInFallback))</span>
+<span class="fc" id="L398">          .forEach(builder::addInterface);</span>
+<span class="fc" id="L399">      return builder.build();</span>
+    });
+
+<span class="fc" id="L402">    Preprocessor PASS_THROUGH = toNamed(&quot;passThrough&quot;, (objectSynthesizer, descriptor) -&gt; descriptor);</span>
+
+    static Preprocessor importDescriptorFromAnotherSynthesizedObject(SynthesizedObject.Descriptor descriptor) {
+<span class="fc" id="L405">      return toNamed(</span>
+          &quot;importDescriptorFromAnotherSynthesizedObject&quot;,
+<span class="fc" id="L407">          (objectSynthesizer, descriptorFromThisSynthesizer) -&gt; SynthesizedObject.Descriptor.merge(descriptorFromThisSynthesizer, descriptor));</span>
+    }
+
+
+    SynthesizedObject.Descriptor apply(
+        AbstractObjectSynthesizer&lt;?&gt; objectSynthesizer,
+        SynthesizedObject.Descriptor descriptor);
+
+    static Preprocessor sequence(Preprocessor... preprocessors) {
+<span class="fc" id="L416">      return toNamed(&quot;preprocessorSequence:&quot; + Arrays.toString(preprocessors), (objectSynthesizer, descriptor) -&gt; {</span>
+<span class="fc" id="L417">        SynthesizedObject.Descriptor ret = descriptor;</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">        for (Preprocessor each : preprocessors) {</span>
+<span class="fc" id="L419">          ret = ensure(requireNonNull(each).apply(objectSynthesizer, ret), isNotNull());</span>
+        }
+<span class="fc" id="L421">        return ret;</span>
+      });
+    }
+
+    static Preprocessor toNamed(String name, Preprocessor preprocessor) {
+<span class="fc" id="L426">      require(name, isNotNull());</span>
+<span class="fc" id="L427">      require(preprocessor, isNotNull());</span>
+<span class="fc" id="L428">      return new Preprocessor() {</span>
+        @Override
+        public SynthesizedObject.Descriptor apply(AbstractObjectSynthesizer&lt;?&gt; objectSynthesizer, SynthesizedObject.Descriptor descriptor) {
+<span class="fc" id="L431">          return preprocessor.apply(objectSynthesizer, descriptor);</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="fc" id="L436">          return name;</span>
+        }
+
+      };
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

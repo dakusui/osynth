@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BuiltInHandlerFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.annotations</a> &gt; <span class="el_source">BuiltInHandlerFactory.java</span></div><h1>BuiltInHandlerFactory.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.annotations;
+
+import com.github.dakusui.osynth.core.*;
+
+import java.lang.annotation.Retention;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static com.github.dakusui.osynth.core.utils.AssertionUtils.methodIsAnnotationPresent;
+import static com.github.dakusui.osynth.core.utils.MethodUtils.execute;
+import static com.github.dakusui.osynth.core.utils.MethodUtils.withName;
+import static com.github.dakusui.pcond.forms.Predicates.and;
+import static com.github.dakusui.pcond.forms.Predicates.isNotNull;
+import static com.github.dakusui.valid8j.Assertions.that;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.util.stream.Collectors.joining;
+
+@Retention(RUNTIME)
+public @interface BuiltInHandlerFactory {
+  Class&lt;? extends MethodHandlerFactory&gt; value();
+
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">  interface MethodHandlerFactory {</span>
+    MethodHandler create(Supplier&lt;SynthesizedObject.Descriptor&gt; descriptorSupplier);
+
+    static MethodHandler createBuiltInMethodHandlerFor(Method method, Supplier&lt;SynthesizedObject.Descriptor&gt; descriptorSupplier) {
+<span class="pc bpc" id="L29" title="2 of 4 branches missed.">      assert that(method, and(</span>
+<span class="fc" id="L30">          isNotNull(),</span>
+<span class="fc" id="L31">          methodIsAnnotationPresent(BuiltInHandlerFactory.class)));</span>
+<span class="fc" id="L32">      BuiltInHandlerFactory annotation = method.getAnnotation(BuiltInHandlerFactory.class);</span>
+<span class="fc" id="L33">      return execute(() -&gt; withName(&quot;builtIn-&quot; + method.getName(), annotation.value().newInstance().create(descriptorSupplier)));</span>
+    }
+
+    static Stream&lt;MethodHandlerEntry&gt; createMethodHandlersForBuiltInMethods(Supplier&lt;SynthesizedObject.Descriptor&gt; descriptorSupplier) {
+<span class="fc" id="L37">      return Arrays.stream(SynthesizedObject.class.getMethods())</span>
+<span class="fc" id="L38">          .filter(each -&gt; each.isAnnotationPresent(BuiltInHandlerFactory.class))</span>
+<span class="fc" id="L39">          .map((Method eachMethod) -&gt; {</span>
+<span class="fc" id="L40">            MethodSignature targetMethodSignature = MethodSignature.create(eachMethod);</span>
+<span class="fc" id="L41">            return MethodHandlerEntry.create(</span>
+<span class="fc" id="L42">                MethodMatcher.create(mm -&gt; String.format(&quot;builtInFor:%s%s&quot;, eachMethod.getName(), Arrays.toString(eachMethod.getParameterTypes())),</span>
+<span class="fc" id="L43">                    (Method candidate) -&gt; targetMethodSignature.equals(MethodSignature.create(candidate))),</span>
+<span class="fc" id="L44">                createBuiltInMethodHandlerFor(eachMethod, descriptorSupplier), true);</span>
+          });
+    }
+
+  }
+
+<span class="fc" id="L50">  class ForToString implements MethodHandlerFactory {</span>
+    @Override
+    public MethodHandler.BuiltIn create(Supplier&lt;SynthesizedObject.Descriptor&gt; descriptorSupplier) {
+<span class="fc" id="L53">      return (synthesizedObject, objects) -&gt; composeFormattedString(synthesizedObject);</span>
+    }
+
+    private static String composeFormattedString(SynthesizedObject synthesizedObject) {
+<span class="fc" id="L57">      return String.format(&quot;osynth(%s):%s&quot;,</span>
+<span class="fc" id="L58">          synthesizedObject.descriptor().interfaces()</span>
+<span class="fc" id="L59">              .stream()</span>
+<span class="fc" id="L60">              .map(Class::getSimpleName)</span>
+<span class="fc" id="L61">              .collect(joining(&quot;,&quot;)),</span>
+<span class="fc" id="L62">          synthesizedObject.descriptor());</span>
+    }
+  }
+
+<span class="fc" id="L66">  class ForHashCode implements MethodHandlerFactory {</span>
+    @Override
+    public MethodHandler.BuiltIn create(Supplier&lt;SynthesizedObject.Descriptor&gt; descriptorSupplier) {
+<span class="fc" id="L69">      return (synthesizedObject, objects) -&gt; synthesizedObject.descriptor().hashCode();</span>
+    }
+  }
+
+<span class="fc" id="L73">  class ForEquals implements MethodHandlerFactory {</span>
+    @Override
+    public MethodHandler.BuiltIn create(Supplier&lt;SynthesizedObject.Descriptor&gt; descriptorSupplier) {
+<span class="fc" id="L76">      return (synthesizedObject, objects) -&gt; {</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (synthesizedObject == objects[0])</span>
+<span class="fc" id="L78">          return true;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (!(objects[0] instanceof SynthesizedObject))</span>
+<span class="fc" id="L80">          return false;</span>
+<span class="fc" id="L81">        SynthesizedObject another = (SynthesizedObject) objects[0];</span>
+<span class="fc" id="L82">        return Objects.equals(synthesizedObject.descriptor(), another.descriptor());</span>
+      };
+    }
+  }
+
+<span class="fc" id="L87">  class ForDescriptor implements MethodHandlerFactory {</span>
+    @Override
+    public MethodHandler.BuiltIn create(Supplier&lt;SynthesizedObject.Descriptor&gt; descriptorSupplier) {
+<span class="fc" id="L90">      return (synthesizedObject, objects) -&gt; descriptorSupplier.get();</span>
+    }
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

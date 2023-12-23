@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MethodMatcher.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.core</a> &gt; <span class="el_source">MethodMatcher.java</span></div><h1>MethodMatcher.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.core;
+
+import java.lang.reflect.Method;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+public interface MethodMatcher {
+  boolean test(Method m);
+
+  default MethodMatcher and(MethodMatcher other) {
+<span class="fc bfc" id="L11" title="All 4 branches covered.">    return create(m -&gt; &quot;and(&quot; + this + &quot;,&quot; + other + &quot;)&quot;, v -&gt; this.test(v) &amp;&amp; other.test(v));</span>
+  }
+
+  default MethodMatcher or(MethodMatcher other) {
+<span class="fc bfc" id="L15" title="All 4 branches covered.">    return create(m -&gt; &quot;or(&quot; + this + &quot;,&quot; + other + &quot;)&quot;, v -&gt; this.test(v) || other.test(v));</span>
+  }
+
+  default MethodMatcher negate() {
+<span class="fc bfc" id="L19" title="All 2 branches covered.">    return create(m -&gt; &quot;not(&quot; + this + &quot;)&quot;, v -&gt; !test(v));</span>
+  }
+
+  static MethodMatcher create(Function&lt;MethodMatcher, String&gt; toString, Predicate&lt;Method&gt; methodPredicate) {
+<span class="fc" id="L23">    return PrivateUtils.methodMatcherOverrideToString(toString, create(methodPredicate));</span>
+  }
+
+  static MethodMatcher create(Predicate&lt;Method&gt; methodPredicate) {
+<span class="fc" id="L27">    return methodPredicate::test;</span>
+  }
+
+  static MethodMatcher overrideToString(Function&lt;MethodMatcher, String&gt; toString, MethodMatcher methodMatcher) {
+<span class="fc" id="L31">    return PrivateUtils.methodMatcherOverrideToString(toString, methodMatcher);</span>
+  }
+
+<span class="fc" id="L34">  enum PrivateUtils {</span>
+    ;
+
+    private static MethodMatcher methodMatcherOverrideToString(Function&lt;MethodMatcher, String&gt; toString, MethodMatcher matcher) {
+<span class="fc" id="L38">      return new MethodMatcher() {</span>
+        @Override
+        public boolean test(Method m) {
+<span class="fc" id="L41">          return matcher.test(m);</span>
+        }
+
+        @Override
+        public String toString() {
+<span class="fc" id="L46">          return toString.apply(matcher);</span>
+        }
+      };
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

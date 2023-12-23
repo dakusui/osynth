@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ObjectSynthesizer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth</a> &gt; <span class="el_source">ObjectSynthesizer.java</span></div><h1>ObjectSynthesizer.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth;
+
+import com.github.dakusui.osynth.core.*;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+
+import static com.github.dakusui.osynth.core.AbstractObjectSynthesizer.Preprocessor.importDescriptorFromAnotherSynthesizedObject;
+import static com.github.dakusui.osynth.core.utils.MethodUtils.*;
+import static java.lang.String.format;
+
+/**
+ * The main entry pont of the `osynth` object synthesizer library.
+ */
+public class ObjectSynthesizer extends AbstractObjectSynthesizer&lt;ObjectSynthesizer&gt; {
+
+  public ObjectSynthesizer() {
+<span class="fc" id="L24">    super(new SynthesizedObject.Descriptor.Builder()</span>
+<span class="fc" id="L25">        .fallbackObject(DEFAULT_FALLBACK_OBJECT));</span>
+<span class="fc" id="L26">  }</span>
+
+  public ObjectSynthesizer(SynthesizedObject.Descriptor descriptor) {
+<span class="fc" id="L29">    super(new SynthesizedObject.Descriptor.Builder(descriptor));</span>
+<span class="fc" id="L30">  }</span>
+
+  public static MethodHandlerEntry.Builder methodCall(String methodName, Class&lt;?&gt;... parameterTypes) {
+<span class="fc" id="L33">    return methodCall(MethodSignature.create(methodName, parameterTypes));</span>
+  }
+
+  public static MethodHandlerEntry.Builder methodCall(MethodSignature methodSignature) {
+<span class="fc" id="L37">    return new MethodHandlerEntry.Builder().matcher(matchingExactly(methodSignature));</span>
+  }
+
+  public static MethodHandlerEntry.Builder methodCall(MethodMatcher matcher) {
+<span class="fc" id="L41">    return new MethodHandlerEntry.Builder().matcher(matcher);</span>
+  }
+
+  public static MethodMatcher matchingExactly(MethodSignature signature) {
+<span class="fc" id="L45">    return MethodMatcher.overrideToString(mm -&gt; (&quot;matchingExactly:&quot; + mm.toString()), nameMatchingExactly(signature.name()).and(parameterTypesMatchingExactly(signature.parameterTypes())));</span>
+  }
+
+  /**
+   * Returns a &quot;lenient&quot; method matcher by signature.
+   * The returned matcher checks if
+   *
+   * 1. The name of a method to be tested if it is matching the name of the `targetMethodSignature` as a regular expression.
+   * 2. Every parameter types of the method to be tested is equal to or more special than the corresponding parameter type in the `signature`.
+   *
+   * If the signature doesn't have any parameter types, it matches a method without
+   * any parameters.
+   * In case you want to create a matcher that matches a method with a specific name but
+   * doesn't care any parameter types, use {@link ObjectSynthesizer#nameMatchingRegex(String)}
+   * or {@link ObjectSynthesizer#nameMatchingExactly(String)}.
+   *
+   * ,@param signature The method signature that matches a returned matcher.
+   *
+   * @return A method matcher by signature.
+   */
+  public static MethodMatcher matchingLeniently(MethodSignature signature) {
+<span class="fc" id="L66">    return MethodMatcher.overrideToString(mm -&gt; (&quot;matchingLeniently:&quot; + mm.toString()), nameMatchingRegex(signature.name()).and(parameterTypesMatchingLeniently(signature.parameterTypes())));</span>
+  }
+
+  public static MethodMatcher nameMatchingExactly(String methodName) {
+<span class="fc" id="L70">    return MethodMatcher.create(</span>
+<span class="fc" id="L71">        (mm) -&gt; format(&quot;nameMatchingExactly[%s]&quot;, methodName),</span>
+<span class="fc" id="L72">        method -&gt; Objects.equals(methodName, method.getName()));</span>
+  }
+
+  public static MethodMatcher nameMatchingRegex(String regexForMethodName) {
+<span class="fc" id="L76">    Pattern regex = Pattern.compile(regexForMethodName);</span>
+<span class="fc" id="L77">    return MethodMatcher.create(</span>
+<span class="fc" id="L78">        (mm) -&gt; format(&quot;nameMatchingRegex[%s]&quot;, regexForMethodName),</span>
+<span class="fc" id="L79">        method -&gt; regex.matcher(method.getName()).matches());</span>
+  }
+
+  public static MethodMatcher parameterTypesMatchingExactly(Class&lt;?&gt;[] parameterTypes) {
+<span class="fc" id="L83">    return MethodMatcher.create(</span>
+<span class="fc" id="L84">        (mm) -&gt; format(&quot;parameterTypesMatchingExactly%s&quot;, Arrays.toString(parameterTypes)),</span>
+<span class="fc" id="L85">        method -&gt; Arrays.equals(parameterTypes, method.getParameterTypes())</span>
+    );
+  }
+
+  public static MethodMatcher parameterTypesMatchingLeniently(Class&lt;?&gt;[] parameterTypes) {
+<span class="fc" id="L90">    return MethodMatcher.create(</span>
+<span class="fc" id="L91">        (mm) -&gt; format(&quot;parameterTypesMatchingLeniently%s&quot;, Arrays.toString(parameterTypes)),</span>
+        method -&gt; {
+<span class="fc" id="L93">          AtomicInteger i = new AtomicInteger(0);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">          return parameterTypes.length == method.getParameterTypes().length &amp;&amp;</span>
+<span class="fc" id="L95">              Arrays.stream(method.getParameterTypes())</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                  .allMatch(type -&gt; type.isAssignableFrom(parameterTypes[i.getAndIncrement()]));</span>
+        }
+    );
+  }
+
+  public static &lt;A extends Annotation&gt; MethodMatcher annotatedWith(Class&lt;A&gt; annotationClass) {
+<span class="fc" id="L102">    return matching(</span>
+<span class="fc" id="L103">        m -&gt; &quot;annotatedWith(@&quot; + simpleClassNameOf(annotationClass) + &quot;)&quot;,</span>
+<span class="fc" id="L104">        method -&gt; method.isAnnotationPresent(annotationClass));</span>
+  }
+
+  public static &lt;A extends Annotation&gt; MethodMatcher annotatedWith(Class&lt;A&gt; annotationClass, Predicate&lt;A&gt; annotationPredicate) {
+<span class="fc" id="L108">    return annotatedWith(annotationClass).and(</span>
+<span class="fc" id="L109">        matching(</span>
+<span class="fc" id="L110">            m -&gt; &quot;satisfying:&quot; + prettierToString(m),</span>
+<span class="fc" id="L111">            m -&gt; annotationPredicate.test(m.getAnnotation(annotationClass))));</span>
+  }
+
+  public static MethodMatcher matching(Function&lt;MethodMatcher, String&gt; nameComposer, Predicate&lt;Method&gt; p) {
+<span class="fc" id="L115">    return MethodMatcher.create(nameComposer, p);</span>
+  }
+
+  public static ObjectSynthesizer from(SynthesizedObject.Descriptor descriptor) {
+    ObjectSynthesizer ret;
+<span class="fc" id="L120">    return (ret = new ObjectSynthesizer()).preprocessWith(Preprocessor.sequence(</span>
+<span class="fc" id="L121">        importDescriptorFromAnotherSynthesizedObject(descriptor),</span>
+<span class="fc" id="L122">        ret.preprocessor()));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

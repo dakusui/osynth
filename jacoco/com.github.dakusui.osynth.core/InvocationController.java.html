@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InvocationController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.core</a> &gt; <span class="el_source">InvocationController.java</span></div><h1>InvocationController.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.core;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.github.dakusui.osynth.core.utils.MethodUtils.execute;
+import static com.github.dakusui.osynth.core.utils.MethodUtils.toEmptyArrayIfNull;
+
+public interface InvocationController extends InvocationHandler {
+<span class="fc" id="L12">  Object[] EMPTY_ARGS = new Object[0];</span>
+
+  @Override
+  default Object invoke(Object proxy, Method method, Object[] args) {
+<span class="fc" id="L16">    InvocationContext.Impl.contextWith(method);</span>
+<span class="fc" id="L17">    return execute(() -&gt; methodHandlerFor(method).handle((SynthesizedObject) proxy, toEmptyArrayIfNull(args)));</span>
+  }
+
+  MethodHandler methodHandlerFor(Method method);
+
+  MethodHandler figuredOutMethodHandlerFor(Method invokedMethod);
+
+  SynthesizedObject.Descriptor descriptor();
+
+  static InvocationContext invocationContext() {
+<span class="fc" id="L27">    return InvocationContext.forCurrentThread();</span>
+  }
+
+  interface WithCache extends InvocationController {
+    /**
+     * Returns a newly created map object used for method handler cache.
+     *
+     * Default implementation of this method returns a new {@link ConcurrentHashMap}
+     * object.
+     * Assign the returned map of this method to a field returned by
+     * {@link InvocationController.WithCache#cache()} method.
+     *
+     * @return A new map for method handler cache.
+     */
+    default Map&lt;Method, MethodHandler&gt; createCache() {
+<span class="fc" id="L42">      return new ConcurrentHashMap&lt;&gt;();</span>
+    }
+
+    /**
+     * Returns an already created map object to be used for a method handler cache.
+     *
+     * @return A map for method handler cache.
+     */
+    Map&lt;Method, MethodHandler&gt; cache();
+
+    default MethodHandler methodHandlerFor(Method method) {
+<span class="fc" id="L53">      return cache().computeIfAbsent(method, this::figuredOutMethodHandlerAndApplyDecorator);</span>
+    }
+
+    default MethodHandler figuredOutMethodHandlerAndApplyDecorator(Method method) {
+<span class="fc" id="L57">      return descriptor()</span>
+<span class="fc" id="L58">          .methodHandlerDecorator()</span>
+<span class="fc" id="L59">          .apply(method, figuredOutMethodHandlerFor(method));</span>
+    }
+  }
+
+  abstract class Base implements InvocationController {
+    private final SynthesizedObject.Descriptor descriptor;
+
+<span class="fc" id="L66">    protected Base(SynthesizedObject.Descriptor descriptor) {</span>
+<span class="fc" id="L67">      this.descriptor = descriptor;</span>
+<span class="fc" id="L68">    }</span>
+
+    @Override
+    public SynthesizedObject.Descriptor descriptor() {
+<span class="fc" id="L72">      return this.descriptor;</span>
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SynthesizedObject.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.core</a> &gt; <span class="el_source">SynthesizedObject.java</span></div><h1>SynthesizedObject.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.core;
+
+import com.github.dakusui.osynth.annotations.BuiltInHandlerFactory;
+import com.github.dakusui.osynth.annotations.ReservedByOSynth;
+import com.github.dakusui.osynth.core.utils.AssertionUtils;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.*;
+
+import static com.github.dakusui.osynth.core.AbstractObjectSynthesizer.DEFAULT_FALLBACK_OBJECT;
+import static com.github.dakusui.osynth.core.MethodHandlerDecorator.chainMethodHandlerDecorators;
+import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.builtIndMethodSignatures;
+import static com.github.dakusui.osynth.core.SynthesizedObject.InternalUtils.reservedMethodSignatures;
+import static com.github.dakusui.osynth.core.utils.MessageUtils.messageForAttemptToCastToUnavailableInterface;
+import static com.github.dakusui.pcond.forms.Predicates.*;
+import static com.github.dakusui.valid8j.Requires.require;
+import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
+public interface SynthesizedObject {
+<span class="fc" id="L24">  Set&lt;Method&gt; RESERVED_METHODS = reservedMethodSignatures();</span>
+<span class="fc" id="L25">  Set&lt;Method&gt; BUILT_IN_METHODS = builtIndMethodSignatures();</span>
+
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForDescriptor.class)
+  @ReservedByOSynth
+  Descriptor descriptor();
+
+  @ReservedByOSynth
+  default &lt;T&gt; T castTo(Class&lt;T&gt; classInUse) {
+<span class="fc" id="L33">    require(classInUse, and(</span>
+<span class="fc" id="L34">        isNotNull(),</span>
+<span class="fc" id="L35">        or(AssertionUtils.classIsInterface(), isEqualTo(Object.class))));</span>
+<span class="fc" id="L36">    return descriptor().interfaces().stream()</span>
+<span class="fc" id="L37">        .filter(classInUse::isAssignableFrom)</span>
+<span class="fc" id="L38">        .findFirst()</span>
+<span class="fc" id="L39">        .map(each -&gt; classInUse.cast(this))</span>
+<span class="fc" id="L40">        .orElseThrow(() -&gt; new ClassCastException(messageForAttemptToCastToUnavailableInterface(classInUse, descriptor().interfaces())));</span>
+  }
+
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForEquals.class)
+  @Override
+  boolean equals(Object object);
+
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForHashCode.class)
+  @Override
+  int hashCode();
+
+  @BuiltInHandlerFactory(BuiltInHandlerFactory.ForToString.class)
+  @Override
+  String toString();
+
+<span class="fc" id="L55">  enum InternalUtils {</span>
+    ;
+
+    static Set&lt;Method&gt; reservedMethodSignatures() {
+<span class="fc" id="L59">      return methodsAnnotatedBy(ReservedByOSynth.class);</span>
+    }
+
+    static Set&lt;Method&gt; builtIndMethodSignatures() {
+<span class="fc" id="L63">      return methodsAnnotatedBy(BuiltInHandlerFactory.class);</span>
+    }
+
+    private static Set&lt;Method&gt; methodsAnnotatedBy(Class&lt;? extends Annotation&gt; annotationClass) {
+<span class="fc" id="L67">      return Arrays.stream(SynthesizedObject.class.getMethods())</span>
+<span class="fc" id="L68">          .filter(each -&gt; each.isAnnotationPresent(annotationClass))</span>
+<span class="fc" id="L69">          .collect(toSet());</span>
+    }
+  }
+
+  /**
+   * A class to describe attributes of a synthesized object.
+   */
+  final class Descriptor {
+    final List&lt;MethodHandlerEntry&gt; methodHandlers;
+    final List&lt;Class&lt;?&gt;&gt;           interfaces;
+    final MethodHandlerDecorator   methodHandlerDecorator;
+    final Object                   fallbackObject;
+
+    public Descriptor(
+        List&lt;Class&lt;?&gt;&gt; interfaces,
+        List&lt;MethodHandlerEntry&gt; methodHandlers,
+        MethodHandlerDecorator methodHandlerDecorator,
+<span class="fc" id="L86">        Object fallbackObject) {</span>
+      // Not using pcond library to avoid unintentional `toString` call back on failure.
+<span class="fc" id="L88">      this.methodHandlers = new LinkedList&lt;&gt;(Objects.requireNonNull(unmodifiableList(methodHandlers)));</span>
+<span class="fc" id="L89">      this.interfaces = new LinkedList&lt;&gt;(Objects.requireNonNull(interfaces));</span>
+<span class="fc" id="L90">      this.fallbackObject = Objects.requireNonNull(fallbackObject);</span>
+<span class="fc" id="L91">      this.methodHandlerDecorator = Objects.requireNonNull(methodHandlerDecorator);</span>
+<span class="fc" id="L92">    }</span>
+
+    public static List&lt;MethodHandlerEntry&gt; nonBuiltInMethodHandlerEntriesOf(Descriptor b) {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">      return b.methodHandlerEntries().stream().filter(methodHandlerEntry -&gt; !methodHandlerEntry.isBuiltIn()).collect(toList());</span>
+    }
+
+    /**
+     * Returns a new descriptor merging two descriptors.
+     * The merge happens in a manner, where &quot;a overrides b&quot;.
+     *
+     * @param a A descriptor to merge.
+     * @param b Another descriptor to merge.
+     * @return A merged new descriptor object.
+     */
+    public static Descriptor merge(Descriptor a, Descriptor b) {
+<span class="fc" id="L107">      Builder builder = a.toBuilder();</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">      if (a.fallbackObject() == DEFAULT_FALLBACK_OBJECT)</span>
+<span class="fc" id="L109">        builder.fallbackObject(b.fallbackObject());</span>
+<span class="fc" id="L110">      nonBuiltInMethodHandlerEntriesOf(b).forEach(builder::addMethodHandler);</span>
+<span class="fc" id="L111">      b.interfaces().forEach(builder::addInterface);</span>
+<span class="fc" id="L112">      builder.methodHandlerDecorator(chainMethodHandlerDecorators(a.methodHandlerDecorator(), b.methodHandlerDecorator()));</span>
+<span class="fc" id="L113">      return builder.build();</span>
+    }
+
+    public List&lt;Class&lt;?&gt;&gt; interfaces() {
+<span class="fc" id="L117">      return unmodifiableList(this.interfaces);</span>
+    }
+
+    public MethodHandlerDecorator methodHandlerDecorator() {
+<span class="fc" id="L121">      return this.methodHandlerDecorator;</span>
+    }
+
+    public Object fallbackObject() {
+<span class="fc" id="L125">      return this.fallbackObject;</span>
+    }
+
+    public List&lt;MethodHandlerEntry&gt; methodHandlerEntries() {
+<span class="fc" id="L129">      return this.methodHandlers;</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L134">      return this.fallbackObject.hashCode();</span>
+    }
+
+    @Override
+    public boolean equals(Object anotherObject) {
+<span class="fc bfc" id="L139" title="All 2 branches covered.">      if (this == anotherObject)</span>
+<span class="fc" id="L140">        return true;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">      if (!(anotherObject instanceof Descriptor)) {</span>
+<span class="fc" id="L142">        return false;</span>
+      }
+<span class="fc" id="L144">      Descriptor another = (Descriptor) anotherObject;</span>
+<span class="fc" id="L145">      Set&lt;MethodHandlerEntry&gt; methodHandlerSet = new HashSet&lt;&gt;(nonBuiltInMethodHandlerEntriesOf(this));</span>
+<span class="fc" id="L146">      Set&lt;MethodHandlerEntry&gt; methodHandlerSetFromAnother = new HashSet&lt;&gt;(nonBuiltInMethodHandlerEntriesOf(another));</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">      return Objects.equals(fallbackObject, another.fallbackObject) &amp;&amp;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">          Objects.equals(methodHandlerDecorator, another.methodHandlerDecorator) &amp;&amp;</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">          Objects.equals(interfaces, another.interfaces) &amp;&amp;</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">          Objects.equals(methodHandlerSet, methodHandlerSetFromAnother);</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L155">      return format(&quot;{methodHandlers=%s,interfaces=%s,fallback:%s}&quot;,</span>
+<span class="fc" id="L156">          nonBuiltInMethodHandlerEntriesOf(this),</span>
+<span class="fc" id="L157">          this.interfaces(),</span>
+<span class="fc" id="L158">          this.fallbackObject());</span>
+    }
+
+    public Descriptor.Builder toBuilder() {
+<span class="fc" id="L162">      return new Descriptor.Builder() {</span>
+        {
+<span class="fc" id="L164">          Descriptor.this.interfaces().forEach(this::addInterface);</span>
+<span class="fc" id="L165">          this.fallbackObject = Descriptor.this.fallbackObject;</span>
+<span class="fc" id="L166">          this.methodHandlerDecorator = Descriptor.this.methodHandlerDecorator();</span>
+<span class="fc" id="L167">          this.methodHandlers.addAll(nonBuiltInMethodHandlerEntriesOf(this.build()));</span>
+<span class="fc" id="L168">        }</span>
+<span class="fc" id="L169">      }.fallbackObject(this.fallbackObject());</span>
+    }
+
+    public static class Builder {
+      final List&lt;Class&lt;?&gt;&gt;           interfaces;
+      final List&lt;MethodHandlerEntry&gt; methodHandlers;
+      MethodHandlerDecorator methodHandlerDecorator;
+      Object                 fallbackObject;
+
+<span class="fc" id="L178">      public Builder() {</span>
+<span class="fc" id="L179">        interfaces = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L180">        methodHandlers = new LinkedList&lt;&gt;();</span>
+<span class="fc" id="L181">      }</span>
+
+      public Builder(Descriptor descriptor) {
+<span class="fc" id="L184">        this();</span>
+<span class="fc" id="L185">        this.interfaces.addAll(descriptor.interfaces());</span>
+<span class="fc" id="L186">        this.methodHandlers.addAll(descriptor.methodHandlerEntries());</span>
+<span class="fc" id="L187">        this.methodHandlerDecorator = descriptor.methodHandlerDecorator();</span>
+<span class="fc" id="L188">        this.fallbackObject = descriptor.fallbackObject();</span>
+<span class="fc" id="L189">      }</span>
+
+      public Builder fallbackObject(Object fallbackObject) {
+<span class="fc" id="L192">        this.fallbackObject = fallbackObject;</span>
+<span class="fc" id="L193">        return this;</span>
+      }
+
+      public Builder addInterface(Class&lt;?&gt; interfaceClass) {
+<span class="fc" id="L197">        this.interfaces.add(interfaceClass);</span>
+<span class="fc" id="L198">        return this;</span>
+      }
+
+      public Builder methodHandlerDecorator(MethodHandlerDecorator methodHandlerDecorator) {
+<span class="fc" id="L202">        this.methodHandlerDecorator = methodHandlerDecorator;</span>
+<span class="fc" id="L203">        return this;</span>
+      }
+
+      public void addMethodHandler(MethodHandlerEntry methodHandlerEntry) {
+<span class="fc" id="L207">        this.methodHandlers.add(methodHandlerEntry);</span>
+<span class="fc" id="L208">      }</span>
+
+
+      public List&lt;Class&lt;?&gt;&gt; interfaces() {
+<span class="fc" id="L212">        return unmodifiableList(this.interfaces);</span>
+      }
+
+      public MethodHandlerDecorator methodHandlerDecorator() {
+<span class="fc" id="L216">        return this.methodHandlerDecorator;</span>
+      }
+
+      public Descriptor build() {
+<span class="fc" id="L220">        return new Descriptor(this.interfaces, this.methodHandlers, this.methodHandlerDecorator, this.fallbackObject);</span>
+      }
+    }
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MethodHandlerDecorator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.core</a> &gt; <span class="el_source">MethodHandlerDecorator.java</span></div><h1>MethodHandlerDecorator.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.core;
+
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiFunction;
+
+import static com.github.dakusui.osynth.core.SynthesizedObject.BUILT_IN_METHODS;
+import static com.github.dakusui.osynth.core.SynthesizedObject.RESERVED_METHODS;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toSet;
+
+/**
+ * This interface is applied to a method handler right after it is figured out
+ * by the `osynth`'s method handler looking up mechanism is finished.
+ *
+ * The returned method handler is used by the rest of the library thereafter.
+ *
+ * This mechanism is useful to construct an &quot;AOP&quot;-like feature such as auto-logging, etc.
+ */
+public interface MethodHandlerDecorator extends BiFunction&lt;Method, MethodHandler, MethodHandler&gt; {
+<span class="fc" id="L24">  MethodHandlerDecorator IDENTITY                       = (method, methodHandler) -&gt; methodHandler;</span>
+<span class="fc" id="L25">  Set&lt;MethodSignature&gt;   PASS_THROUGH_METHOD_SIGNATURES = unmodifiableSet(new HashSet&lt;MethodSignature&gt;() {</span>
+    {
+<span class="fc" id="L27">      this.addAll(RESERVED_METHODS.stream().map(MethodSignature::create).collect(toSet()));</span>
+<span class="fc" id="L28">      this.addAll(BUILT_IN_METHODS.stream().map(MethodSignature::create).collect(toSet()));</span>
+<span class="fc" id="L29">    }</span>
+  });
+
+  static MethodHandlerDecorator chainMethodHandlerDecorators(MethodHandlerDecorator methodHandlerDecorator, MethodHandlerDecorator methodHandlerDecorator1) {
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">    return methodHandlerDecorator == null ?</span>
+        methodHandlerDecorator1 :
+<span class="fc" id="L35">        methodHandlerDecorator.andThen(methodHandlerDecorator1);</span>
+  }
+
+  default MethodHandlerDecorator compose(MethodHandlerDecorator before) {
+<span class="fc" id="L39">    return (method, methodHandler) -&gt; MethodHandlerDecorator.this.apply(method, before.apply(method, methodHandler));</span>
+  }
+
+  default MethodHandlerDecorator andThen(MethodHandlerDecorator after) {
+<span class="fc" id="L43">    return (method, methodHandler) -&gt; after.apply(method, MethodHandlerDecorator.this.apply(method, methodHandler));</span>
+  }
+
+  static MethodHandlerDecorator filterOutPredefinedMethods(MethodHandlerDecorator decorator) {
+<span class="fc" id="L47">    class PredefinedMethodFilteringOutMethodHandlerDecorator implements MethodHandlerDecorator {</span>
+<span class="fc" id="L48">      final MethodHandlerDecorator childDecorator = decorator;</span>
+
+      @Override
+      public MethodHandler apply(Method method, MethodHandler methodHandler) {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (isPassThroughMethod(method))</span>
+<span class="fc" id="L53">          return methodHandler;</span>
+<span class="fc" id="L54">        return decorator.apply(method, methodHandler);</span>
+      }
+
+      public int hashCode() {
+<span class="fc" id="L58">        return this.childDecorator.hashCode();</span>
+      }
+
+      public boolean equals(Object anotherObject) {
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (this == anotherObject)</span>
+<span class="fc" id="L63">          return true;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (!(anotherObject instanceof PredefinedMethodFilteringOutMethodHandlerDecorator))</span>
+<span class="fc" id="L65">          return false;</span>
+<span class="fc" id="L66">        PredefinedMethodFilteringOutMethodHandlerDecorator another = (PredefinedMethodFilteringOutMethodHandlerDecorator) anotherObject;</span>
+<span class="fc" id="L67">        return Objects.equals(this.childDecorator, another.childDecorator);</span>
+      }
+    }
+<span class="fc" id="L70">    return new PredefinedMethodFilteringOutMethodHandlerDecorator();</span>
+  }
+
+  static boolean isPassThroughMethod(Method method) {
+<span class="fc" id="L74">    return PASS_THROUGH_METHOD_SIGNATURES.contains(MethodSignature.create(method));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

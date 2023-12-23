@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+<body>
+
+
+<h1>InvocationController.java</h1>
+
+<table class="src">
+
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_1'/>
+1
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_1'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>package com.github.dakusui.osynth.core;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_2'/>
+2
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_2'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_3'/>
+3
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_3'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.lang.reflect.InvocationHandler;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_4'/>
+4
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_4'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.lang.reflect.Method;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_5'/>
+5
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_5'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.Map;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_6'/>
+6
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_6'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import java.util.concurrent.ConcurrentHashMap;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_7'/>
+7
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_7'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_8'/>
+8
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_8'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import static com.github.dakusui.osynth.core.utils.MethodUtils.execute;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_9'/>
+9
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_9'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>import static com.github.dakusui.osynth.core.utils.MethodUtils.toEmptyArrayIfNull;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_10'/>
+10
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_10'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_11'/>
+11
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_11'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>public interface InvocationController extends InvocationHandler {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_12'/>
+12
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_12'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>  Object[] EMPTY_ARGS = new Object[0];</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_13'/>
+13
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_13'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_14'/>
+14
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_14'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_15'/>
+15
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_15'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  default Object invoke(Object proxy, Method method, Object[] args) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_16'/>
+16
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_16'>1</a>
+<span>
+1. invoke : removed call to com/github/dakusui/osynth/core/InvocationContext$Impl::contextWith &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    InvocationContext.Impl.contextWith(method);</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_17'/>
+17
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_17'>2</a>
+<span>
+1. invoke : replaced return value with null for com/github/dakusui/osynth/core/InvocationController::invoke &rarr; KILLED<br/>
+2. lambda$invoke$0 : replaced return value with null for com/github/dakusui/osynth/core/InvocationController::lambda$invoke$0 &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return execute(() -&#62; methodHandlerFor(method).handle((SynthesizedObject) proxy, toEmptyArrayIfNull(args)));</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_18'/>
+18
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_18'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_19'/>
+19
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_19'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_20'/>
+20
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_20'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  MethodHandler methodHandlerFor(Method method);</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_21'/>
+21
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_21'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_22'/>
+22
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_22'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  MethodHandler figuredOutMethodHandlerFor(Method invokedMethod);</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_23'/>
+23
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_23'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_24'/>
+24
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_24'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  SynthesizedObject.Descriptor descriptor();</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_25'/>
+25
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_25'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_26'/>
+26
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_26'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  static InvocationContext invocationContext() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_27'/>
+27
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_27'>1</a>
+<span>
+1. invocationContext : replaced return value with null for com/github/dakusui/osynth/core/InvocationController::invocationContext &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>    return InvocationContext.forCurrentThread();</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_28'/>
+28
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_28'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_29'/>
+29
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_29'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_30'/>
+30
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_30'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  interface WithCache extends InvocationController {</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_31'/>
+31
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_31'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /**</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_32'/>
+32
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_32'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * Returns a newly created map object used for method handler cache.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_33'/>
+33
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_33'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     *</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_34'/>
+34
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_34'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * Default implementation of this method returns a new {@link ConcurrentHashMap}</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_35'/>
+35
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_35'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * object.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_36'/>
+36
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_36'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * Assign the returned map of this method to a field returned by</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_37'/>
+37
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_37'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * {@link InvocationController.WithCache#cache()} method.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_38'/>
+38
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_38'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     *</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_39'/>
+39
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_39'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * @return A new map for method handler cache.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_40'/>
+40
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_40'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_41'/>
+41
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_41'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    default Map&#60;Method, MethodHandler&#62; createCache() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_42'/>
+42
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_42'>1</a>
+<span>
+1. createCache : replaced return value with Collections.emptyMap for com/github/dakusui/osynth/core/InvocationController$WithCache::createCache &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return new ConcurrentHashMap&#60;&#62;();</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_43'/>
+43
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_43'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_44'/>
+44
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_44'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_45'/>
+45
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_45'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    /**</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_46'/>
+46
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_46'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * Returns an already created map object to be used for a method handler cache.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_47'/>
+47
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_47'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     *</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_48'/>
+48
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_48'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     * @return A map for method handler cache.</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_49'/>
+49
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_49'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>     */</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_50'/>
+50
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_50'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    Map&#60;Method, MethodHandler&#62; cache();</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_51'/>
+51
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_51'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_52'/>
+52
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_52'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    default MethodHandler methodHandlerFor(Method method) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_53'/>
+53
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_53'>1</a>
+<span>
+1. methodHandlerFor : replaced return value with null for com/github/dakusui/osynth/core/InvocationController$WithCache::methodHandlerFor &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return cache().computeIfAbsent(method, this::figuredOutMethodHandlerAndApplyDecorator);</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_54'/>
+54
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_54'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_55'/>
+55
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_55'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_56'/>
+56
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_56'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    default MethodHandler figuredOutMethodHandlerAndApplyDecorator(Method method) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_57'/>
+57
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_57'>1</a>
+<span>
+1. figuredOutMethodHandlerAndApplyDecorator : replaced return value with null for com/github/dakusui/osynth/core/InvocationController$WithCache::figuredOutMethodHandlerAndApplyDecorator &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return descriptor()</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_58'/>
+58
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_58'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>          .methodHandlerDecorator()</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_59'/>
+59
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_59'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>          .apply(method, figuredOutMethodHandlerFor(method));</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_60'/>
+60
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_60'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_61'/>
+61
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_61'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_62'/>
+62
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_62'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_63'/>
+63
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_63'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  abstract class Base implements InvocationController {</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_64'/>
+64
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_64'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    private final SynthesizedObject.Descriptor descriptor;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_65'/>
+65
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_65'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_66'/>
+66
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_66'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    protected Base(SynthesizedObject.Descriptor descriptor) {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_67'/>
+67
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_67'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>      this.descriptor = descriptor;</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_68'/>
+68
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_68'></a>
+<span>
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_69'/>
+69
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_69'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''></span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_70'/>
+70
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_70'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    @Override</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_71'/>
+71
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_71'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    public SynthesizedObject.Descriptor descriptor() {</span></pre></td></tr>
+
+
+<tr>
+<td class='covered'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_72'/>
+72
+</td>
+<td class='killed'>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_72'>1</a>
+<span>
+1. descriptor : replaced return value with null for com/github/dakusui/osynth/core/InvocationController$Base::descriptor &rarr; KILLED<br/>
+
+</span>
+</span>
+</td>
+<td class='covered'><pre><span  class='killed'>      return this.descriptor;</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_73'/>
+73
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_73'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>    }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_74'/>
+74
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_74'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
+
+
+<tr>
+<td class='na'>
+<a name='org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_75'/>
+75
+</td>
+<td class=''>
+<span class='pop'>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_75'></a>
+<span>
+</span>
+</span>
+</td>
+<td class=''><pre><span  class=''>}</span></pre></td></tr>
+
+
+
+<tr><td></td><td></td><td><h2>Mutations</h2></td></tr>
+
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_16'>16</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_16'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>invoke<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.DelegationTest.whenDoDelegation$thenDelegatedObjectTakesControl(com.github.dakusui.osynth.ut.DelegationTest)</span></span> removed call to com/github/dakusui/osynth/core/InvocationContext$Impl::contextWith &rarr; KILLED</p> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_17'>17</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_17'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>invoke<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.descriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest)</span></span> replaced return value with null for com/github/dakusui/osynth/core/InvocationController::invoke &rarr; KILLED</p> <p class='KILLED'><span class='pop'>2.<span><b>2</b><br/><b>Location : </b>lambda$invoke$0<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.descriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest)</span></span> replaced return value with null for com/github/dakusui/osynth/core/InvocationController::lambda$invoke$0 &rarr; KILLED</p> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_27'>27</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_27'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>invocationContext<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.DelegationTest.whenDoDelegation$thenDelegatedObjectTakesControl(com.github.dakusui.osynth.ut.DelegationTest)</span></span> replaced return value with null for com/github/dakusui/osynth/core/InvocationController::invocationContext &rarr; KILLED</p> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_42'>42</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_42'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>createCache<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.descriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest)</span></span> replaced return value with Collections.emptyMap for com/github/dakusui/osynth/core/InvocationController$WithCache::createCache &rarr; KILLED</p> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_53'>53</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_53'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>methodHandlerFor<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.descriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest)</span></span> replaced return value with null for com/github/dakusui/osynth/core/InvocationController$WithCache::methodHandlerFor &rarr; KILLED</p> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_57'>57</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_57'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>figuredOutMethodHandlerAndApplyDecorator<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.descriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest)</span></span> replaced return value with null for com/github/dakusui/osynth/core/InvocationController$WithCache::figuredOutMethodHandlerAndApplyDecorator &rarr; KILLED</p> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@4a47bc9c_72'>72</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@4a47bc9c_72'/> 
+
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>descriptor<br/><b>Killed by : </b>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.descriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest)</span></span> replaced return value with null for com/github/dakusui/osynth/core/InvocationController$Base::descriptor &rarr; KILLED</p> 
+</td>
+</tr>
+
+</table>
+
+
+<h2>Active mutators</h2>
+<ul>
+<li class='mutator'>CONDITIONALS_BOUNDARY</li>
+<li class='mutator'>EMPTY_RETURNS</li>
+<li class='mutator'>FALSE_RETURNS</li>
+<li class='mutator'>INCREMENTS</li>
+<li class='mutator'>INVERT_NEGS</li>
+<li class='mutator'>MATH</li>
+<li class='mutator'>NEGATE_CONDITIONALS</li>
+<li class='mutator'>NULL_RETURNS</li>
+<li class='mutator'>PRIMITIVE_RETURNS</li>
+<li class='mutator'>TRUE_RETURNS</li>
+<li class='mutator'>VOID_METHOD_CALLS</li>
+
+</ul>
+
+<h2>Tests examined</h2>
+<ul>
+<li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.testAnnotatedMethod2(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (16 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.whenErrorThrowingDefaultMethodExecuted$thenErrorThrown(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenBothIsRun[6](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (16 ms)</li><li>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.differentMethodHandlerSet(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest) (1 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.test(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesizedWithSimpleObjectSynthesizer$thenTargetMethodIsRun[5](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testDefaultMethodIsOverridden(com.github.dakusui.osynth.ut.BasicTest) (6 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.whenCustomMethodHandlerOverridesAbstractMethodThrowsCheckedException$theExceptionThrownAsOsynthInvocationTargetException(com.github.dakusui.osynth.ut.BasicTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenCoreInterface$whenSynthesized$thenPass(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (3 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsError[12](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.equalness$differentSameMethodHandlers(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (4 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.givenAutoLoggingEnabled_whenDefaultMethod$bMethod$_thenDoesntBreak(com.github.dakusui.osynth.ut.AutoLoggingTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsError[4](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenSynthesizerWithInterfaceB$whenSynthesizeWithNonB$thenReturnValueFromNonB(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenBothIsRun[1](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (19 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.enableAutoLogging(com.github.dakusui.osynth.ut.AutoLoggingTest) (10 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsCheckedException[2](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (8 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.whenNonInterfaceClassPassed$thenExceptionThrown(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (2 ms)</li><li>com.github.dakusui.osynth.ut.DelegationTest.given$whenDoDelegation$thenDelegatedObjectTakesControl(com.github.dakusui.osynth.ut.DelegationTest) (10 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testDefaultMethodIsUsed(com.github.dakusui.osynth.ut.BasicTest) (3 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.givenSynthesizedObjectWithLenientMatchers$whenMethodWithNoMatchingHandlerInvoked$thenUnsupportedException(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsError[13](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenInSecondIsRun[5](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.givenEnableAutoLogging_whenFallback$cMethod$_thenDoesntBreak(com.github.dakusui.osynth.ut.AutoLoggingTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenSynthesizedObject$whenResynthesize$overridingHandlerIsInvoked(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (10 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.whenCustomMethodHandlerOverridesAbstractMethodThrowsException$theExceptionThrown(com.github.dakusui.osynth.ut.BasicTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenSynthesizedObjectsFromDifferentDefinitions$whenEquals$thenFalse(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (4 ms)</li><li>com.github.dakusui.osynth.ut.MethodMatcherTest$CompositionTest.examineOr(com.github.dakusui.osynth.ut.MethodMatcherTest$CompositionTest) (15 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenHandlerForMethodInB$whenMethodInBCalled$thenHandlerIsRun(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (10 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsRuntimeException[9](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testFallbackObject$defaultMethodIsPickedUp(com.github.dakusui.osynth.ut.BasicTest) (6 ms)</li><li>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.descriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest) (1 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testIfCustomMethodHandlerOverridesAbstractMethodTwice(com.github.dakusui.osynth.ut.BasicTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.whenSynthesizedWithUnregisteredInterface$thenClassCastExceptionThrown(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.givenSynthesizedFromAnotherSynthesized$whenCallMethod$thenLetsSee(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (7 ms)</li><li>com.github.dakusui.osynth.ut.InterfaceInclusionTest.givenInterfaceInclusionIsRequested$whenObjectIsCastToTestIF$thenSuccessfullyCast(com.github.dakusui.osynth.ut.InterfaceInclusionTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.ut.ParameterizedMethodHandlingTest.testDouble(com.github.dakusui.osynth.compat.ut.ParameterizedMethodHandlingTest) (6 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testFallbackObject$whenImplementationIsOverriddenWithoutDefaultImplementation$methodInFallbackIsPickedUpAndUnsupportedOperationThrown(com.github.dakusui.osynth.ut.BasicTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.whenEqualsItself$thenTrue(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (2 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsRuntimeException[15](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenBothIsRun[5](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (18 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenInFirstIsRun[0](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (18 ms)</li><li>com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenHandlerObjectImplementingTestInterfaceAndMethodHandlerForCalleeMethod.whenCallerMethodIsInvoked$thenCalleeInHandlerObjectIsInvoked(com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenHandlerObjectImplementingTestInterfaceAndMethodHandlerForCalleeMethod) (2 ms)</li><li>com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenFallbackObjectOverridingCalleeMethod.whenCallerMethodIsInvoked$thenCalleeInInterfaceDefaultIsRun(com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenFallbackObjectOverridingCalleeMethod) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.givenSynthesizedObjectWithLenientMatchers$whenMethodWithMatchingHandlerInvoked$thenProperHandlerExecuted(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (13 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsRuntimeException[10](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenSynthesizerWithInterfaceBTwice$whenSynthesize$thenThrowsException(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (2 ms)</li><li>com.github.dakusui.osynth.compat.ut.ParameterizedMethodHandlingTest.testSingle_2(com.github.dakusui.osynth.compat.ut.ParameterizedMethodHandlingTest) (5 ms)</li><li>com.github.dakusui.osynth.ut.PreprocessingTest.givenValidationLeftDefault$whenTwoReservedMethodsTriedOverridden$thenExceptionThrown(com.github.dakusui.osynth.ut.PreprocessingTest) (3 ms)</li><li>com.github.dakusui.osynth.ut.ValidationTest.givenValidationDisabled$whenReservedMethodTriedOverridden$thenNoExceptionThrown(com.github.dakusui.osynth.ut.ValidationTest) (1 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testFallbackObject$whenMethodWithDefaultImplementationIsOverriddenWithoutDefaultImplementation$methodInFallbackIsPickedUp(com.github.dakusui.osynth.ut.BasicTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.testAnnotatedMethod(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (11 ms)</li><li>com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerFloorplanIssue53Test.test(com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerFloorplanIssue53Test) (9 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.whenErrorThrowingOverridingMethodExecuted$thenErrorThrown(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.notGivenAnyObjectForFallback$whenSynthesizeAndCallMethod$thenDoesntBreak(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (3 ms)</li><li>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.differentHandlerDecorator(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest) (1 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.givenDescriptorIsFinalized$whenQueried$thenTrue(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (13 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.testAnnotatedMethod3(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsCheckedException[14](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenNoHandlerObjectAndMethodHandlerForCalleeMethod.whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked(com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenNoHandlerObjectAndMethodHandlerForCalleeMethod) (1 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenNoExplicitInterface$whenSynthesizedWithoutInclusionFromFallbackInNonAutoMode$thenClassCastException(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (3 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsError[7](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.ut.ValidationTest.givenDuplicationCheckEnabled$whenNoSameIFRegisteredTwice$thenPass(com.github.dakusui.osynth.ut.ValidationTest) (7 ms)</li><li>com.github.dakusui.osynth.ut.MethodMatcherTest$CompositionTest.examineNegateAndAnd(com.github.dakusui.osynth.ut.MethodMatcherTest$CompositionTest) (10 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.modifyAutoLoggingBehaviorBy$andThen$_thenModifiedBehaviorObserved(com.github.dakusui.osynth.ut.AutoLoggingTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.ut.ParameterizedMethodHandlingTest.testSingle(com.github.dakusui.osynth.compat.ut.ParameterizedMethodHandlingTest) (8 ms)</li><li>com.github.dakusui.osynth.ut.DelegationTest.given$whenDoDelegation$thenDelegatedObjectTakesControl2(com.github.dakusui.osynth.ut.DelegationTest) (5 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.givenAutoLoggingEnabledOverridingBuiltInMethod$whenToString$thenNotLoggedAndDoesntBreak(com.github.dakusui.osynth.ut.AutoLoggingTest) (6 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.modifyAutoLoggingBehaviorBy$compose$_thenModifiedBehaviorObserved(com.github.dakusui.osynth.ut.AutoLoggingTest) (7 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.enableAutoLogging$whenNormalMethodA$thenDoesntBreak(com.github.dakusui.osynth.ut.AutoLoggingTest) (16 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsCheckedException[11](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (10 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenInFirstIsRun[1](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsRuntimeException[16](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodIsRun[6](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.whenErrorThrowingMethodIsInvoked$thenExceptionThrown(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (3 ms)</li><li>com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenNoHandlerObjectAndMethodHandlerForCalleeMethod.whenCallerMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked(com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenNoHandlerObjectAndMethodHandlerForCalleeMethod) (2 ms)</li><li>com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest.whenDefaultMethodCalled$thenValueReturned(com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest) (6 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testFallbackObject$methodInFallbackIsPickedUp(com.github.dakusui.osynth.ut.BasicTest) (3 ms)</li><li>com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest.whenEqualsOnAnotherXNotEqual$thenFalse(com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest) (3 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenNoHandlerForMethodInB$whenMethodInBCalled$thenUnsupportedOperationException(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (7 ms)</li><li>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.equalMethodHandlerSet(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest) (2 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.equalness$differentMethodHandlers(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (4 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.whenCallToString$descriptorToStringIsCalled(com.github.dakusui.osynth.ut.BasicTest) (3 ms)</li><li>com.github.dakusui.osynth.ut.AutoLoggingTest.disableAutoLogging(com.github.dakusui.osynth.ut.AutoLoggingTest) (8 ms)</li><li>com.github.dakusui.osynth.ut.VariationTest.whenCallBuiltInMethodFromInsideHandler$thenCalledSuccessfully(com.github.dakusui.osynth.ut.VariationTest) (3 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testIfCustomMethodHandlerOverridesAbstractMethod(com.github.dakusui.osynth.ut.BasicTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsCheckedException[8](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (6 ms)</li><li>com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenHandlerObjectImplementingTestInterfaceAndMethodHandlerForCalleeMethod.whenCalleeMethodIsInvoked$thenCalleeInBaseInterfaceIsInvoked(com.github.dakusui.osynth.compat.ut.issues.DefaultMethodToDefaultMethodCallTest$GivenHandlerObjectImplementingTestInterfaceAndMethodHandlerForCalleeMethod) (2 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodIsRun[5](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest.whenMethodsCalled$thenProxiedToIntendedMethods(com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest) (4 ms)</li><li>com.github.dakusui.osynth.ut.BasicTest.testFallbackObject$whenImplementationIsMissing$methodInFallbackIsPickedUpAndUnsupportedOperationThrown(com.github.dakusui.osynth.ut.BasicTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodIsRun[0](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (7 ms)</li><li>com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest.equalness$differentInterfaces(com.github.dakusui.osynth.compat.ut.NewObjectSynthesizerTest) (10 ms)</li><li>com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest.whenEqualsOnAnotherObjectNotEqual$thenFalse(com.github.dakusui.osynth.compat.ut.SimpleObjectSynthesizerTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenInFirstIsRun[5](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (7 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenInFirstIsRun[6](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (7 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenBothIsRun[0](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (138 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodIsRun[1](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (8 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenTargetMethodThrowsRuntimeException[3](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (5 ms)</li><li>com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest.givenTweakerWithInterfaceB$whenSynthesizeWithB$thenReturnValueFromB(com.github.dakusui.osynth.compat.ut.ObjectSynthesizerTest) (3 ms)</li><li>com.github.dakusui.osynth.ut.core.SynthesizedObjectTest.nonDescriptorSameReference(com.github.dakusui.osynth.ut.core.SynthesizedObjectTest) (1 ms)</li><li>com.github.dakusui.osynth.ut.InterfaceInclusionTest.givenInterfaceInclusionIsNotRequested$whenObjectIsCastToTestIF$thenExceptionThrown(com.github.dakusui.osynth.ut.InterfaceInclusionTest) (4 ms)</li><li>com.github.dakusui.osynth.compat.comb.JCUnitBasedTest.whenSynthesized$thenMethodWrittenInSecondIsRun[1](com.github.dakusui.osynth.compat.comb.JCUnitBasedTest) (8 ms)</li><li>com.github.dakusui.osynth.ut.DelegationTest.whenDoDelegation$thenDelegatedObjectTakesControl(com.github.dakusui.osynth.ut.DelegationTest) (4 ms)</li>
+</ul>
+
+<br/>
+
+Report generated by <a href='http://pitest.org'>PIT</a> 1.7.3
+
+</body>
+</html>

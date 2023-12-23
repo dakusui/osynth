@@ -1,0 +1,53 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+osynth,com.github.dakusui.osynth.core.utils,MessageUtils,0,65,0,0,0,8,0,5,0,5
+osynth,com.github.dakusui.osynth.core.utils,AssertionUtils,0,91,0,2,0,16,0,11,0,10
+osynth,com.github.dakusui.osynth.core.utils,MethodUtils.new MethodHandler() {...},0,18,0,0,0,3,0,3,0,3
+osynth,com.github.dakusui.osynth.core.utils,MethodUtils,21,355,7,25,1,67,7,40,0,31
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer,0,307,0,4,0,69,0,34,0,32
+osynth,com.github.dakusui.osynth.core,MethodHandlerDecorator.new HashSet() {...},0,23,0,0,0,4,0,1,0,1
+osynth,com.github.dakusui.osynth.core,SynthesizedObject.InternalUtils,0,24,0,0,0,6,0,5,0,5
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry.Type.new AutoLogger.Entry.Type() {...},0,7,0,0,0,1,0,1,0,1
+osynth,com.github.dakusui.osynth.core,InvocationController,0,24,0,0,0,4,0,4,0,4
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry.Type.new AutoLogger.Entry.Type() {...},0,7,0,0,0,1,0,1,0,1
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry.Type.new AutoLogger.Entry.Type() {...},0,7,0,0,0,1,0,1,0,1
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry,8,21,0,0,2,3,2,3,2,3
+osynth,com.github.dakusui.osynth.core,MethodHandlerDecorator,2,52,1,1,0,8,1,9,0,9
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.Validator,0,148,0,2,0,28,0,9,0,8
+osynth,com.github.dakusui.osynth.core,SynthesizedObject.Descriptor.Builder,0,78,0,0,0,21,0,9,0,9
+osynth,com.github.dakusui.osynth.core,SynthesizedObject,0,63,0,0,0,10,0,4,0,4
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.InternalUtils,0,131,0,2,0,26,0,11,0,10
+osynth,com.github.dakusui.osynth.core,SynthesizedObject.Descriptor,0,180,1,15,0,36,1,19,0,12
+osynth,com.github.dakusui.osynth.core,MethodSignature.Impl,0,54,0,6,0,12,0,9,0,6
+osynth,com.github.dakusui.osynth.core,MethodHandlerEntry,0,13,0,0,0,3,0,1,0,1
+osynth,com.github.dakusui.osynth.core,MethodMatcher.PrivateUtils.new MethodMatcher() {...},0,21,0,0,0,3,0,3,0,3
+osynth,com.github.dakusui.osynth.core,MethodMatcher,0,110,0,10,0,6,0,17,0,12
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.Preprocessor,0,172,0,6,0,29,0,14,0,11
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.Validator.new AbstractObjectSynthesizer.Validator() {...},0,18,0,0,0,3,0,3,0,3
+osynth,com.github.dakusui.osynth.core,InvocationController.Base,0,9,0,0,0,4,0,2,0,2
+osynth,com.github.dakusui.osynth.core,InvocationContext,0,10,0,0,0,2,0,2,0,2
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry.Type,0,48,0,0,0,8,0,3,0,3
+osynth,com.github.dakusui.osynth.core,SynthesizedObject.Descriptor.new SynthesizedObject.Descriptor.Builder() {...},0,29,0,0,0,6,0,1,0,1
+osynth,com.github.dakusui.osynth.core,MethodMatcher.PrivateUtils,0,10,0,0,0,2,0,2,0,2
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.new Object() {...},0,15,0,0,0,2,0,2,0,2
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.InternalUtils.new OutputStream() {...},0,46,0,2,0,13,0,5,0,4
+osynth,com.github.dakusui.osynth.core,InvocationController.WithCache,0,22,0,0,0,5,0,3,0,3
+osynth,com.github.dakusui.osynth.core,MethodHandlerEntry.new MethodHandlerEntry() {...},0,36,0,0,0,5,0,5,0,5
+osynth,com.github.dakusui.osynth.core,MethodSignature,0,31,0,0,0,3,0,3,0,3
+osynth,com.github.dakusui.osynth.core,MethodHandlerDecorator.new MethodHandlerDecorator() {...},0,45,0,6,0,12,0,7,0,4
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry.new AutoLogger.Entry() {...},0,26,0,0,0,6,0,6,0,6
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry.new AutoLogger.Entry() {...},0,23,0,0,0,5,0,5,0,5
+osynth,com.github.dakusui.osynth.core,AutoLogger,0,54,0,0,0,11,0,6,0,6
+osynth,com.github.dakusui.osynth.core,AutoLogger.Entry.new AutoLogger.Entry() {...},0,26,0,0,0,6,0,6,0,6
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.InternalUtils.ReservedMethodViolation,0,24,0,0,0,5,0,2,0,2
+osynth,com.github.dakusui.osynth.core,InvocationContext.Impl,0,32,0,2,0,13,0,7,0,6
+osynth,com.github.dakusui.osynth.core,MethodHandlerEntry.Builder,0,47,0,0,0,12,0,7,0,7
+osynth,com.github.dakusui.osynth.core,AbstractObjectSynthesizer.Preprocessor.new AbstractObjectSynthesizer.Preprocessor() {...},0,18,0,0,0,3,0,3,0,3
+osynth,com.github.dakusui.osynth.annotations,BuiltInHandlerFactory.MethodHandlerFactory,4,97,3,3,0,14,3,8,0,8
+osynth,com.github.dakusui.osynth.annotations,BuiltInHandlerFactory.ForHashCode,0,10,0,0,0,2,0,3,0,3
+osynth,com.github.dakusui.osynth.annotations,BuiltInHandlerFactory.ForEquals,0,33,0,4,0,8,0,5,0,3
+osynth,com.github.dakusui.osynth.annotations,BuiltInHandlerFactory.ForToString,0,30,0,0,0,8,0,4,0,4
+osynth,com.github.dakusui.osynth.annotations,BuiltInHandlerFactory.ForDescriptor,0,10,0,0,0,2,0,3,0,3
+osynth,com.github.dakusui.osynth,ObjectSynthesizer,0,256,0,4,0,37,0,32,0,30
+osynth,com.github.dakusui.osynth.exceptions,OsynthException,11,50,1,11,2,17,1,9,0,4
+osynth,com.github.dakusui.osynth.exceptions,ValidationException,0,4,0,0,0,2,0,1,0,1
+osynth,com.github.dakusui.osynth.invocationcontrollers,StandardInvocationController,0,52,0,0,0,11,0,6,0,6

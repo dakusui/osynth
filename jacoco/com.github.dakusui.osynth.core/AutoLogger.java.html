@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AutoLogger.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.core</a> &gt; <span class="el_source">AutoLogger.java</span></div><h1>AutoLogger.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.core;
+
+import java.lang.reflect.Method;
+
+public interface AutoLogger {
+
+  static MethodHandlerDecorator create(AutoLogger autoLogger) {
+<span class="fc" id="L8">    return (method, methodHandler) -&gt; (MethodHandler) (synthesizedObject, args) -&gt; {</span>
+<span class="fc" id="L9">      autoLogger.log(autoLogger.enter(synthesizedObject, method, args));</span>
+      Object ret;
+      try {
+<span class="fc" id="L12">        ret = methodHandler.handle(synthesizedObject, args);</span>
+<span class="fc" id="L13">        autoLogger.log(autoLogger.leave(synthesizedObject, method, ret));</span>
+<span class="fc" id="L14">        return ret;</span>
+<span class="fc" id="L15">      } catch (Throwable t) {</span>
+<span class="fc" id="L16">        autoLogger.log(autoLogger.exception(synthesizedObject, method, t));</span>
+<span class="fc" id="L17">        throw t;</span>
+      }
+    };
+  }
+
+  interface Entry {
+
+
+<span class="fc" id="L25">    enum Type {</span>
+<span class="fc" id="L26">      ENTER(&quot;arguments&quot;) {</span>
+      },
+<span class="fc" id="L28">      LEAVE(&quot;return&quot;) {</span>
+      },
+<span class="fc" id="L30">      EXCEPTION(&quot;exception&quot;) {</span>
+      };
+
+      private final String outputValueLabel;
+
+<span class="fc" id="L35">      Type(String outputValueLabel) {</span>
+<span class="fc" id="L36">        this.outputValueLabel = outputValueLabel;</span>
+<span class="fc" id="L37">      }</span>
+
+      public String outputValueLabel() {
+<span class="fc" id="L40">        return this.outputValueLabel;</span>
+      }
+    }
+
+    Entry.Type type();
+
+    Object object();
+
+    Method method();
+
+    Object value();
+
+    /**
+     * A default implementation of this method is provided to save implementation
+     * effort for entries not need arguments.
+     *
+     * @return An argument array passed this entry when this represents a method entry.
+     */
+    default Object[] arguments() {
+<span class="nc" id="L59">      throw new UnsupportedOperationException();</span>
+    }
+
+    /**
+     * A default implementation of this method is provided to save implementation
+     * effort for entries not need exception.
+     *
+     * @return An exception detected during method execution.
+     */
+    default Throwable exception() {
+<span class="nc" id="L69">      throw new UnsupportedOperationException();</span>
+    }
+
+    ;
+
+    static Entry enter(Object object, Method method, Object[] args) {
+<span class="fc" id="L75">      return new Entry() {</span>
+        @Override
+        public Type type() {
+<span class="fc" id="L78">          return Type.ENTER;</span>
+        }
+
+        @Override
+        public Object object() {
+<span class="fc" id="L83">          return object;</span>
+        }
+
+        @Override
+        public Method method() {
+<span class="fc" id="L88">          return method;</span>
+        }
+
+        @Override
+        public Object[] arguments() {
+<span class="fc" id="L93">          return args;</span>
+        }
+
+        @Override
+        public Object value() {
+<span class="fc" id="L98">          return this.arguments();</span>
+        }
+      };
+    }
+
+    static Entry leave(Object object, Method method, Object returnedValue) {
+<span class="fc" id="L104">      return new Entry() {</span>
+        @Override
+        public Type type() {
+<span class="fc" id="L107">          return Type.LEAVE;</span>
+        }
+
+        @Override
+        public Object object() {
+<span class="fc" id="L112">          return object;</span>
+        }
+
+        @Override
+        public Method method() {
+<span class="fc" id="L117">          return method;</span>
+        }
+
+        @Override
+        public Object value() {
+<span class="fc" id="L122">          return returnedValue;</span>
+        }
+      };
+    }
+
+    static Entry exception(Object object, Method method, Throwable exception) {
+<span class="fc" id="L128">      return new Entry() {</span>
+        @Override
+        public Type type() {
+<span class="fc" id="L131">          return Type.EXCEPTION;</span>
+        }
+
+        @Override
+        public Object object() {
+<span class="fc" id="L136">          return object;</span>
+        }
+
+        @Override
+        public Method method() {
+<span class="fc" id="L141">          return method;</span>
+        }
+
+        @Override
+        public Object value() {
+<span class="fc" id="L146">          return exception();</span>
+        }
+
+        @Override
+        public Throwable exception() {
+<span class="fc" id="L151">          return exception;</span>
+        }
+      };
+    }
+  }
+
+  default Entry enter(Object object, Method method, Object[] args) {
+<span class="fc" id="L158">    return Entry.enter(object, method, args);</span>
+  }
+
+  default Entry leave(Object object, Method method, Object returnedValue) {
+<span class="fc" id="L162">    return Entry.leave(object, method, returnedValue);</span>
+  }
+
+  default Entry exception(Object object, Method method, Throwable t) {
+<span class="fc" id="L166">    return Entry.exception(object, method, t);</span>
+  }
+
+  void log(Entry entry);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

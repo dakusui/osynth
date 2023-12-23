@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssertionUtils.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">osynth</a> &gt; <a href="index.source.html" class="el_package">com.github.dakusui.osynth.core.utils</a> &gt; <span class="el_source">AssertionUtils.java</span></div><h1>AssertionUtils.java</h1><pre class="source lang-java linenums">package com.github.dakusui.osynth.core.utils;
+
+import com.github.dakusui.osynth.core.MethodHandlerEntry;
+import com.github.dakusui.osynth.core.SynthesizedObject;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+import static com.github.dakusui.pcond.core.refl.MethodQuery.instanceMethod;
+import static com.github.dakusui.pcond.forms.Functions.call;
+import static com.github.dakusui.pcond.forms.Functions.parameter;
+import static com.github.dakusui.pcond.forms.Predicates.callp;
+import static com.github.dakusui.pcond.forms.Printables.function;
+import static com.github.dakusui.pcond.forms.Printables.predicate;
+
+<span class="fc" id="L19">public enum AssertionUtils {</span>
+  ;
+
+  public static Function&lt;Class&lt;?&gt;, Method&gt; classGetMethod(String name, Class&lt;?&gt;[] parameterTypes) {
+<span class="fc" id="L23">    return call(instanceMethod(parameter(), &quot;getMethod&quot;, name, parameterTypes));</span>
+  }
+
+  public static Function&lt;SynthesizedObject.Descriptor, Object&gt; descriptorFallbackObject() {
+<span class="fc" id="L27">    return call(instanceMethod(parameter(), &quot;fallbackObject&quot;));</span>
+  }
+
+  public static Function&lt;SynthesizedObject.Descriptor, List&lt;MethodHandlerEntry&gt;&gt; descriptorMethodHandlerEntries() {
+<span class="fc" id="L31">    return call(instanceMethod(parameter(), &quot;methodHandlerEntries&quot;));</span>
+  }
+
+  public static Function&lt;SynthesizedObject.Descriptor, List&lt;Class&lt;?&gt;&gt;&gt; descriptorInterfaces() {
+<span class="fc" id="L35">    return call(instanceMethod(parameter(), &quot;interfaces&quot;));</span>
+  }
+
+  public static Predicate&lt;Method&gt; methodIsAnnotationPresent(Class&lt;? extends Annotation&gt; annotation) {
+<span class="fc" id="L39">    return callp(instanceMethod(parameter(), &quot;isAnnotationPresent&quot;, annotation));</span>
+  }
+
+  public static &lt;E&gt; Function&lt;Collection&lt;E&gt;, List&lt;E&gt;&gt; collectionDuplicatedElements() {
+<span class="fc" id="L43">    return function(&quot;duplicatedElements&quot;, AssertionUtils::duplicatedElementsIn);</span>
+  }
+
+  public static &lt;E&gt; List&lt;E&gt; duplicatedElementsIn(Collection&lt;E&gt; collection) {
+<span class="fc" id="L47">    HashSet&lt;E&gt; appeared = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L48">    LinkedHashSet&lt;E&gt; duplication = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L49">    collection.forEach(each -&gt; {</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">      if (!appeared.contains(each))</span>
+<span class="fc" id="L51">        appeared.add(each);</span>
+      else {
+<span class="fc" id="L53">        duplication.add(each);</span>
+      }
+<span class="fc" id="L55">    });</span>
+<span class="fc" id="L56">    return new ArrayList&lt;&gt;(duplication);</span>
+  }
+
+  public static &lt;T&gt; Predicate&lt;Class&lt;T&gt;&gt; classIsInterface() {
+<span class="fc" id="L60">    return predicate(&quot;isInterface&quot;, Class::isInterface);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
