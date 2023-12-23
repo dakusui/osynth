@@ -7,7 +7,7 @@
     <description>A library to synthesize an object from interfaces dynamically
     </description>
 
-    <name>${project.artifactId}</name>
+    <name>osynth</name>
     <url>http://dakusui.github.io/${project.name}</url>
 
     <scm>
@@ -162,6 +162,9 @@
                             --base-dir ${project.basedir}
                             --attribute "name=${project.name}"
                             --attribute "version=${project.version}"
+                            --attribute "imagesoutdir=.asciidoctor/diagram"
+                            --attribute "imagesdir=.asciidoctor/diagram"
+                            --attribute "dot=/usr/bin/dot"
                             --require asciidoctor-diagram
                             --gem-path ${env.GEM_PATH}
                             --attribute data-uri
@@ -352,6 +355,21 @@
                             </arguments>
                         </configuration>
                     </execution>
+                    <execution><!-- Run our version calculation script -->
+                        <id>publish-gh-pages</id>
+                        <phase>site-deploy</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>bash</executable>
+                            <arguments>
+                                <argument>
+                                    ${basedir}/src/main/build_tools/publish-gh-pages.sh
+                                </argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
@@ -535,7 +553,7 @@
         </repository>
         <site>
             <id>${project.name}</id>
-            <url>file:///tmp/${project.name}</url>
+            <url>file:///${user.dir}/target/site-staging</url>
         </site>
     </distributionManagement>
 
